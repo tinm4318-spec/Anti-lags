@@ -1,0 +1,29 @@
+local Players = game:GetService("Players")
+
+local MAX_SPRAYS = 1
+
+local function cleanSprays(player)
+    local bricks = workspace:FindFirstChild("Bricks")
+    if not bricks then return end
+
+    local folder = bricks:FindFirstChild(player.Name)
+    if not folder then return end
+
+    local sprays = {}
+
+    for _, object in ipairs(folder:GetChildren()) do
+        if object.Name == "Spray" then
+            table.insert(sprays, object)
+        end
+    end
+
+    for i = MAX_SPRAYS + 1, #sprays do
+        sprays[i]:Destroy()
+    end
+end
+
+while task.wait(1) do
+    for _, player in ipairs(Players:GetPlayers()) do
+        cleanSprays(player)
+    end
+end
