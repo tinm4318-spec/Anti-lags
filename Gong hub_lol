@@ -840,4 +840,148 @@ local function startAura()
             else
                 local tools = findDeleteTools()
                 if #tools == 0 then
-                    auraStatus.Text = "aura:
+                    auraStatus.Text = "aura: delete tool lost"
+                    auraStatus.TextColor3 = C.danger
+                    auraActive = false
+                    break
+                end
+                if tick() - lastRefresh >= TOOL_REFRESH then
+                    lastRefresh = tick()
+                end
+                local bricks = getAllBricks()
+                blockCount.Text = string.format("blocks targetable: %d", #bricks)
+                for _, brick in ipairs(bricks) do
+                    if not auraActive then break end
+                    if brick and brick:IsDescendantOf(workspace) then
+                        dti = dti + 1
+                        local tool = tools[(dti % #tools) + 1]
+                        pcall(function()
+                            tool.e:FireServer(brick, hrp.Position)
+                        end)
+                        safeWait(FIRE_DELAY / math.max(#tools, 1))
+                    end
+                end
+            end
+            safeWait(0.05)
+        end
+        auraActive = false
+    end)
+end
+
+local function stopAura()
+    auraActive = false
+    auraStatus.Text = "aura: stopped"
+    auraStatus.TextColor3 = C.textDim
+    startBtn.Text = "Start Delete Aura"
+    startBtn.BackgroundColor3 = C.accent
+    startBtn.TextColor3 = C.bg
+    if auraLoop then
+        pcall(function() safeCancel(auraLoop) end)
+        auraLoop = nil
+    end
+end
+
+startBtn.MouseButton1Click:Connect(function()
+    if auraActive then stopAura() else startAura() end
+end)
+
+hlBtn.MouseButton1Click:Connect(function()
+    if hlActive then
+        hlActive = false
+        hlBtn.Text = "Highlight Blocks: OFF"
+        hlBtn.BackgroundColor3 = C.panelAlt
+        hlStatus.Text = "highlight: off"
+        hlStatus.TextColor3 = C.textDim
+        if hlLoop then pcall(function() safeCancel(hlLoop) end); hlLoop = nil end
+        clearHighlights()
+    else
+        hlActive = true
+        hlBtn.Text = "Highlight Blocks: ON"
+        hlBtn.BackgroundColor3 = C.accentDim
+        hlStatus.Text = "highlight: on (refreshes 1s)"
+        hlStatus.TextColor3 = C.good
+        hlLoop = safeTaskSpawn(function()
+            while hlActive do
+                applyHighlights()
+                safeWait(1)
+            end
+            clearHighlights()
+        end)
+    end
+end)
+
+refreshStatusBtn.MouseButton1Click:Connect(function()
+    refreshToolStatus()
+    blockCount.Text = string.format("blocks targetable: %d", #getAllBricks())
+end)
+
+safeTaskSpawn(function()
+    while _G.__GongHubAlive and gui.Parent do
+        if not auraActive then
+            refreshToolStatus()
+            blockCount.Text = string.format("blocks targetable: %d", #getAllBricks())
+        end
+        safeWait(3)
+    end
+end)
+
+gui.Destroying:Connect(function()
+    auraActive = false
+    hlActive = false
+    clearHighlights()
+    if auraLoop then pcall(function() safeCancel(auraLoop) end) end
+    if hlLoop then pcall(function() safeCancel(hlLoop) end) end
+end)
+
+-- ============================================================
+-- INFO PAGE
+-- ============================================================
+local infoPage = makePage("info")
+local infoSection = mkSection(infoPage, "GongHub")
+local infoBody = mkLabel(infoSection,
+    "server hopper with prev-server tracking, delete aura, block highlighter.\n" ..
+    "no loggers, no webhooks, no hwid, no ip grab.\n" ..
+    "all credits to gong.",
+    C.textDim, 12)
+infoBody.Size = UDim2.new(1, 0, 0, 90)
+
+local unloadBtn = mkBtn(infoSection, "Unload Hub", false)
+unloadBtn.BackgroundColor3 = C.danger
+unloadBtn.TextColor3 = C.text
+unloadBtn.MouseButton1Click:Connect(function()
+    auraActive = false
+    hlActive = false
+    clearHighlights()
+    if auraLoop then pcall(function() safeCancel(auraLoop) end) end
+    if hlLoop then pcall(function() safeCancel(hlLoop) end) end
+    Hopper.destroy()
+    gui:Destroy()
+end)
+
+-- ============================================================
+-- WIRE TABS + BOOT
+-- ============================================================
+tabs["hopper"].MouseButton1Click:Connect(function() setPage("hopper") end)
+tabs["grief"].MouseButton1Click:Connect(function() setPage("grief") end)
+tabs["info"].MouseButton1Click:Connect(function() setPage("info") end)
+
+minBtn.MouseButton1Click:Connect(function()
+    root.Visible = not root.Visible
+end)
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+setPage("hopper")
+refreshToolStatus()
+blockCount.Text = string.format("blocks targetable: %d", #getAllBricks())
+
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "GongHub",
+        Text = "loaded · all credits to gong",
+        Duration = 3,
+    })
+end)
+
+print("[GongHub] loaded")
