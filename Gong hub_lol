@@ -1,0 +1,1180 @@
+--========================================================
+-- GONGHUB | clean rebuild + server hopper + blacklist
+--========================================================
+
+local Players         = game:GetService("Players")
+local RunService      = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting        = game:GetService("Lighting")
+local TeleportService = game:GetService("TeleportService")
+local HttpService     = game:GetService("HttpService")
+local StarterGui      = game:GetService("StarterGui")
+
+local lp = Players.LocalPlayer
+local pg = lp:WaitForChild("PlayerGui")
+
+for _, parent in ipairs({pg, game:GetService("CoreGui")}) do
+    local old = parent:FindFirstChild("GongHubGui")
+    if old then old:Destroy() end
+end
+
+--========================================================
+-- PALETTE
+--========================================================
+
+local C = {
+    bg      = Color3.fromRGB(23, 23, 23),
+    group   = Color3.fromRGB(17, 17, 17),
+    accent  = Color3.fromRGB(0, 124, 255),
+    accentD = Color3.fromRGB(0, 92, 189),
+    border  = Color3.fromRGB(58, 58, 58),
+    text    = Color3.fromRGB(255, 255, 255),
+    muted   = Color3.fromRGB(190, 190, 190),
+    button  = Color3.fromRGB(25, 25, 25),
+    good    = Color3.fromRGB(70, 200, 100),
+    warn    = Color3.fromRGB(210, 180, 60),
+    bad     = Color3.fromRGB(210, 80, 80),
+}
+
+local FONT = Font.new("rbxasset://fonts/families/Inconsolata.json",
+    Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+
+--========================================================
+-- FILESYSTEM PROBE
+--========================================================
+
+local supportsFiles = false
+pcall(function()
+    writefile("gonghub_probe.txt", "ok")
+    if readfile("gonghub_probe.txt") == "ok" then supportsFiles = true end
+end)
+
+--========================================================
+-- STATE
+--========================================================
+
+local state = {
+    walkspeed = { on = false, value = 16 },
+    jumppower = { on = false, value = 50 },
+    fly       = { on = false, value = 50 },
+    infjump   = { on = false },
+    shiftlock = { on = false },
+    antikb    = { on = false },
+    gravity   = { on = false, value = 196.2 },
+}
+
+local Blacklist = {
+    enabled = true,
+    list = {},   -- [string] = true  (lowercased name / displayname / userid string)
+}
+
+local HopState = {
+    servers = {},
+    lastFetch = 0,
+    sortAsc = false,
+    rateLimited = false,
+    previousServer = "",
+}
+
+if supportsFiles then
+    pcall(function()
+        HopState.previousServer = readfile("gonghub_prevserver.txt") or ""
+        local bl = readfile("gonghub_blacklist.txt")
+        if bl then
+            for line in bl:gmatch("[^\r\n]+") do
+                Blacklist.list[line:lower()] = true
+            end
+        end
+    end)
+end
+
+Players.PlayerRemoving:Connect(function(plr)
+    if plr == lp and supportsFiles then
+        pcall(function()
+            writefile("gonghub_prevserver.txt", tostring(game.JobId))
+        end)
+    end
+end)
+
+local conns = {}
+local function addConn(c) table.insert(conns, c); return c end
+
+--========================================================
+-- BLACKLIST HELPERS
+--========================================================
+
+local function saveBlacklist()
+    if not supportsFiles then return end
+    local out = {}
+    for k in pairs(Blacklist.list) do table.insert(out, k) end
+    pcall(function() writefile("gonghub_blacklist.txt", table.concat(out, "\n")) end)
+end
+
+local function isBlacklisted(plr)
+    if not Blacklist.enabled then return false end
+    if not plr then return false end
+    if Blacklist.list[tostring(plr.UserId):lower()] then return true end
+    if Blacklist.list[plr.Name:lower()] then return true end
+    if Blacklist.list[plr.DisplayName:lower()] then return true end
+    return false
+end
+
+local function addToBlacklist(entry)
+    if not entry or entry == "" then return end
+    local e = entry:lower()
+    Blacklist.list[e] = true
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Name:lower() == e or p.DisplayName:lower() == e then
+            Blacklist.list[tostring(p.UserId):lower()] = true
+        end
+    end
+    saveBlacklist()
+end
+
+local function removeFromBlacklist(entry)
+    if not entry then return end
+    Blacklist.list[entry:lower()] = nil
+    saveBlacklist()
+end
+
+--========================================================
+-- HOPPER HELPERS
+--========================================================
+
+local function getRequest()
+    return request
+        or (syn and syn.request)
+        or (http and http.request)
+        or (fluxus and fluxus.request)
+        or (krnl and krnl.request)
+end
+
+local function fetchServers(force)
+    if not force and (tick() - HopState.lastFetch) < 60 and #HopState.servers > 0 then
+        return HopState.servers, false
+    end
+    if game.PlaceId == 0 then
+        return HopState.servers, true
+    end
+
+    local url = "https://games.roblox.com/v1/games/"..tostring(game.PlaceId).."/servers/Public?sortOrder="
+        ..(HopState.sortAsc and "Asc" or "Desc").."&limit=100"
+
+    local req = getRequest()
+    local body
+
+    local ok, res = pcall(function()
+        if req then
+            return req({Url = url, Method = "GET"})
+        end
+        return {Body = game:HttpGet(url), StatusCode = 200}
+    end)
+
+    if ok and res then
+        if res.StatusCode and res.StatusCode ~= 200 then
+            HopState.rateLimited = true
+        else
+            body = res.Body
+        end
+    end
+
+    if not body then
+        local okFallback, fallback = pcall(game.HttpGet, game, url)
+        if okFallback and fallback then
+            body = fallback
+            HopState.rateLimited = false
+        end
+    end
+
+    if body then
+        local okDecode, data = pcall(function() return HttpService:JSONDecode(body) end)
+        if okDecode and data and type(data) == "table" and type(data.data) == "table" then
+            HopState.servers = data.data
+            HopState.lastFetch = tick()
+            HopState.rateLimited = false
+            return HopState.servers, false
+        end
+    end
+
+    HopState.rateLimited = true
+    return HopState.servers, true
+end
+
+local function joinServer(jobId)
+    if not jobId or jobId == "" or jobId == game.JobId then return end
+    pcall(function()
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, jobId, lp)
+    end)
+end
+
+--========================================================
+-- GUI ROOT
+--========================================================
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "GongHubGui"
+gui.DisplayOrder = 999999999
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.ResetOnSpawn = false
+gui.Parent = pg
+
+local mainFrame = Instance.new("Frame", gui)
+mainFrame.Size = UDim2.new(0, 450, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -225, 0.5, -150)
+mainFrame.BackgroundColor3 = C.bg
+mainFrame.BorderColor3 = C.accent
+mainFrame.BorderSizePixel = 1
+mainFrame.Active = true
+
+local mainPad = Instance.new("UIPadding", mainFrame)
+mainPad.PaddingLeft = UDim.new(0, 8)
+
+do
+    local dragging, dragStart, startPos
+    mainFrame.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1
+            or i.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = i.Position
+            startPos = mainFrame.Position
+        end
+    end)
+    mainFrame.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1
+            or i.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(i)
+        if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement
+            or i.UserInputType == Enum.UserInputType.Touch) then
+            local d = i.Position - dragStart
+            mainFrame.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + d.X,
+                startPos.Y.Scale, startPos.Y.Offset + d.Y
+            )
+        end
+    end)
+end
+
+--========================================================
+-- SIDEBAR + TABS
+--========================================================
+
+local sidebar = Instance.new("ScrollingFrame", mainFrame)
+sidebar.Size = UDim2.new(0, 60, 0, 266)
+sidebar.Position = UDim2.new(0, 0, 0.08667, 0)
+sidebar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+sidebar.BorderColor3 = C.border
+sidebar.BorderSizePixel = 1
+sidebar.ScrollBarThickness = 0
+sidebar.ScrollingEnabled = false
+sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
+sidebar.CanvasSize = UDim2.new(0, 0, 1, 0)
+
+local sidebarLayout = Instance.new("UIListLayout", sidebar)
+sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+Instance.new("UIPadding", sidebar)
+
+local tabNames = {"Main", "Hop", "Blacklist", "TCO", "Settings", "Visual", "MENU"}
+local tabButtons = {}
+local pages = {}
+
+for i, name in ipairs(tabNames) do
+    local btn = Instance.new("TextButton", sidebar)
+    btn.Size = UDim2.new(0, 60, 0, 25)
+    btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    btn.BorderColor3 = C.border
+    btn.BorderSizePixel = 1
+    btn.TextColor3 = C.text
+    btn.FontFace = FONT
+    btn.TextSize = 12
+    btn.Text = name
+    btn.TextWrapped = true
+    btn.LayoutOrder = i
+    tabButtons[name] = btn
+end
+
+local contentArea = Instance.new("Frame", mainFrame)
+contentArea.Size = UDim2.new(0, 365, 0, 266)
+contentArea.Position = UDim2.new(0.15385, 0, 0.08667, 0)
+contentArea.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+contentArea.BorderColor3 = C.border
+contentArea.BorderSizePixel = 1
+
+local function makePage(name)
+    local f = Instance.new("ScrollingFrame", contentArea)
+    f.Name = name .. "Page"
+    f.Size = UDim2.new(0, 349, 0, 250)
+    f.Position = UDim2.new(0.02329, 0, 0.03008, 0)
+    f.BackgroundTransparency = 1
+    f.BorderSizePixel = 0
+    f.ScrollBarThickness = 4
+    f.ScrollBarImageColor3 = C.accentD
+    f.CanvasSize = UDim2.new(0, 0, 0, 0)
+    f.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    f.Visible = (name == "Main")
+    pages[name] = f
+    return f
+end
+
+for _, name in ipairs(tabNames) do makePage(name) end
+
+local function switchPage(name)
+    for n, p in pairs(pages) do p.Visible = (n == name) end
+    for n, b in pairs(tabButtons) do
+        b.BackgroundColor3 = (n == name) and C.accentD or Color3.fromRGB(0, 0, 0)
+    end
+end
+
+for name, btn in pairs(tabButtons) do
+    btn.MouseButton1Click:Connect(function() switchPage(name) end)
+end
+
+--========================================================
+-- UI BUILDERS
+--========================================================
+
+local function makeColumn(page, xOffset, width)
+    local col = Instance.new("Frame", page)
+    col.Size = UDim2.new(0, width, 0, 0)
+    col.Position = UDim2.new(0, xOffset, 0, 0)
+    col.BackgroundTransparency = 1
+    col.BorderSizePixel = 0
+    col.AutomaticSize = Enum.AutomaticSize.Y
+    local l = Instance.new("UIListLayout", col)
+    l.Padding = UDim.new(0, 7)
+    l.SortOrder = Enum.SortOrder.LayoutOrder
+    return col
+end
+
+local groupId = 0
+local function makeGroup(parent, title, order)
+    groupId = groupId + 1
+    local g = Instance.new("Frame", parent)
+    g.BackgroundColor3 = C.group
+    g.BorderColor3 = C.border
+    g.BorderSizePixel = 1
+    g.Size = UDim2.new(0, 169, 0, 25)
+    g.AutomaticSize = Enum.AutomaticSize.Y
+    g.LayoutOrder = order or groupId
+
+    local layout = Instance.new("UIListLayout", g)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local accent = Instance.new("Frame", g)
+    accent.BackgroundColor3 = C.accent
+    accent.BorderColor3 = C.accentD
+    accent.Size = UDim2.new(0, 169, 0, 2)
+    accent.LayoutOrder = 0
+
+    local titleBar = Instance.new("TextLabel", g)
+    titleBar.Size = UDim2.new(0, 169, 0, 15)
+    titleBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    titleBar.BackgroundTransparency = 0.95
+    titleBar.BorderSizePixel = 0
+    titleBar.FontFace = FONT
+    titleBar.TextSize = 14
+    titleBar.TextColor3 = C.muted
+    titleBar.Text = title
+    titleBar.LayoutOrder = 1
+
+    local content = Instance.new("Frame", g)
+    content.Size = UDim2.new(0, 169, 0, 0)
+    content.BackgroundTransparency = 1
+    content.AutomaticSize = Enum.AutomaticSize.Y
+    content.LayoutOrder = 2
+    local cLayout = Instance.new("UIListLayout", content)
+    cLayout.Padding = UDim.new(0, 4)
+    cLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local expanded = true
+    local min = Instance.new("TextButton", titleBar)
+    min.Size = UDim2.new(0, 20, 0, 15)
+    min.Position = UDim2.new(0.88166, 0, 0, 0)
+    min.BackgroundTransparency = 1
+    min.BorderSizePixel = 0
+    min.FontFace = FONT
+    min.TextSize = 14
+    min.TextColor3 = C.text
+    min.Text = "-"
+    min.MouseButton1Click:Connect(function()
+        expanded = not expanded
+        content.Visible = expanded
+        min.Text = expanded and "-" or "+"
+    end)
+
+    return content
+end
+
+local function makeRow(parent, label, order)
+    local row = Instance.new("Frame", parent)
+    row.Size = UDim2.new(0, 169, 0, 20)
+    row.BackgroundTransparency = 1
+    row.BorderSizePixel = 0
+    row.LayoutOrder = order or 999
+
+    local lbl = Instance.new("TextLabel", row)
+    lbl.Size = UDim2.new(0, 88, 0, 20)
+    lbl.Position = UDim2.new(0.17751, 0, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.BorderSizePixel = 0
+    lbl.FontFace = FONT
+    lbl.TextSize = 14
+    lbl.TextColor3 = C.text
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Text = label
+
+    return row
+end
+
+local function makeToggle(parent, label, order, onChange)
+    local row = makeRow(parent, label, order)
+    local tb = Instance.new("TextButton", row)
+    tb.Size = UDim2.new(0, 16, 0, 16)
+    tb.Position = UDim2.new(0.02367, 0, 0.16, 0)
+    tb.BackgroundColor3 = C.tickOff or Color3.fromRGB(0, 0, 0)
+    tb.BorderColor3 = C.border
+    tb.BorderSizePixel = 1
+    tb.FontFace = FONT
+    tb.Text = ""
+    local on = false
+    tb.MouseButton1Click:Connect(function()
+        on = not on
+        tb.BackgroundColor3 = on and C.accent or Color3.fromRGB(0, 0, 0)
+        if onChange then pcall(onChange, on) end
+    end)
+    return tb
+end
+
+local function makeTextbox(parent, label, placeholder, order, onChange)
+    local row = makeRow(parent, label, order)
+    local box = Instance.new("TextBox", row)
+    box.Size = UDim2.new(0, 46, 0, 16)
+    box.Position = UDim2.new(0.69822, 0, 0.16, 0)
+    box.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    box.BorderColor3 = C.border
+    box.BorderSizePixel = 1
+    box.FontFace = FONT
+    box.TextSize = 14
+    box.TextScaled = true
+    box.TextColor3 = C.accent
+    box.PlaceholderColor3 = C.accent
+    box.PlaceholderText = placeholder
+    box.Text = ""
+    box.FocusLost:Connect(function()
+        if onChange then pcall(onChange, box.Text) end
+    end)
+    return box
+end
+
+local function makeButton(parent, label, order, onClick)
+    local row = Instance.new("Frame", parent)
+    row.Size = UDim2.new(0, 169, 0, 20)
+    row.BackgroundTransparency = 1
+    row.LayoutOrder = order or 999
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(0, 161, 0, 16)
+    btn.Position = UDim2.new(0.02367, 0, 0.16, 0)
+    btn.BackgroundColor3 = C.button
+    btn.BorderColor3 = C.border
+    btn.BorderSizePixel = 1
+    btn.FontFace = FONT
+    btn.TextSize = 14
+    btn.TextColor3 = C.text
+    btn.Text = label
+    btn.MouseButton1Click:Connect(function()
+        if onClick then pcall(onClick) end
+    end)
+    return btn
+end
+
+--========================================================
+-- FEATURE IMPLS
+--========================================================
+
+local function getChar()
+    local c = lp.Character
+    if not c then return nil, nil end
+    return c, c:FindFirstChildOfClass("Humanoid")
+end
+
+addConn(RunService.Heartbeat:Connect(function()
+    if not state.walkspeed.on then return end
+    local _, hum = getChar()
+    if hum then pcall(function() hum.WalkSpeed = state.walkspeed.value end) end
+end))
+
+addConn(RunService.Heartbeat:Connect(function()
+    if not state.jumppower.on then return end
+    local _, hum = getChar()
+    if hum then pcall(function() hum.JumpPower = state.jumppower.value end) end
+end))
+
+addConn(UserInputService.JumpRequest:Connect(function()
+    if not state.infjump.on then return end
+    local _, hum = getChar()
+    if hum then pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end) end
+end))
+
+local shiftConn
+local function setShiftlock(on)
+    if shiftConn then shiftConn:Disconnect() shiftConn = nil end
+    if not on then return end
+    shiftConn = addConn(RunService.RenderStepped:Connect(function()
+        local char = lp.Character
+        if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then pcall(function() hum.CameraOffset = Vector3.new(1.75, 0, 0) end) end
+    end))
+end
+
+local flyBody
+local function setFly(on)
+    if flyBody then
+        pcall(function() flyBody:Destroy() end)
+        flyBody = nil
+    end
+    if not on then return end
+    local char, hum = getChar()
+    if not char or not hum then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    flyBody = Instance.new("BodyVelocity", hrp)
+    flyBody.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+    flyBody.Velocity = Vector3.zero
+    addConn(RunService.RenderStepped:Connect(function()
+        if not state.fly.on or not flyBody or not flyBody.Parent then return end
+        local cam = workspace.CurrentCamera
+        if not cam then return end
+        local v = Vector3.zero
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then v += cam.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then v -= cam.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then v -= cam.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then v += cam.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then v += Vector3.new(0, 1, 0) end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then v -= Vector3.new(0, 1, 0) end
+        flyBody.Velocity = v.Magnitude > 0 and v.Unit * state.fly.value or Vector3.zero
+    end))
+end
+
+addConn(RunService.Heartbeat:Connect(function()
+    local char = lp.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    if hrp.AssemblyLinearVelocity.Magnitude > 200 then
+        pcall(function()
+            hrp.AssemblyLinearVelocity = Vector3.zero
+            hrp.AssemblyAngularVelocity = Vector3.zero
+        end)
+    end
+end))
+
+task.spawn(function()
+    while gui.Parent do
+        task.wait(60 + math.random(0, 25))
+        pcall(function()
+            local vu = game:GetService("VirtualUser")
+            vu:CaptureController()
+            vu:ClickButton1(Vector2.new(math.random(100,500), math.random(100,500)))
+        end)
+    end
+end)
+
+addConn(RunService.Heartbeat:Connect(function()
+    local char = lp.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum and hum:GetState() == Enum.HumanoidStateType.Physics then
+        pcall(function() hum:ChangeState(Enum.HumanoidStateType.Running) end)
+    end
+end))
+
+addConn(RunService.Heartbeat:Connect(function()
+    local char = lp.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hrp and hrp.Position.Y < -100 then
+        pcall(function() hrp.CFrame = CFrame.new(0, 50, 0) end)
+    end
+end))
+
+addConn(RunService.Heartbeat:Connect(function()
+    if not state.antikb.on then return end
+    local char = lp.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then pcall(function() hum.PlatformStand = false end) end
+end))
+
+pcall(function()
+    if hookfunction and lp.Kick then
+        hookfunction(lp.Kick, function() end)
+    end
+end)
+
+local noclipConn
+local function setNoclip(on)
+    if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+    if not on then return end
+    noclipConn = addConn(RunService.Stepped:Connect(function()
+        local char = lp.Character
+        if not char then return end
+        for _, p in ipairs(char:GetDescendants()) do
+            if p:IsA("BasePart") then p.CanCollide = false end
+        end
+    end))
+end
+
+local function setGravity(v) pcall(function() workspace.Gravity = v end) end
+local function rejoin() pcall(function() TeleportService:Teleport(game.PlaceId, lp) end) end
+
+local function tpSpawn()
+    local char = lp.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local sp = workspace:FindFirstChildOfClass("SpawnLocation")
+    if sp then pcall(function() hrp.CFrame = sp.CFrame + Vector3.new(0, 5, 0) end) end
+end
+
+local function resetChar()
+    local _, hum = getChar()
+    if hum then pcall(function() hum.Health = 0 end) end
+end
+
+local function boostFps()
+    pcall(function()
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 9e9
+        Lighting.Brightness = 2
+        for _, fx in ipairs(Lighting:GetDescendants()) do
+            if fx:IsA("PostEffect") or fx:IsA("Atmosphere") or fx:IsA("Sky") then
+                fx.Enabled = false
+            end
+        end
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    end)
+end
+
+--========================================================
+-- TP TARGET SELECTOR (respects blacklist)
+--========================================================
+
+local selectedPlayer = nil
+
+local function pickNextPlayer()
+    local list = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= lp and not isBlacklisted(p) then
+            table.insert(list, p)
+        end
+    end
+    if #list == 0 then selectedPlayer = nil return end
+    local idx = 1
+    for i, p in ipairs(list) do
+        if p == selectedPlayer then idx = i break end
+    end
+    idx = idx % #list + 1
+    selectedPlayer = list[idx]
+end
+
+local function tpPlayer()
+    if not selectedPlayer then return end
+    local thrp = selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local char = lp.Character
+    if not char or not thrp then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hrp then pcall(function() hrp.CFrame = thrp.CFrame + Vector3.new(0, 3, 0) end) end
+end
+
+--========================================================
+-- MAIN PAGE
+--========================================================
+
+local mainPage = pages["Main"]
+local mainL = makeColumn(mainPage, 0, 170)
+local mainR = makeColumn(mainPage, 180, 170)
+
+local moveG = makeGroup(mainL, "Movement", 1)
+makeToggle(moveG, "Walk Speed", 1, function(on) state.walkspeed.on = on end)
+makeTextbox(moveG, "Walk Speed", "(16)", 2, function(txt)
+    local n = tonumber(txt); if n then state.walkspeed.value = n end
+end)
+makeToggle(moveG, "Jump Power", 3, function(on) state.jumppower.on = on end)
+makeTextbox(moveG, "Jump Power", "(50)", 4, function(txt)
+    local n = tonumber(txt); if n then state.jumppower.value = n end
+end)
+makeToggle(moveG, "Fly", 5, function(on) state.fly.on = on setFly(on) end)
+makeTextbox(moveG, "Fly Speed", "(50)", 6, function(txt)
+    local n = tonumber(txt); if n then state.fly.value = n end
+end)
+makeToggle(moveG, "Infinite Jump", 7, function(on) state.infjump.on = on end)
+makeToggle(moveG, "Mobile Shiftlock", 8, function(on) state.shiftlock.on = on setShiftlock(on) end)
+
+local miscG = makeGroup(mainL, "Misc", 2)
+makeButton(miscG, "Rejoin Server", 1, rejoin)
+makeToggle(miscG, "Set Gravity", 2, function(on)
+    state.gravity.on = on
+    setGravity(on and state.gravity.value or 196.2)
+end)
+makeTextbox(miscG, "Gravity Value", "(196.2)", 3, function(txt)
+    local n = tonumber(txt)
+    if n then
+        state.gravity.value = n
+        if state.gravity.on then setGravity(n) end
+    end
+end)
+makeButton(miscG, "Boost FPS", 4, boostFps)
+
+local antiG = makeGroup(mainR, "Anti", 1)
+makeToggle(antiG, "Anti Fling", 1, nil)
+makeToggle(antiG, "Anti AFK", 2, nil)
+makeToggle(antiG, "Anti Ragdoll", 3, nil)
+makeToggle(antiG, "Anti Void", 4, nil)
+makeToggle(antiG, "Anti Knockback", 5, function(on) state.antikb.on = on end)
+makeToggle(antiG, "Anti Kick (client)", 6, nil)
+
+local charG = makeGroup(mainR, "Character", 2)
+makeToggle(charG, "Noclip", 1, function(on) setNoclip(on) end)
+makeButton(charG, "TP To Spawn", 2, tpSpawn)
+makeButton(charG, "TP To Selected", 3, tpPlayer)
+makeButton(charG, "Reset Character", 4, resetChar)
+
+-- TP target picker
+local targetRow = Instance.new("Frame", charG)
+targetRow.Size = UDim2.new(0, 169, 0, 20)
+targetRow.BackgroundTransparency = 1
+targetRow.LayoutOrder = 5
+local targetLbl = Instance.new("TextLabel", targetRow)
+targetLbl.Size = UDim2.new(0, 60, 0, 20)
+targetLbl.Position = UDim2.new(0.02367, 0, 0, 0)
+targetLbl.BackgroundTransparency = 1
+targetLbl.FontFace = FONT
+targetLbl.TextSize = 12
+targetLbl.TextColor3 = C.text
+targetLbl.TextXAlignment = Enum.TextXAlignment.Left
+targetLbl.Text = "Target:"
+local targetBtn = Instance.new("TextButton", targetRow)
+targetBtn.Size = UDim2.new(0, 96, 0, 16)
+targetBtn.Position = UDim2.new(0.4, 0, 0.16, 0)
+targetBtn.BackgroundColor3 = C.button
+targetBtn.BorderColor3 = C.border
+targetBtn.BorderSizePixel = 1
+targetBtn.FontFace = FONT
+targetBtn.TextSize = 11
+targetBtn.TextColor3 = C.text
+targetBtn.Text = "none"
+targetBtn.MouseButton1Click:Connect(function()
+    pickNextPlayer()
+    targetBtn.Text = selectedPlayer and selectedPlayer.Name or "none"
+end)
+
+--========================================================
+-- HOP PAGE
+--========================================================
+
+local hopPage = pages["Hop"]
+
+local hopToolbar = Instance.new("Frame", hopPage)
+hopToolbar.Size = UDim2.new(0, 349, 0, 26)
+hopToolbar.Position = UDim2.new(0, 0, 0, 0)
+hopToolbar.BackgroundColor3 = C.group
+hopToolbar.BorderColor3 = C.border
+hopToolbar.BorderSizePixel = 1
+
+local refreshBtn = Instance.new("TextButton", hopToolbar)
+refreshBtn.Size = UDim2.new(0, 80, 0, 20)
+refreshBtn.Position = UDim2.new(0, 3, 0, 3)
+refreshBtn.BackgroundColor3 = C.accentD
+refreshBtn.BorderColor3 = C.border
+refreshBtn.BorderSizePixel = 1
+refreshBtn.FontFace = FONT
+refreshBtn.TextSize = 11
+refreshBtn.TextColor3 = C.text
+refreshBtn.Text = "REFRESH"
+
+local sortBtn = Instance.new("TextButton", hopToolbar)
+sortBtn.Size = UDim2.new(0, 60, 0, 20)
+sortBtn.Position = UDim2.new(0, 88, 0, 3)
+sortBtn.BackgroundColor3 = C.button
+sortBtn.BorderColor3 = C.border
+sortBtn.BorderSizePixel = 1
+sortBtn.FontFace = FONT
+sortBtn.TextSize = 11
+sortBtn.TextColor3 = C.text
+sortBtn.Text = "DESC"
+
+local hopStatus = Instance.new("TextLabel", hopToolbar)
+hopStatus.Size = UDim2.new(0, 190, 0, 20)
+hopStatus.Position = UDim2.new(0, 153, 0, 3)
+hopStatus.BackgroundTransparency = 1
+hopStatus.FontFace = FONT
+hopStatus.TextSize = 10
+hopStatus.TextColor3 = C.muted
+hopStatus.TextXAlignment = Enum.TextXAlignment.Left
+hopStatus.Text = "ready"
+
+local hopScroll = Instance.new("ScrollingFrame", hopPage)
+hopScroll.Size = UDim2.new(0, 349, 0, 216)
+hopScroll.Position = UDim2.new(0, 0, 0, 32)
+hopScroll.BackgroundColor3 = C.group
+hopScroll.BorderColor3 = C.border
+hopScroll.BorderSizePixel = 1
+hopScroll.ScrollBarThickness = 4
+hopScroll.ScrollBarImageColor3 = C.accentD
+hopScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+hopScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local hopLayout = Instance.new("UIListLayout", hopScroll)
+hopLayout.Padding = UDim.new(0, 2)
+hopLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local hopPad = Instance.new("UIPadding", hopScroll)
+hopPad.PaddingTop = UDim.new(0, 3)
+hopPad.PaddingLeft = UDim.new(0, 3)
+hopPad.PaddingRight = UDim.new(0, 3)
+
+local function renderServerRow(idx, server)
+    local row = Instance.new("Frame", hopScroll)
+    row.Size = UDim2.new(0, 339, 0, 22)
+    row.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+    row.BorderColor3 = C.border
+    row.BorderSizePixel = 1
+    row.LayoutOrder = idx
+
+    local isCurrent = server.id == game.JobId
+    local isPrev = server.id == HopState.previousServer
+    local isFull = tonumber(server.playing) >= tonumber(server.maxPlayers)
+
+    if isCurrent then
+        row.BackgroundColor3 = Color3.fromRGB(0, 0, 60)
+    elseif isPrev then
+        row.BackgroundColor3 = Color3.fromRGB(60, 50, 0)
+    elseif isFull then
+        row.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+    end
+
+    local jid = Instance.new("TextLabel", row)
+    jid.Size = UDim2.new(0, 190, 0, 20)
+    jid.Position = UDim2.new(0, 4, 0, 1)
+    jid.BackgroundTransparency = 1
+    jid.FontFace = FONT
+    jid.TextSize = 10
+    jid.TextColor3 = C.muted
+    jid.TextXAlignment = Enum.TextXAlignment.Left
+    jid.TextTruncate = Enum.TextTruncate.AtEnd
+    jid.Text = server.id
+    if isCurrent then jid.Text = server.id .. " (you)" end
+    if isPrev then jid.Text = server.id .. " (prev)" end
+
+    local cnt = Instance.new("TextLabel", row)
+    cnt.Size = UDim2.new(0, 60, 0, 20)
+    cnt.Position = UDim2.new(0, 200, 0, 1)
+    cnt.BackgroundTransparency = 1
+    cnt.FontFace = FONT
+    cnt.TextSize = 10
+    cnt.TextColor3 = isFull and C.bad or C.good
+    cnt.Text = tostring(server.playing).."/"..tostring(server.maxPlayers)
+
+    local joinBtn = Instance.new("TextButton", row)
+    joinBtn.Size = UDim2.new(0, 60, 0, 18)
+    joinBtn.Position = UDim2.new(0, 272, 0, 2)
+    joinBtn.BackgroundColor3 = isCurrent and C.button or C.accentD
+    joinBtn.BorderColor3 = C.border
+    joinBtn.BorderSizePixel = 1
+    joinBtn.FontFace = FONT
+    joinBtn.TextSize = 10
+    joinBtn.TextColor3 = C.text
+    joinBtn.Text = isCurrent and "HERE" or "JOIN"
+    joinBtn.MouseButton1Click:Connect(function()
+        if isCurrent then return end
+        joinServer(server.id)
+    end)
+end
+
+local function rebuildHop()
+    for _, c in ipairs(hopScroll:GetChildren()) do
+        if c:IsA("Frame") then c:Destroy() end
+    end
+    local list = HopState.servers
+    if #list == 0 then
+        local empty = Instance.new("TextLabel", hopScroll)
+        empty.Size = UDim2.new(0, 339, 0, 40)
+        empty.BackgroundTransparency = 1
+        empty.FontFace = FONT
+        empty.TextSize = 11
+        empty.TextColor3 = C.muted
+        empty.Text = "no servers loaded — press REFRESH"
+        empty.LayoutOrder = 1
+        return
+    end
+    for i, s in ipairs(list) do
+        if type(s) == "table" and s.id and s.playing and s.maxPlayers then
+            renderServerRow(i, s)
+        end
+    end
+end
+
+local function refreshHop()
+    hopStatus.Text = "fetching..."
+    hopStatus.TextColor3 = C.warn
+    task.spawn(function()
+        local list, limited = fetchServers(true)
+        if limited then
+            hopStatus.Text = "rate-limited — cached list"
+            hopStatus.TextColor3 = C.bad
+        else
+            hopStatus.Text = #list .. " servers · 60s cooldown"
+            hopStatus.TextColor3 = C.good
+        end
+        rebuildHop()
+    end)
+end
+
+refreshBtn.MouseButton1Click:Connect(refreshHop)
+
+sortBtn.MouseButton1Click:Connect(function()
+    HopState.sortAsc = not HopState.sortAsc
+    sortBtn.Text = HopState.sortAsc and "ASC" or "DESC"
+    HopState.lastFetch = 0
+    refreshHop()
+end)
+
+task.spawn(function()
+    task.wait(2)
+    refreshHop()
+end)
+
+--========================================================
+-- BLACKLIST PAGE
+--========================================================
+
+local blPage = pages["Blacklist"]
+
+local blToolbar = Instance.new("Frame", blPage)
+blToolbar.Size = UDim2.new(0, 349, 0, 26)
+blToolbar.Position = UDim2.new(0, 0, 0, 0)
+blToolbar.BackgroundColor3 = C.group
+blToolbar.BorderColor3 = C.border
+blToolbar.BorderSizePixel = 1
+
+local blInput = Instance.new("TextBox", blToolbar)
+blInput.Size = UDim2.new(0, 180, 0, 20)
+blInput.Position = UDim2.new(0, 3, 0, 3)
+blInput.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+blInput.BorderColor3 = C.border
+blInput.BorderSizePixel = 1
+blInput.FontFace = FONT
+blInput.TextSize = 11
+blInput.TextColor3 = C.text
+blInput.PlaceholderColor3 = C.muted
+blInput.PlaceholderText = "name / displayname / userid"
+blInput.Text = ""
+
+local blAddBtn = Instance.new("TextButton", blToolbar)
+blAddBtn.Size = UDim2.new(0, 60, 0, 20)
+blAddBtn.Position = UDim2.new(0, 188, 0, 3)
+blAddBtn.BackgroundColor3 = C.accentD
+blAddBtn.BorderColor3 = C.border
+blAddBtn.BorderSizePixel = 1
+blAddBtn.FontFace = FONT
+blAddBtn.TextSize = 11
+blAddBtn.TextColor3 = C.text
+blAddBtn.Text = "ADD"
+
+local blToggle = Instance.new("TextButton", blToolbar)
+blToggle.Size = UDim2.new(0, 90, 0, 20)
+blToggle.Position = UDim2.new(0, 253, 0, 3)
+blToggle.BackgroundColor3 = C.good
+blToggle.BorderColor3 = C.border
+blToggle.BorderSizePixel = 1
+blToggle.FontFace = FONT
+blToggle.TextSize = 10
+blToggle.TextColor3 = C.text
+blToggle.Text = "ENABLED"
+
+local blScroll = Instance.new("ScrollingFrame", blPage)
+blScroll.Size = UDim2.new(0, 349, 0, 216)
+blScroll.Position = UDim2.new(0, 0, 0, 32)
+blScroll.BackgroundColor3 = C.group
+blScroll.BorderColor3 = C.border
+blScroll.BorderSizePixel = 1
+blScroll.ScrollBarThickness = 4
+blScroll.ScrollBarImageColor3 = C.accentD
+blScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+blScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local blLayout = Instance.new("UIListLayout", blScroll)
+blLayout.Padding = UDim.new(0, 2)
+blLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local blPad = Instance.new("UIPadding", blScroll)
+blPad.PaddingTop = UDim.new(0, 3)
+blPad.PaddingLeft = UDim.new(0, 3)
+blPad.PaddingRight = UDim.new(0, 3)
+
+local function rebuildBlacklistUI()
+    for _, c in ipairs(blScroll:GetChildren()) do
+        if c:IsA("Frame") then c:Destroy() end
+    end
+    local keys = {}
+    for k in pairs(Blacklist.list) do table.insert(keys, k) end
+    table.sort(keys)
+    if #keys == 0 then
+        local empty = Instance.new("TextLabel", blScroll)
+        empty.Size = UDim2.new(0, 339, 0, 40)
+        empty.BackgroundTransparency = 1
+        empty.FontFace = FONT
+        empty.TextSize = 11
+        empty.TextColor3 = C.muted
+        empty.Text = "blacklist empty — add a name or userid above"
+        empty.LayoutOrder = 1
+        return
+    end
+    for i, key in ipairs(keys) do
+        local row = Instance.new("Frame", blScroll)
+        row.Size = UDim2.new(0, 339, 0, 20)
+        row.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+        row.BorderColor3 = C.border
+        row.BorderSizePixel = 1
+        row.LayoutOrder = i
+
+        local lbl = Instance.new("TextLabel", row)
+        lbl.Size = UDim2.new(0, 300, 0, 20)
+        lbl.Position = UDim2.new(0, 4, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.FontFace = FONT
+        lbl.TextSize = 11
+        lbl.TextColor3 = C.text
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Text = key
+
+        local rm = Instance.new("TextButton", row)
+        rm.Size = UDim2.new(0, 26, 0, 16)
+        rm.Position = UDim2.new(0, 308, 0, 2)
+        rm.BackgroundColor3 = C.bad
+        rm.BorderColor3 = C.border
+        rm.BorderSizePixel = 1
+        rm.FontFace = FONT
+        rm.TextSize = 12
+        rm.TextColor3 = C.text
+        rm.Text = "X"
+        rm.MouseButton1Click:Connect(function()
+            removeFromBlacklist(key)
+            rebuildBlacklistUI()
+        end)
+    end
+end
+
+blAddBtn.MouseButton1Click:Connect(function()
+    local v = blInput.Text
+    if v and v ~= "" then
+        addToBlacklist(v)
+        blInput.Text = ""
+        rebuildBlacklistUI()
+    end
+end)
+
+blInput.FocusLost:Connect(function(enter)
+    if enter then
+        local v = blInput.Text
+        if v and v ~= "" then
+            addToBlacklist(v)
+            blInput.Text = ""
+            rebuildBlacklistUI()
+        end
+    end
+end)
+
+blToggle.MouseButton1Click:Connect(function()
+    Blacklist.enabled = not Blacklist.enabled
+    blToggle.Text = Blacklist.enabled and "ENABLED" or "OFF"
+    blToggle.BackgroundColor3 = Blacklist.enabled and C.good or C.bad
+end)
+
+rebuildBlacklistUI()
+
+--========================================================
+-- TCO PAGE (helpers)
+--========================================================
+
+local tcoPage = pages["TCO"]
+local tcoL = makeColumn(tcoPage, 0, 170)
+
+local tcoG = makeGroup(tcoL, "TCO Helpers", 1)
+makeButton(tcoG, "Copy Server ID", 1, function()
+    if setclipboard then pcall(setclipboard, game.JobId) end
+end)
+makeButton(tcoG, "Copy Place ID", 2, function()
+    if setclipboard then pcall(setclipboard, tostring(game.PlaceId)) end
+end)
+makeButton(tcoG, "Join OG Server", 3, function()
+    pcall(function() TeleportService:Teleport(game.PlaceId, lp) end)
+end)
+
+--========================================================
+-- SETTINGS PAGE
+--========================================================
+
+local setPage = pages["Settings"]
+local setL = makeColumn(setPage, 0, 170)
+local setG = makeGroup(setL, "UI", 1)
+makeButton(setG, "Reset UI Position", 1, function()
+    mainFrame.Position = UDim2.new(0.5, -225, 0.5, -150)
+end)
+makeButton(setG, "Unload Hub", 2, function()
+    for _, c in ipairs(conns) do pcall(function() c:Disconnect() end) end
+    gui:Destroy()
+end)
+
+--========================================================
+-- VISUAL PAGE
+--========================================================
+
+local visPage = pages["Visual"]
+local visL = makeColumn(visPage, 0, 170)
+local visG = makeGroup(visL, "Visual", 1)
+makeButton(visG, "Fullbright", 1, function()
+    pcall(function()
+        Lighting.Brightness = 3
+        Lighting.Ambient = Color3.fromRGB(200, 200, 200)
+        Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200)
+    end)
+end)
+makeButton(visG, "Restore Lighting", 2, function()
+    pcall(function()
+        Lighting.Brightness = 2
+        Lighting.Ambient = Color3.fromRGB(70, 70, 70)
+        Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+    end)
+end)
+
+--========================================================
+-- MENU PAGE
+--========================================================
+
+local menuPage = pages["MENU"]
+local menuL = makeColumn(menuPage, 0, 170)
+local menuG = makeGroup(menuL, "About", 1)
+local aboutLabel = Instance.new("TextLabel", menuG)
+aboutLabel.Size = UDim2.new(0, 169, 0, 170)
+aboutLabel.BackgroundTransparency = 1
+aboutLabel.FontFace = FONT
+aboutLabel.TextSize = 11
+aboutLabel.TextColor3 = C.muted
+aboutLabel.TextXAlignment = Enum.TextXAlignment.Left
+aboutLabel.TextYAlignment = Enum.TextYAlignment.Top
+aboutLabel.TextWrapped = true
+aboutLabel.Text = "GONGHUB\n\nclean rebuild of agarware\nwith server hopper + blacklist\n\ncreated by gong\n\nno ip logger\nno chat spam\nno snitch console"
+
+--========================================================
+-- INIT
+--========================================================
+
+pcall(function()
+    StarterGui:SetCore("SendNotification", {
+        Title = "GongHub",
+        Text = "loaded",
+        Duration = 3,
+    })
+end)
