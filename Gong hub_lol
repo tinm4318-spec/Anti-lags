@@ -1,8 +1,3 @@
--- GongHub | all credits to gong
--- merged: fresh gonghub UI + server hopper
--- no loggers. no webhooks. no hwid. no ip. no remote loadstrings.
--- hopper logic adapted from 2AreYou Mental110's classic, rate-limit respected.
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
@@ -11,729 +6,89 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 
-local LocalPlayer = Players.LocalPlayer
-if not LocalPlayer then
-    Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
-    LocalPlayer = Players.LocalPlayer
-end
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
-for _, c in ipairs({ PlayerGui, CoreGui }) do
-    local old = c:FindFirstChild("GongHub")
-    if old then old:Destroy() end
-end
-
 -- ============================================================
--- THEME
+-- EXECUTOR SHIMS (delta-safe, no nil calls)
 -- ============================================================
-local C = {
-    bg        = Color3.fromRGB(14, 14, 16),
-    panel     = Color3.fromRGB(20, 20, 24),
-    panelAlt  = Color3.fromRGB(26, 26, 32),
-    stroke    = Color3.fromRGB(48, 48, 58),
-    strokeLit = Color3.fromRGB(72, 72, 88),
-    accent    = Color3.fromRGB(0, 200, 180),
-    accentDim = Color3.fromRGB(0, 140, 126),
-    text      = Color3.fromRGB(235, 235, 240),
-    textDim   = Color3.fromRGB(150, 150, 165),
-    danger    = Color3.fromRGB(230, 70, 80),
-    good      = Color3.fromRGB(90, 220, 130),
-    tagSelf   = Color3.fromRGB(0, 60, 120),
-    tagPrev   = Color3.fromRGB(120, 110, 0),
-    tagMax    = Color3.fromRGB(120, 30, 30),
-}
-local FONT = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-
-local function corner(inst, r)
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, r or 6)
-    c.Parent = inst
-    return c
-end
-local function stroke(inst, col, th)
-    local s = Instance.new("UIStroke")
-    s.Color = col or C.stroke
-    s.Thickness = th or 1
-    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    s.Parent = inst
-    return s
-end
-
--- ============================================================
--- HOPPER BACKEND
--- ============================================================
-local Hopper = {}
-
-local function httpGet(url)
-    local req = http_request or request or (syn and syn.request) or (fluxus and fluxus.request)
-    if req then
-        local ok, res = pcall(function()
-            return req({ Url = url, Method = "GET" })
-        end)
-        if ok and res and res.Body then return res.Body end
+local function safeTaskSpawn(fn, ...)
+    if type(task) == "table" and type(task.spawn) == "function" then
+        return task.spawn(fn, ...)
+    elseif type(spawn) == "function" then
+        return spawn(fn, ...)
+    else
+        return coroutine.wrap(function() fn(...) end)()
     end
-    local ok2, body = pcall(function() return game:HttpGet(url) end)
-    if ok2 then return body end
+end
+local function safeWait(n)
+    if type(task) == "table" and type(task.wait) == "function" then return task.wait(n) end
+    if type(wait) == "function" then return wait(n) end
+    return 0
+end
+local function safeDelay(n, fn)
+    if type(task) == "table" and type(task.delay) == "function" then return task.delay(n, fn) end
+    if type(delay) == "function" then return delay(n, fn) end
+end
+
+local function doRequest(opts)
+    local candidates = {
+        rawget(getfenv(), "request"),
+        rawget(getfenv(), "http_request"),
+        type(syn) == "table" and syn.request or nil,
+        type(fluxus) == "table" and fluxus.request or nil,
+        type(http) == "table" and http.request or nil,
+    }
+    for _, fn in ipairs(candidates) do
+        if type(fn) == "function" then
+            local ok, res = pcall(fn, opts)
+            if ok and type(res) == "table" then return res end
+        end
+    end
     return nil
 end
 
-local PREV_FILE = "gonghub_prevserver.txt"
-local supportsFiles = false
-local memoryPrev = "0"
-
-pcall(function()
-    writefile(PREV_FILE, "0")
-    if readfile(PREV_FILE) == "0" then
-        supportsFiles = true
-    end
-end)
-
-local function readPrev()
-    if supportsFiles then
-        local ok, v = pcall(function() return readfile(PREV_FILE) end)
-        if ok and v and v ~= "" then return v end
-    end
-    return memoryPrev
+local function httpGet(url)
+    local res = doRequest({ Url = url, Method = "GET" })
+    if res and res.Body then return res.Body end
+    local ok, body = pcall(function() return game:HttpGet(url) end)
+    if ok and type(body) == "string" then return body end
+    return nil
 end
 
-local function writePrev(jobId)
-    memoryPrev = tostring(jobId)
-    if supportsFiles then
-        pcall(function() writefile(PREV_FILE, memoryPrev) end)
-    end
-end
-
-Hopper._state = { asc = false, refreshing = false, destroyed = false, servers = {} }
-local RATE_LIMIT_WAIT = 70
-local POST_FETCH_WAIT = 3
-
-local function fetchServers()
-    local order = Hopper._state.asc and "Asc" or "Desc"
-    local url = string.format(
-        "https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=%s&limit=100",
-        game.PlaceId, order
-    )
-    local body = httpGet(url)
-    if not body then return nil, "network" end
-    local ok, decoded = pcall(function() return HttpService:JSONDecode(body) end)
-    if not ok or type(decoded) ~= "table" or type(decoded.data) ~= "table" then
-        return nil, "rate limited"
-    end
-
-    local list = {}
-    local currJob = game.JobId
-    local prevJob = readPrev()
-
-    for _, v in ipairs(decoded.data) do
-        if type(v) == "table" and v.id and v.playing and v.maxPlayers then
-            local playing = tonumber(v.playing) or 0
-            local max = tonumber(v.maxPlayers) or 0
-            local tag, tagKind = "", "none"
-
-            if playing >= max and max > 0 then
-                if v.id == currJob then tag, tagKind = "max + your server", "max-self"
-                elseif tostring(v.id) == tostring(prevJob) then tag, tagKind = "max + previous server", "max-prev"
-                else tag, tagKind = "max", "max" end
-            else
-                if v.id == currJob then tag, tagKind = "your server", "self"
-                elseif tostring(v.id) == tostring(prevJob) then tag, tagKind = "previous server", "prev" end
-            end
-
-            table.insert(list, {
-                id = v.id, playing = playing, max = max,
-                ping = tonumber(v.ping) or 0, tag = tag, tagKind = tagKind,
-            })
-        end
-    end
-
-    return list, nil
-end
-
-local function sortServers(list)
-    local priority = { self = 0, prev = 1, ["max-self"] = 2, ["max-prev"] = 3, max = 4, none = 5 }
-    table.sort(list, function(a, b)
-        local pa = priority[a.tagKind] or 5
-        local pb = priority[b.tagKind] or 5
-        if pa ~= pb then return pa < pb end
-        if a.playing == b.playing then return a.ping < b.ping end
-        return a.playing > b.playing
+-- Font.new fallback -> plain Enum.Font.Code
+local FONT
+do
+    local ok, f = pcall(function()
+        return Font.new("rbxasset://fonts/families/Inconsolata.json",
+            Enum.FontWeight.Regular, Enum.FontStyle.Normal)
     end)
-end
-
-function Hopper.setAscending(v) Hopper._state.asc = v and true or false end
-function Hopper.isAscending() return Hopper._state.asc end
-function Hopper.getCached() return Hopper._state.servers end
-
-function Hopper.refresh(cb)
-    if Hopper._state.refreshing then
-        if cb then cb(Hopper._state.servers, "busy") end
-        return
-    end
-    Hopper._state.refreshing = true
-
-    task.spawn(function()
-        local list, err = fetchServers()
-        if err then
-            Hopper._state.refreshing = false
-            if cb then cb(nil, err) end
-            return
-        end
-        sortServers(list)
-        Hopper._state.servers = list
-        task.wait(POST_FETCH_WAIT)
-        Hopper._state.refreshing = false
-        if cb then cb(list, nil) end
-    end)
-end
-
-function Hopper.hop(jobId)
-    if not jobId or jobId == "" then return false end
-    if jobId == game.JobId then return false end
-    local ok = pcall(function()
-        TeleportService:TeleportToPlaceInstance(game.PlaceId, jobId, LocalPlayer)
-    end)
-    return ok
-end
-
-function Hopper.hopToHighest()
-    for _, s in ipairs(Hopper._state.servers) do
-        if s.id ~= game.JobId then
-            return Hopper.hop(s.id)
-        end
-    end
-    return false
-end
-
-function Hopper.startAutoRefresh(cb)
-    if Hopper._loop then return end
-    Hopper._loop = true
-    task.spawn(function()
-        Hopper.refresh(cb)
-        while not Hopper._state.destroyed do
-            task.wait(RATE_LIMIT_WAIT)
-            if Hopper._state.destroyed then break end
-            Hopper.refresh(cb)
-        end
-    end)
-end
-
-function Hopper.destroy() Hopper._state.destroyed = true end
-
-Players.PlayerRemoving:Connect(function(plr)
-    if plr == LocalPlayer then
-        writePrev(game.JobId)
-    end
-end)
-
--- ============================================================
--- ROOT GUI
--- ============================================================
-local gui = Instance.new("ScreenGui")
-gui.Name = "GongHub"
-gui.DisplayOrder = 999999999
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-
-if not RunService:IsStudio() then
-    local ok = pcall(function() gui.Parent = CoreGui end)
-    if not ok then gui.Parent = PlayerGui end
-else
-    gui.Parent = PlayerGui
-end
-
-gui.Destroying:Connect(function() Hopper.destroy() end)
-
--- ============================================================
--- MAIN WINDOW
--- ============================================================
-local root = Instance.new("Frame")
-root.Name = "Root"
-root.AnchorPoint = Vector2.new(0.5, 0)
-root.Position = UDim2.new(0.5, 0, 0.5, -190)
-root.Size = UDim2.new(0, 580, 0, 380)
-root.BackgroundColor3 = C.bg
-root.BorderSizePixel = 0
-root.Active = true
-root.Draggable = true
-root.Parent = gui
-corner(root, 10)
-stroke(root, C.stroke, 1)
-
--- ============================================================
--- TOP BAR
--- ============================================================
-local topBar = Instance.new("Frame", root)
-topBar.Name = "TopBar"
-topBar.Size = UDim2.new(1, 0, 0, 40)
-topBar.BackgroundColor3 = C.panel
-topBar.BorderSizePixel = 0
-corner(topBar, 10)
-
-local topCover = Instance.new("Frame", topBar)
-topCover.Size = UDim2.new(1, 0, 0, 10)
-topCover.Position = UDim2.new(0, 0, 1, -10)
-topCover.BackgroundColor3 = C.panel
-topCover.BorderSizePixel = 0
-
-local title = Instance.new("TextLabel", topBar)
-title.BackgroundTransparency = 1
-title.Text = "GONG HUB"
-title.TextColor3 = C.text
-title.TextSize = 16
-title.FontFace = FONT
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Size = UDim2.new(0, 140, 1, 0)
-title.Position = UDim2.new(0, 16, 0, 0)
-
-local dot = Instance.new("Frame", topBar)
-dot.BackgroundColor3 = C.accent
-dot.Size = UDim2.new(0, 8, 0, 8)
-dot.Position = UDim2.new(0, 128, 0.5, -4)
-dot.BorderSizePixel = 0
-corner(dot, 4)
-
-local stats = Instance.new("TextLabel", topBar)
-stats.BackgroundTransparency = 1
-stats.TextColor3 = C.textDim
-stats.TextSize = 13
-stats.FontFace = FONT
-stats.TextXAlignment = Enum.TextXAlignment.Left
-stats.Size = UDim2.new(0, 320, 1, 0)
-stats.Position = UDim2.new(0, 160, 0, 0)
-stats.Text = ""
-
-local minBtn = Instance.new("TextButton", topBar)
-minBtn.Text = "—"
-minBtn.TextColor3 = C.textDim
-minBtn.TextSize = 16
-minBtn.BackgroundColor3 = C.panelAlt
-minBtn.BorderSizePixel = 0
-minBtn.FontFace = FONT
-minBtn.Size = UDim2.new(0, 28, 0, 24)
-minBtn.Position = UDim2.new(1, -68, 0.5, -12)
-minBtn.AutoButtonColor = false
-corner(minBtn, 5)
-stroke(minBtn, C.stroke, 1)
-
-local closeBtn = Instance.new("TextButton", topBar)
-closeBtn.Text = "x"
-closeBtn.TextColor3 = C.danger
-closeBtn.TextSize = 16
-closeBtn.BackgroundColor3 = C.panelAlt
-closeBtn.BorderSizePixel = 0
-closeBtn.FontFace = FONT
-closeBtn.Size = UDim2.new(0, 28, 0, 24)
-closeBtn.Position = UDim2.new(1, -36, 0.5, -12)
-closeBtn.AutoButtonColor = false
-corner(closeBtn, 5)
-stroke(closeBtn, C.stroke, 1)
-
--- live stats
-local smoothedFPS = 60
-local lastTick = tick()
-RunService.RenderStepped:Connect(function()
-    if not gui.Parent then return end
-    local now = tick()
-    local dt = now - lastTick
-    lastTick = now
-    if dt > 0 then
-        smoothedFPS = smoothedFPS + (1/dt - smoothedFPS) * 0.05
-    end
-    local ping = math.floor((LocalPlayer:GetNetworkPing() or 0) * 1000)
-    stats.Text = string.format("fps %d  ·  ping %dms  ·  %d players",
-        math.floor(smoothedFPS + 0.5), ping, #Players:GetPlayers())
-end)
-
--- ============================================================
--- SIDEBAR
--- ============================================================
-local sidebar = Instance.new("Frame", root)
-sidebar.Name = "Sidebar"
-sidebar.BackgroundColor3 = C.panel
-sidebar.BorderSizePixel = 0
-sidebar.Size = UDim2.new(0, 140, 1, -56)
-sidebar.Position = UDim2.new(0, 12, 0, 48)
-corner(sidebar, 8)
-
-local sbLayout = Instance.new("UIListLayout", sidebar)
-sbLayout.Padding = UDim.new(0, 4)
-sbLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-local sbPad = Instance.new("UIPadding", sidebar)
-sbPad.PaddingTop = UDim.new(0, 8)
-sbPad.PaddingLeft = UDim.new(0, 8)
-sbPad.PaddingRight = UDim.new(0, 8)
-sbPad.PaddingBottom = UDim.new(0, 8)
-
-local tabs = {}
-local tabOrder = {}
-
-local function makeTab(id, label)
-    local btn = Instance.new("TextButton", sidebar)
-    btn.Name = "Tab_" .. id
-    btn.Text = label
-    btn.TextSize = 13
-    btn.TextColor3 = C.textDim
-    btn.BackgroundColor3 = C.panel
-    btn.BorderSizePixel = 0
-    btn.FontFace = FONT
-    btn.Size = UDim2.new(1, 0, 0, 32)
-    btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.AutoButtonColor = false
-    btn.LayoutOrder = #tabOrder + 1
-    corner(btn, 6)
-    local pad = Instance.new("UIPadding", btn)
-    pad.PaddingLeft = UDim.new(0, 10)
-    tabs[id] = btn
-    table.insert(tabOrder, id)
-    return btn
-end
-
-makeTab("hopper", "Server Hopper")
-makeTab("info", "Info")
-
-local credit = Instance.new("TextLabel", sidebar)
-credit.Name = "Credit"
-credit.Text = "all credits to gong"
-credit.TextColor3 = C.textDim
-credit.TextSize = 11
-credit.FontFace = FONT
-credit.BackgroundTransparency = 1
-credit.TextXAlignment = Enum.TextXAlignment.Left
-credit.Size = UDim2.new(1, -16, 0, 16)
-credit.Position = UDim2.new(0, 8, 1, -22)
-credit.LayoutOrder = 99
-
--- ============================================================
--- CONTENT AREA
--- ============================================================
-local content = Instance.new("Frame", root)
-content.Name = "Content"
-content.BackgroundColor3 = C.panel
-content.BorderSizePixel = 0
-content.Size = UDim2.new(1, -164, 1, -56)
-content.Position = UDim2.new(0, 156, 0, 48)
-corner(content, 8)
-
-local pages = {}
-local function makePage(id)
-    local p = Instance.new("ScrollingFrame", content)
-    p.Name = "Page_" .. id
-    p.BackgroundTransparency = 1
-    p.BorderSizePixel = 0
-    p.ScrollBarThickness = 3
-    p.ScrollBarImageColor3 = C.strokeLit
-    p.CanvasSize = UDim2.new(0, 0, 0, 0)
-    p.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    p.Size = UDim2.new(1, 0, 1, 0)
-    p.Visible = false
-    p.Active = true
-    local pad = Instance.new("UIPadding", p)
-    pad.PaddingTop = UDim.new(0, 12)
-    pad.PaddingLeft = UDim.new(0, 12)
-    pad.PaddingRight = UDim.new(0, 12)
-    pad.PaddingBottom = UDim.new(0, 12)
-    local lay = Instance.new("UIListLayout", p)
-    lay.Padding = UDim.new(0, 8)
-    lay.SortOrder = Enum.SortOrder.LayoutOrder
-    pages[id] = p
-    return p
-end
-
-local function setPage(id)
-    for pid, p in pairs(pages) do p.Visible = (pid == id) end
-    for tid, btn in pairs(tabs) do
-        local active = (tid == id)
-        btn.TextColor3 = active and C.text or C.textDim
-        btn.BackgroundColor3 = active and C.panelAlt or C.panel
-        local s = btn:FindFirstChildOfClass("UIStroke")
-        if s then s.Visible = active end
-    end
-end
-
-local function mkBtn(parent, text, primary)
-    local b = Instance.new("TextButton", parent)
-    b.Text = text
-    b.TextColor3 = primary and C.bg or C.text
-    b.TextSize = 13
-    b.BackgroundColor3 = primary and C.accent or C.panelAlt
-    b.BorderSizePixel = 0
-    b.FontFace = FONT
-    b.Size = UDim2.new(1, 0, 0, 30)
-    b.AutoButtonColor = false
-    corner(b, 6)
-    if not primary then stroke(b, C.stroke, 1) end
-    return b
-end
-
-local function mkLabel(parent, text, color, size)
-    local l = Instance.new("TextLabel", parent)
-    l.Text = text
-    l.TextColor3 = color or C.text
-    l.TextSize = size or 13
-    l.FontFace = FONT
-    l.BackgroundTransparency = 1
-    l.TextXAlignment = Enum.TextXAlignment.Left
-    l.Size = UDim2.new(1, 0, 0, 22)
-    return l
-end
-
-local function mkSection(parent, text)
-    local f = Instance.new("Frame", parent)
-    f.BackgroundColor3 = C.panelAlt
-    f.BorderSizePixel = 0
-    f.Size = UDim2.new(1, 0, 0, 0)
-    f.AutomaticSize = Enum.AutomaticSize.Y
-    corner(f, 8)
-    stroke(f, C.stroke, 1)
-    local pad = Instance.new("UIPadding", f)
-    pad.PaddingTop = UDim.new(0, 10)
-    pad.PaddingBottom = UDim.new(0, 10)
-    pad.PaddingLeft = UDim.new(0, 10)
-    pad.PaddingRight = UDim.new(0, 10)
-    local lay = Instance.new("UIListLayout", f)
-    lay.Padding = UDim.new(0, 8)
-    lay.SortOrder = Enum.SortOrder.LayoutOrder
-    local t = Instance.new("TextLabel", f)
-    t.Text = text
-    t.TextColor3 = C.accent
-    t.TextSize = 14
-    t.FontFace = FONT
-    t.BackgroundTransparency = 1
-    t.TextXAlignment = Enum.TextXAlignment.Left
-    t.Size = UDim2.new(1, 0, 0, 20)
-    t.LayoutOrder = 0
-    return f
-end
-
--- ============================================================
--- HOPPER PAGE
--- ============================================================
-local hopperPage = makePage("hopper")
-
-local hopSection = mkSection(hopperPage, "Server Hopper")
-local hopStatus = mkLabel(hopSection, "ready", C.textDim, 12)
-local hopCount = mkLabel(hopSection, "servers: —", C.textDim, 12)
-local sortBtn = mkBtn(hopSection, "Sort: Descending", false)
-local refreshBtn = mkBtn(hopSection, "Refresh Servers", false)
-local hopBtn = mkBtn(hopSection, "Hop to Highest Player Server", true)
-
-local serverList = Instance.new("ScrollingFrame", hopperPage)
-serverList.BackgroundColor3 = C.panelAlt
-serverList.BorderSizePixel = 0
-serverList.ScrollBarThickness = 3
-serverList.ScrollBarImageColor3 = C.strokeLit
-serverList.CanvasSize = UDim2.new(0, 0, 0, 0)
-serverList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-serverList.Size = UDim2.new(1, 0, 0, 220)
-corner(serverList, 8)
-stroke(serverList, C.stroke, 1)
-
-local slPad = Instance.new("UIPadding", serverList)
-slPad.PaddingTop = UDim.new(0, 8)
-slPad.PaddingLeft = UDim.new(0, 8)
-slPad.PaddingRight = UDim.new(0, 8)
-slPad.PaddingBottom = UDim.new(0, 8)
-
-local slLay = Instance.new("UIListLayout", serverList)
-slLay.Padding = UDim.new(0, 4)
-slLay.SortOrder = Enum.SortOrder.LayoutOrder
-
-local function tagColor(kind)
-    if kind == "self" or kind == "max-self" then return C.tagSelf end
-    if kind == "prev" or kind == "max-prev" then return C.tagPrev end
-    if kind == "max" then return C.tagMax end
-    return C.panel
-end
-
-local function renderServers(list)
-    for _, child in ipairs(serverList:GetChildren()) do
-        if child:IsA("TextButton") then child:Destroy() end
-    end
-    if not list or #list == 0 then
-        local e = Instance.new("TextLabel", serverList)
-        e.Text = "no servers found"
-        e.TextColor3 = C.textDim
-        e.TextSize = 12
-        e.FontFace = FONT
-        e.BackgroundTransparency = 1
-        e.Size = UDim2.new(1, 0, 0, 24)
-        return
-    end
-    for i, s in ipairs(list) do
-        local row = Instance.new("TextButton", serverList)
-        row.BackgroundColor3 = tagColor(s.tagKind)
-        row.BorderSizePixel = 0
-        row.Text = ""
-        row.AutoButtonColor = false
-        row.Size = UDim2.new(1, 0, 0, 34)
-        row.LayoutOrder = i
-        corner(row, 6)
-        stroke(row, C.stroke, 1)
-
-        local fill = (s.max > 0) and (s.playing / s.max) or 0
-        local bar = Instance.new("Frame", row)
-        bar.BackgroundColor3 = C.accentDim
-        bar.BorderSizePixel = 0
-        bar.Size = UDim2.new(fill * 0.98, 0, 1, 0)
-        bar.BackgroundTransparency = 0.8
-        bar.ZIndex = 1
-        corner(bar, 6)
-
-        local lbl = Instance.new("TextLabel", row)
-        lbl.BackgroundTransparency = 1
-        lbl.ZIndex = 2
-        lbl.Text = string.format("%d/%d · ping %d%s",
-            s.playing, s.max, s.ping or 0,
-            (s.tag ~= "" and (" · " .. s.tag) or ""))
-        lbl.TextColor3 = C.text
-        lbl.TextSize = 12
-        lbl.FontFace = FONT
-        lbl.TextXAlignment = Enum.TextXAlignment.Left
-        lbl.Size = UDim2.new(1, -80, 1, 0)
-        lbl.Position = UDim2.new(0, 10, 0, 0)
-
-        local join = Instance.new("TextButton", row)
-        join.ZIndex = 3
-        join.Text = "Join"
-        join.TextSize = 12
-        join.TextColor3 = C.bg
-        join.BackgroundColor3 = C.accent
-        join.BorderSizePixel = 0
-        join.FontFace = FONT
-        join.Size = UDim2.new(0, 60, 0, 22)
-        join.Position = UDim2.new(1, -70, 0.5, -11)
-        corner(join, 5)
-
-        join.MouseButton1Click:Connect(function()
-            if s.id == game.JobId then
-                hopStatus.Text = "already in that server"
-                hopStatus.TextColor3 = C.danger
-                return
-            end
-            hopStatus.Text = "teleporting..."
-            hopStatus.TextColor3 = C.accent
-            Hopper.hop(s.id)
-        end)
-    end
-end
-
-local function onRefresh(list, err)
-    if err then
-        hopStatus.Text = err == "busy" and "still fetching..." or ("fetch failed: " .. err)
-        hopStatus.TextColor3 = err == "busy" and C.textDim or C.danger
-        return
-    end
-    hopStatus.Text = "ready"
-    hopStatus.TextColor3 = C.good
-    hopCount.Text = string.format("servers: %d", #list)
-    renderServers(list)
-end
-
-sortBtn.MouseButton1Click:Connect(function()
-    Hopper.setAscending(not Hopper.isAscending())
-    sortBtn.Text = Hopper.isAscending() and "Sort: Ascending" or "Sort: Descending"
-    Hopper.refresh(onRefresh)
-end)
-
-refreshBtn.MouseButton1Click:Connect(function()
-    hopStatus.Text = "fetching servers..."
-    hopStatus.TextColor3 = C.textDim
-    Hopper.refresh(onRefresh)
-end)
-
-hopBtn.MouseButton1Click:Connect(function()
-    if #Hopper.getCached() == 0 then
-        hopStatus.Text = "no servers cached, refresh first"
-        hopStatus.TextColor3 = C.danger
-        return
-    end
-    if Hopper.hopToHighest() then
-        hopStatus.Text = "hopping..."
-        hopStatus.TextColor3 = C.accent
+    if ok and f then
+        FONT = f
     else
-        hopStatus.Text = "already in highest server"
-        hopStatus.TextColor3 = C.danger
+        FONT = Enum.Font.Code
     end
-end)
-
--- ============================================================
--- INFO PAGE
--- ============================================================
-local infoPage = makePage("info")
-local infoSection = mkSection(infoPage, "GongHub")
-local creditLabel = mkLabel(infoSection, "all credits to gong", C.accent, 14)
-local subLabel = mkLabel(infoSection, "server hopper only. no loggers, no webhooks, no hwid.", C.textDim, 12)
-local versionLabel = mkLabel(infoSection, "v1.0.0 · delta compatible", C.textDim, 11)
-local hopperCredit = mkLabel(infoSection, "hopper logic adapted from 2AreYou Mental110's classic", C.textDim, 11)
-
--- ============================================================
--- MIN KEYBIND PILL
--- ============================================================
-local keybind = Instance.new("Frame", gui)
-keybind.Name = "Keybind"
-keybind.AnchorPoint = Vector2.new(1, 0)
-keybind.Position = UDim2.new(1, -10, 0, 10)
-keybind.Size = UDim2.new(0, 160, 0, 30)
-keybind.BackgroundColor3 = C.panel
-keybind.BorderSizePixel = 0
-keybind.Visible = false
-corner(keybind, 6)
-stroke(keybind, C.stroke, 1)
-
-local kbText = Instance.new("TextLabel", keybind)
-kbText.BackgroundTransparency = 1
-kbText.Text = "right-click to restore"
-kbText.TextColor3 = C.textDim
-kbText.TextSize = 11
-kbText.FontFace = FONT
-kbText.Size = UDim2.new(1, -8, 1, 0)
-kbText.Position = UDim2.new(0, 6, 0, 0)
-
-local hidden = false
-local function setHidden(v)
-    hidden = v
-    root.Visible = not hidden
-    keybind.Visible = hidden
 end
 
-UserInputService.InputBegan:Connect(function(input, processed)
-    if processed then return end
-    if hidden and input.UserInputType == Enum.UserInputType.MouseButton2 then
-        setHidden(false)
+-- ============================================================
+-- FILE SHIMS
+-- ============================================================
+local function fsWrite(path, data)
+    local w = rawget(getfenv(), "writefile")
+    if type(w) == "function" then pcall(w, path, data) end
+end
+local function fsRead(path)
+    local r = rawget(getfenv(), "readfile")
+    if type(r) == "function" then
+        local ok, v = pcall(r, path)
+        if ok then return v end
     end
-end)
-
--- ============================================================
--- WIRE UI
--- ============================================================
-for id, btn in pairs(tabs) do
-    btn.MouseButton1Click:Connect(function() setPage(id) end)
+    return nil
 end
 
-local minimized = false
-local originalSize = root.Size
-
-minBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    if minimized then
-        root.Size = UDim2.new(0, 580, 0, 40)
-        sidebar.Visible = false
-        content.Visible = false
-        minBtn.Text = "+"
-    else
-        root.Size = originalSize
-        sidebar.Visible = true
-        content.Visible = true
-        minBtn.Text = "—"
-    end
-end)
-
-closeBtn.MouseButton1Click:Connect(function()
-    Hopper.destroy()
-    gui:Destroy()
-end)
-
-setPage("hopper")
-Hopper.startAutoRefresh(onRefresh)
+-- ============================================================
+-- then your existing code, with these swaps:
+--  task.spawn(fn)        -> safeTaskSpawn(fn)
+--  task.wait(n)          -> safeWait(n)
+--  task.delay(n, fn)     -> safeDelay(n, fn)
+--  request({...}) / game:HttpGet -> httpGet(url)  (already used in Hopper)
+--  writefile(...)        -> fsWrite(...)
+--  readfile(...)         -> fsRead(...)
+-- ============================================================
