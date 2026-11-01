@@ -1,833 +1,787 @@
--- GongHub | all credits to gong
--- merged: gonghub UI + server hopper + delete aura
--- delta-safe shims. no loggers. no webhooks. no hwid. no ip.
+--========================================================
+-- GONGHUB | unified | zero exfil
+-- anti suite + esp + bkit bypasses + tco helpers + trolls
+--========================================================
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
+local Players          = game:GetService("Players")
+local RunService       = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
+local Lighting         = game:GetService("Lighting")
+local SoundService     = game:GetService("SoundService")
+local TeleportService  = game:GetService("TeleportService")
+local HttpService      = game:GetService("HttpService")
+local StarterGui       = game:GetService("StarterGui")
+local Teams            = game:GetService("Teams")
+local Workspace        = game:GetService("Workspace")
 
-local LocalPlayer = Players.LocalPlayer
-if not LocalPlayer then
-    Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
-    LocalPlayer = Players.LocalPlayer
-end
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local lp = Players.LocalPlayer
+local pg = lp:WaitForChild("PlayerGui")
 
-for _, c in ipairs({ PlayerGui, CoreGui }) do
-    local old = c:FindFirstChild("GongHub")
+for _, parent in ipairs({pg, game:GetService("CoreGui")}) do
+    local old = parent:FindFirstChild("GongHubGui")
     if old then old:Destroy() end
 end
 
--- ============================================================
--- EXECUTOR SHIMS
--- ============================================================
-local function safeTaskSpawn(fn, ...)
-    if type(task) == "table" and type(task.spawn) == "function" then
-        return task.spawn(fn, ...)
-    elseif type(spawn) == "function" then
-        return spawn(fn, ...)
-    else
-        return coroutine.wrap(function() fn(...) end)()
-    end
-end
-local function safeWait(n)
-    if type(task) == "table" and type(task.wait) == "function" then return task.wait(n) end
-    if type(wait) == "function" then return wait(n) end
-    return 0
-end
-local function safeDelay(n, fn)
-    if type(task) == "table" and type(task.delay) == "function" then return task.delay(n, fn) end
-    if type(delay) == "function" then return delay(n, fn) end
-end
-local function safeCancel(thread)
-    if not thread then return end
-    if type(task) == "table" and type(task.cancel) == "function" then
-        pcall(function() task.cancel(thread) end)
-    else
-        pcall(function() coroutine.close(thread) end)
-    end
-end
+--========================================================
+-- PALETTE (black)
+--========================================================
 
-local function doRequest(opts)
-    local env = getfenv()
-    local candidates = {
-        rawget(env, "request"),
-        rawget(env, "http_request"),
-        type(syn) == "table" and syn.request or nil,
-        type(fluxus) == "table" and fluxus.request or nil,
-        type(http) == "table" and http.request or nil,
-    }
-    for _, fn in ipairs(candidates) do
-        if type(fn) == "function" then
-            local ok, res = pcall(fn, opts)
-            if ok and type(res) == "table" then return res end
-        end
-    end
-    return nil
-end
-
-local function httpGet(url)
-    local res = doRequest({ Url = url, Method = "GET" })
-    if res and res.Body then return res.Body end
-    local ok, body = pcall(function() return game:HttpGet(url) end)
-    if ok and type(body) == "string" then return body end
-    return nil
-end
-
-local FONT
-do
-    local ok, f = pcall(function()
-        return Font.new("rbxasset://fonts/families/Inconsolata.json",
-            Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-    end)
-    if ok and f then FONT = f else FONT = Enum.Font.Code end
-end
-
-local function fsWrite(path, data)
-    local w = rawget(getfenv(), "writefile")
-    if type(w) == "function" then pcall(w, path, data) end
-end
-local function fsRead(path)
-    local r = rawget(getfenv(), "readfile")
-    if type(r) == "function" then
-        local ok, v = pcall(r, path)
-        if ok then return v end
-    end
-    return nil
-end
-
--- ============================================================
--- THEME
--- ============================================================
 local C = {
-    bg        = Color3.fromRGB(14, 14, 16),
-    panel     = Color3.fromRGB(20, 20, 24),
-    panelAlt  = Color3.fromRGB(26, 26, 32),
-    stroke    = Color3.fromRGB(48, 48, 58),
-    strokeLit = Color3.fromRGB(72, 72, 88),
-    accent    = Color3.fromRGB(0, 200, 180),
-    accentDim = Color3.fromRGB(0, 140, 126),
-    text      = Color3.fromRGB(235, 235, 240),
-    textDim   = Color3.fromRGB(150, 150, 165),
-    danger    = Color3.fromRGB(230, 70, 80),
-    good      = Color3.fromRGB(90, 220, 130),
-    tagSelf   = Color3.fromRGB(0, 60, 120),
-    tagPrev   = Color3.fromRGB(120, 110, 0),
-    tagMax    = Color3.fromRGB(120, 30, 30),
+    bg      = Color3.fromRGB(0, 0, 0),
+    group   = Color3.fromRGB(12, 12, 12),
+    accent  = Color3.fromRGB(230, 230, 230),
+    accentD = Color3.fromRGB(110, 110, 110),
+    border  = Color3.fromRGB(58, 58, 58),
+    text    = Color3.fromRGB(240, 240, 240),
+    muted   = Color3.fromRGB(150, 150, 150),
+    button  = Color3.fromRGB(22, 22, 22),
+    on      = Color3.fromRGB(70, 200, 110),
+    warn    = Color3.fromRGB(220, 190, 70),
+    bad     = Color3.fromRGB(220, 70, 70),
 }
 
-local function corner(inst, r)
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, r or 6)
-    c.Parent = inst
-    return c
-end
-local function stroke(inst, col, th)
-    local s = Instance.new("UIStroke")
-    s.Color = col or C.stroke
-    s.Thickness = th or 1
-    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    s.Parent = inst
-    return s
-end
+local FONT = Font.new("rbxasset://fonts/families/Inconsolata.json",
+    Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 
--- ============================================================
--- HOPPER BACKEND
--- ============================================================
-local Hopper = {}
-Hopper._state = { asc = false, refreshing = false, destroyed = false, servers = {} }
-local RATE_LIMIT_WAIT = 70
-local POST_FETCH_WAIT = 3
-local PREV_FILE = "gonghub_prevserver.txt"
-local memoryPrev = "0"
+local supportsFiles = false
+pcall(function()
+    writefile("gh_probe.txt", "ok")
+    if readfile("gh_probe.txt") == "ok" then supportsFiles = true end
+end)
 
-local function readPrev()
-    local v = fsRead(PREV_FILE)
-    if v and v ~= "" then return v end
-    return memoryPrev
-end
-local function writePrev(jobId)
-    memoryPrev = tostring(jobId)
-    fsWrite(PREV_FILE, memoryPrev)
-end
+--========================================================
+-- STATE
+--========================================================
 
-local function fetchServers()
-    local order = Hopper._state.asc and "Asc" or "Desc"
-    local url = string.format(
-        "https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=%s&limit=100",
-        game.PlaceId, order
-    )
-    local body = httpGet(url)
-    if not body then return nil, "network" end
-    local ok, decoded = pcall(function() return HttpService:JSONDecode(body) end)
-    if not ok or type(decoded) ~= "table" or type(decoded.data) ~= "table" then
-        return nil, "rate limited"
-    end
+local state = {
+    walkspeed = { on = false, value = 16 },
+    jumppower = { on = false, value = 50 },
+    fly       = { on = false, value = 50 },
+    infjump   = { on = false },
+    shiftlock = { on = false },
+    gravity   = { on = false, value = 196.2 },
+    godmode   = { on = false },
+    respawn   = { on = false },
+}
 
-    local list = {}
-    local currJob = game.JobId
-    local prevJob = readPrev()
+local ESPState = {
+    on           = false,
+    showNames    = false,
+    showDist     = false,
+    showOutline  = false,
+    maxDist      = 1000,
+    color        = Color3.fromRGB(255, 255, 255),
+    guis         = {},
+    renderConn   = nil,
+}
 
-    for _, v in ipairs(decoded.data) do
-        if type(v) == "table" and v.id and v.playing and v.maxPlayers then
-            local playing = tonumber(v.playing) or 0
-            local max = tonumber(v.maxPlayers) or 0
-            local tag, tagKind = "", "none"
-            if playing >= max and max > 0 then
-                if v.id == currJob then tag, tagKind = "max + your server", "max-self"
-                elseif tostring(v.id) == tostring(prevJob) then tag, tagKind = "max + previous server", "max-prev"
-                else tag, tagKind = "max", "max" end
-            else
-                if v.id == currJob then tag, tagKind = "your server", "self"
-                elseif tostring(v.id) == tostring(prevJob) then tag, tagKind = "previous server", "prev" end
-            end
-            table.insert(list, {
-                id = v.id, playing = playing, max = max,
-                ping = tonumber(v.ping) or 0, tag = tag, tagKind = tagKind,
-            })
-        end
-    end
-    return list, nil
-end
+local Wall = {
+    on      = false,
+    conn    = nil,
+    savedMin = nil,
+    savedMax = nil,
+}
 
-local function sortServers(list)
-    local priority = { self = 0, prev = 1, ["max-self"] = 2, ["max-prev"] = 3, max = 4, none = 5 }
-    table.sort(list, function(a, b)
-        local pa = priority[a.tagKind] or 5
-        local pb = priority[b.tagKind] or 5
-        if pa ~= pb then return pa < pb end
-        if a.playing == b.playing then return a.ping < b.ping end
-        return a.playing > b.playing
+local FakeLag = {
+    on      = false,
+    value   = 1,
+    task    = nil,
+}
+
+local AnimSpeed = {
+    on      = false,
+    value   = 1,
+    conn    = nil,
+}
+
+local Spin = {
+    on      = false,
+    value   = 1,
+    conn    = nil,
+}
+
+local BkitState = {}
+
+local Grief = {
+    nuking = false, radius = 999999, keepAnchor = false, keepSpawn = true,
+    batchSize = 60, delay = 0.05, orbitOn = false, flingOn = false,
+    orbitRadius = 50, orbitParts = {},
+}
+
+local Boom = { log = {}, watching = false, conns = {}, onUpdate = nil }
+local Lists = { blacklist = {}, whitelist = {}, blEnabled = true, wlEnabled = true }
+local HopState = { servers = {}, lastFetch = 0, sortAsc = false, rateLimited = false, previousServer = "", cooldown = 70 }
+
+if supportsFiles then
+    pcall(function()
+        HopState.previousServer = readfile("gh_prevserver.txt") or ""
+        local bl = readfile("gh_blacklist.txt")
+        if bl then for l in bl:gmatch("[^\r\n]+") do Lists.blacklist[l:lower()] = true end end
+        local wl = readfile("gh_whitelist.txt")
+        if wl then for l in wl:gmatch("[^\r\n]+") do Lists.whitelist[l:lower()] = true end end
     end)
 end
 
-function Hopper.setAscending(v) Hopper._state.asc = v and true or false end
-function Hopper.isAscending() return Hopper._state.asc end
-function Hopper.getCached() return Hopper._state.servers end
-
-function Hopper.refresh(cb)
-    if Hopper._state.refreshing then
-        if cb then cb(Hopper._state.servers, "busy") end
-        return
+Players.PlayerRemoving:Connect(function(plr)
+    if plr == lp and supportsFiles then
+        pcall(function() writefile("gh_prevserver.txt", tostring(game.JobId)) end)
     end
-    Hopper._state.refreshing = true
-    safeTaskSpawn(function()
-        local list, err = fetchServers()
-        if err then
-            Hopper._state.refreshing = false
-            if cb then cb(nil, err) end
-            return
-        end
-        sortServers(list)
-        Hopper._state.servers = list
-        safeWait(POST_FETCH_WAIT)
-        Hopper._state.refreshing = false
-        if cb then cb(list, nil) end
-    end)
+end)
+
+local conns = {}
+local function addConn(c) table.insert(conns, c); return c end
+
+--========================================================
+-- LIST HELPERS
+--========================================================
+
+local function saveList(tbl, fname)
+    if not supportsFiles then return end
+    local out = {}
+    for k in pairs(tbl) do table.insert(out, k) end
+    pcall(function() writefile(fname, table.concat(out, "\n")) end)
 end
 
-function Hopper.hop(jobId)
-    if not jobId or jobId == "" or jobId == game.JobId then return false end
-    return pcall(function()
-        TeleportService:TeleportToPlaceInstance(game.PlaceId, jobId, LocalPlayer)
-    end)
+local function playerKeys(plr)
+    return { tostring(plr.UserId):lower(), plr.Name:lower(), plr.DisplayName:lower() }
 end
 
-function Hopper.hopToHighest()
-    for _, s in ipairs(Hopper._state.servers) do
-        if s.id ~= game.JobId then return Hopper.hop(s.id) end
+local function checkList(tbl, enabled, plr)
+    if not enabled or not plr then return false end
+    for _, k in ipairs(playerKeys(plr)) do
+        if tbl[k] then return true end
     end
     return false
 end
 
-function Hopper.startAutoRefresh(cb)
-    if Hopper._loop then return end
-    Hopper._loop = true
-    safeTaskSpawn(function()
-        Hopper.refresh(cb)
-        while not Hopper._state.destroyed do
-            safeWait(RATE_LIMIT_WAIT)
-            if Hopper._state.destroyed then break end
-            Hopper.refresh(cb)
+local function isBlacklisted(plr) return checkList(Lists.blacklist, Lists.blEnabled, plr) end
+local function isWhitelisted(plr) return checkList(Lists.whitelist, Lists.wlEnabled, plr) end
+local function isProtected(plr) return isBlacklisted(plr) or isWhitelisted(plr) end
+
+local function addToList(tbl, fname, entry)
+    if not entry or entry == "" then return end
+    local e = entry:lower(); tbl[e] = true
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Name:lower() == e or p.DisplayName:lower() == e then
+            tbl[tostring(p.UserId):lower()] = true
+        end
+    end
+    saveList(tbl, fname)
+end
+
+local function removeFromList(tbl, fname, entry)
+    if not entry then return end
+    tbl[entry:lower()] = nil
+    saveList(tbl, fname)
+end
+
+--========================================================
+-- PROTECTIONS
+--========================================================
+
+local Protections = {}
+local function addProt(name, label, startFn, stopFn)
+    Protections[name] = { label = label, start = startFn, stop = stopFn, active = false, conns = {} }
+end
+local function setProt(name, on)
+    local p = Protections[name]; if not p or on == p.active then return end
+    p.active = on
+    if on then pcall(p.start) else
+        pcall(p.stop)
+        for _, c in ipairs(p.conns) do pcall(function() c:Disconnect() end) end
+        p.conns = {}
+    end
+end
+
+local tpGraceUntil = 0
+local function tpGrace() tpGraceUntil = tick() + 2 end
+
+local function getChar()
+    local c = lp.Character; if not c then return nil, nil end
+    return c, c:FindFirstChildOfClass("Humanoid")
+end
+
+addProt("anti_fling", "Anti Fling", function()
+    local p = Protections["anti_fling"]
+    table.insert(p.conns, RunService.Heartbeat:Connect(function()
+        local char = lp.Character; if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
+        if hrp.AssemblyLinearVelocity.Magnitude > 200 then
+            pcall(function()
+                hrp.AssemblyLinearVelocity = Vector3.zero
+                hrp.AssemblyAngularVelocity = Vector3.zero
+            end)
+        end
+    end))
+end, function() end)
+
+addProt("anti_afk", "Anti AFK", function()
+    local p = Protections["anti_afk"]; p.running = true
+    task.spawn(function()
+        while p.running do
+            task.wait(60 + math.random(0, 25)); if not p.running then break end
+            pcall(function()
+                local vu = game:GetService("VirtualUser")
+                vu:CaptureController()
+                vu:ClickButton1(Vector2.new(math.random(100,500), math.random(100,500)))
+            end)
+        end
+    end)
+end, function() Protections["anti_afk"].running = false end)
+
+addProt("anti_ragdoll", "Anti Ragdoll", function()
+    local p = Protections["anti_ragdoll"]
+    table.insert(p.conns, RunService.Heartbeat:Connect(function()
+        local char = lp.Character; if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid"); if not hum then return end
+        if hum:GetState() == Enum.HumanoidStateType.Physics then
+            pcall(function() hum:ChangeState(Enum.HumanoidStateType.Running) end)
+        end
+    end))
+end, function() end)
+
+addProt("anti_void", "Anti Void", function()
+    local p = Protections["anti_void"]
+    table.insert(p.conns, RunService.Heartbeat:Connect(function()
+        local char = lp.Character; if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
+        if hrp.Position.Y < -100 then pcall(function() hrp.CFrame = CFrame.new(0, 50, 0) end) end
+    end))
+end, function() end)
+
+addProt("anti_kb", "Anti KB", function()
+    local p = Protections["anti_kb"]
+    table.insert(p.conns, RunService.Heartbeat:Connect(function()
+        local char = lp.Character; if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid"); if not hum then return end
+        pcall(function() hum.PlatformStand = false end)
+    end))
+end, function() end)
+
+addProt("anti_kick", "Anti Kick", function()
+    local p = Protections["anti_kick"]; p.original = nil
+    pcall(function()
+        if hookfunction and lp.Kick then
+            p.original = hookfunction(lp.Kick, function() end)
+        end
+    end)
+end, function()
+    local p = Protections["anti_kick"]
+    if p.original and restorefunction then pcall(function() restorefunction(lp.Kick, p.original) end) end
+    p.original = nil
+end)
+
+addProt("anti_sit", "Anti Sit", function()
+    local p = Protections["anti_sit"]
+    table.insert(p.conns, RunService.Heartbeat:Connect(function()
+        local char = lp.Character; if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid"); if not hum then return end
+        if hum.Sit then pcall(function() hum.Sit = false end) end
+    end))
+end, function() end)
+
+addProt("anti_freeze", "Anti Freeze", function()
+    local p = Protections["anti_freeze"]
+    table.insert(p.conns, RunService.Heartbeat:Connect(function()
+        local char = lp.Character; if not char then return end
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") and part.Anchored then
+                pcall(function() part.Anchored = false end)
+            end
+        end
+    end))
+end, function() end)
+
+addProt("anti_blind", "Anti Blind", function()
+    local p = Protections["anti_blind"]
+    local cache = {
+        Ambient = Lighting.Ambient, OutdoorAmbient = Lighting.OutdoorAmbient,
+        Brightness = Lighting.Brightness, ExposureCompensation = Lighting.ExposureCompensation,
+        GlobalShadows = Lighting.GlobalShadows,
+    }
+    local function strip()
+        for _, o in ipairs(Lighting:GetChildren()) do
+            if o:IsA("BlurEffect") or o:IsA("ColorCorrectionEffect")
+                or o:IsA("SunRaysEffect") or o:IsA("BloomEffect")
+                or o:IsA("DepthOfFieldEffect") then
+                pcall(function() o:Destroy() end)
+            end
+        end
+    end
+    strip()
+    table.insert(p.conns, RunService.Heartbeat:Connect(function()
+        for k, v in pairs(cache) do
+            if Lighting[k] ~= v then pcall(function() Lighting[k] = v end) end
+        end
+        strip()
+    end))
+end, function() end)
+
+addProt("anti_grab", "Anti Grab", function()
+    local p = Protections["anti_grab"]
+    table.insert(p.conns, RunService.Heartbeat:Connect(function()
+        local char = lp.Character; if not char then return end
+        for _, o in ipairs(char:GetDescendants()) do
+            if o:IsA("Weld") or o:IsA("WeldConstraint") then
+                local a, b = o.Part0, o.Part1
+                if a and b and not (char:IsAncestorOf(a) and char:IsAncestorOf(b)) then
+                    pcall(function() o:Destroy() end)
+                end
+            elseif o:IsA("AlignPosition") or o:IsA("AlignOrientation") then
+                local a0 = o.Attachment0
+                if a0 and a0.Parent and not char:IsAncestorOf(a0.Parent) then
+                    pcall(function() o:Destroy() end)
+                end
+            end
+        end
+    end))
+end, function() end)
+
+addProt("anti_teleport", "Anti TP", function()
+    local p = Protections["anti_teleport"]
+    local lastPos, lastT = nil, 0; local TH = 100
+    table.insert(p.conns, RunService.Heartbeat:Connect(function()
+        if tick() < tpGraceUntil then
+            local char = lp.Character
+            if char then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp then lastPos = hrp.Position; lastT = tick() end
+            end
+            return
+        end
+        local char = lp.Character; if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
+        local pos, now = hrp.Position, tick()
+        if lastPos and (now - lastT) < 0.15 and (pos - lastPos).Magnitude > TH then
+            pcall(function() hrp.CFrame = CFrame.new(lastPos) * hrp.CFrame.Rotation end)
+        end
+        lastPos, lastT = pos, now
+    end))
+end, function() end)
+
+addProt("anti_death", "Anti Death", function()
+    local p = Protections["anti_death"]
+    local function attach(char)
+        local hum = char:WaitForChild("Humanoid", 5); if not hum then return end
+        table.insert(p.conns, hum:GetPropertyChangedSignal("Health"):Connect(function()
+            if hum.Health <= 0 then pcall(function() hum.Health = hum.MaxHealth end) end
+        end))
+    end
+    if lp.Character then attach(lp.Character) end
+    table.insert(p.conns, lp.CharacterAdded:Connect(attach))
+end, function() end)
+
+addProt("anti_sound", "Anti Sound", function()
+    local p = Protections["anti_sound"]
+    local function watch(parent)
+        table.insert(p.conns, parent.ChildAdded:Connect(function(c)
+            if c:IsA("Sound") then task.defer(function() pcall(function() c:Destroy() end) end) end
+        end))
+    end
+    watch(SoundService); watch(workspace)
+    if lp.Character then watch(lp.Character) end
+    table.insert(p.conns, lp.CharacterAdded:Connect(watch))
+end, function() end)
+
+addProt("anti_nan", "Anti NaN (TCO)", function()
+    local p = Protections["anti_nan"]
+    local function isNaN(n) return n ~= n end
+    local function isVoided()
+        local spawn = workspace:FindFirstChild("Spawn")
+        if not spawn then return false end
+        local a = spawn.AssemblyCenterOfMass
+        return a.X == 0 and a.Y == -1000000 and a.Z == 0
+    end
+    local function onChar(char)
+        local hrp = char:WaitForChild("HumanoidRootPart", 5)
+        if not hrp or not isVoided() then return end
+        hrp.Anchored = true
+        task.wait(0.1)
+        pcall(function() hrp.CFrame = CFrame.new(0, 3, 0) end)
+        hrp.Anchored = false
+    end
+    table.insert(p.conns, lp.CharacterAdded:Connect(onChar))
+    if lp.Character then onChar(lp.Character) end
+end, function() end)
+
+addProt("anti_glitch", "Anti Glitch (TCO)", function()
+    local p = Protections["anti_glitch"]
+    local lastPos, back = nil, false
+    table.insert(p.conns, RunService.Heartbeat:Connect(function()
+        local char = lp.Character; if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
+        if not lastPos then lastPos = hrp.Position; return end
+        local pos = hrp.Position
+        if math.abs(pos.X - 1234567) < 5 and not back then
+            pcall(function() hrp.CFrame = CFrame.new(lastPos) end)
+            back = true
+        elseif math.abs(pos.X - 1234567) >= 5 then
+            back = false; lastPos = pos
+        end
+    end))
+end, function() end)
+
+--========================================================
+-- CHARACTER IMPLS
+--========================================================
+
+addConn(RunService.Heartbeat:Connect(function()
+    if not state.walkspeed.on then return end
+    local _, hum = getChar()
+    if hum then pcall(function() hum.WalkSpeed = state.walkspeed.value end) end
+end))
+
+addConn(RunService.Heartbeat:Connect(function()
+    if not state.jumppower.on then return end
+    local _, hum = getChar()
+    if hum then pcall(function() hum.JumpPower = state.jumppower.value end) end
+end))
+
+addConn(UserInputService.JumpRequest:Connect(function()
+    if not state.infjump.on then return end
+    local _, hum = getChar()
+    if hum then pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end) end
+end))
+
+local shiftConn
+local function setShiftlock(on)
+    if shiftConn then shiftConn:Disconnect() shiftConn = nil end
+    if not on then return end
+    shiftConn = addConn(RunService.RenderStepped:Connect(function()
+        local char = lp.Character; if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then pcall(function() hum.CameraOffset = Vector3.new(1.75, 0, 0) end) end
+    end))
+end
+
+local flyBody
+local function setFly(on)
+    if flyBody then pcall(function() flyBody:Destroy() end); flyBody = nil end
+    if not on then return end
+    local char, hum = getChar(); if not char or not hum then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
+    flyBody = Instance.new("BodyVelocity", hrp)
+    flyBody.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+    flyBody.Velocity = Vector3.zero
+    addConn(RunService.RenderStepped:Connect(function()
+        if not state.fly.on or not flyBody or not flyBody.Parent then return end
+        local cam = workspace.CurrentCamera; if not cam then return end
+        local v = Vector3.zero
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then v += cam.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then v -= cam.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then v -= cam.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then v += cam.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then v += Vector3.new(0, 1, 0) end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then v -= Vector3.new(0, 1, 0) end
+        flyBody.Velocity = v.Magnitude > 0 and v.Unit * state.fly.value or Vector3.zero
+    end))
+end
+
+local noclipConn
+local function setNoclip(on)
+    if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+    if not on then return end
+    noclipConn = addConn(RunService.Stepped:Connect(function()
+        local char = lp.Character; if not char then return end
+        for _, p in ipairs(char:GetDescendants()) do
+            if p:IsA("BasePart") then p.CanCollide = false end
+        end
+    end))
+end
+
+-- Noclip Bypass (TCO-grade: floor snap + wall push via raycasts)
+local noclipBypassConn
+local function setNoclipBypass(on)
+    if noclipBypassConn then noclipBypassConn:Disconnect() noclipBypassConn = nil end
+    if not on then return end
+    local HALF_H, HALF_W, EXTRA, SCAN = 2.1, 0.6, 0.05, 8
+    noclipBypassConn = addConn(RunService.RenderStepped:Connect(function()
+        local char = lp.Character; if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
+        local pos = hrp.Position
+        local cf = hrp.CFrame
+
+        local rp = RaycastParams.new()
+        rp.FilterType = Enum.RaycastFilterType.Exclude
+        rp.FilterDescendantsInstances = {char}
+
+        -- floor snap
+        local floorHit = workspace:Raycast(pos, Vector3.new(0, -SCAN, 0), rp)
+        if floorHit then
+            local surfaceY = floorHit.Position.Y + HALF_H
+            if pos.Y < surfaceY then
+                local vel = hrp.AssemblyLinearVelocity
+                hrp.AssemblyLinearVelocity = Vector3.new(vel.X, 0, vel.Z)
+                hrp.CFrame = CFrame.new(Vector3.new(pos.X, surfaceY, pos.Z))
+                    * CFrame.fromMatrix(Vector3.new(), cf.RightVector, cf.UpVector)
+                pos = hrp.Position
+            end
+        end
+
+        -- wall push
+        local newPos = pos
+        local scanDist = HALF_W + 1
+        for _, dir in ipairs({cf.LookVector, -cf.LookVector, cf.RightVector, -cf.RightVector}) do
+            local res = workspace:Raycast(pos, dir * scanDist, rp)
+            if res then
+                local dist = (res.Position - pos).Magnitude
+                if dist < HALF_W then
+                    newPos = newPos + (-dir * (HALF_W - dist + EXTRA))
+                end
+            end
+        end
+        if (newPos - pos).Magnitude > 0.01 then
+            local cur = hrp.CFrame
+            hrp.CFrame = CFrame.new(newPos) * CFrame.fromMatrix(Vector3.new(), cur.RightVector, cur.UpVector)
+        end
+    end))
+end
+
+local function setGravity(v) pcall(function() workspace.Gravity = v end) end
+local function rejoin() pcall(function() TeleportService:Teleport(game.PlaceId, lp) end) end
+
+local function tpSpawn()
+    tpGrace()
+    local char = lp.Character; if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
+    local sp = workspace:FindFirstChildOfClass("SpawnLocation")
+    if sp then pcall(function() hrp.CFrame = sp.CFrame + Vector3.new(0, 5, 0) end) end
+end
+
+local function resetChar()
+    local _, hum = getChar(); if hum then pcall(function() hum.Health = 0 end) end
+end
+
+local function boostFps()
+    pcall(function()
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 9e9
+        Lighting.Brightness = 2
+        for _, fx in ipairs(Lighting:GetDescendants()) do
+            if fx:IsA("PostEffect") or fx:IsA("Atmosphere") or fx:IsA("Sky") then
+                fx.Enabled = false
+            end
+        end
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    end)
+end
+
+local freezeConn
+local function setFreezeAnim(on)
+    if freezeConn then freezeConn:Disconnect() freezeConn = nil end
+    if not on then return end
+    freezeConn = addConn(RunService.Heartbeat:Connect(function()
+        local char = lp.Character; if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid"); if not hum then return end
+        local anim = hum:FindFirstChildOfClass("Animator")
+        if anim then
+            pcall(function()
+                for _, track in ipairs(anim:GetPlayingAnimationTracks()) do track:Stop(0) end
+            end)
+        end
+    end))
+end
+
+--========================================================
+-- WALL WALK (camera + transparency trick, resets on respawn)
+--========================================================
+
+local function setWallWalk(on)
+    if Wall.conn then Wall.conn:Disconnect(); Wall.conn = nil end
+    if not on then
+        if Wall.savedMin then lp.CameraMinZoomDistance = Wall.savedMin end
+        if Wall.savedMax then lp.CameraMaxZoomDistance = Wall.savedMax end
+        Wall.savedMin = nil; Wall.savedMax = nil
+        Wall.on = false
+        return
+    end
+    Wall.savedMin = lp.CameraMinZoomDistance
+    Wall.savedMax = lp.CameraMaxZoomDistance
+    Wall.on = true
+    Wall.conn = addConn(RunService.RenderStepped:Connect(function()
+        if not Wall.on then return end
+        if lp.CameraMinZoomDistance ~= 0.5 then lp.CameraMinZoomDistance = 0.5 end
+        if lp.CameraMaxZoomDistance ~= 128 then lp.CameraMaxZoomDistance = 128 end
+        local char = lp.Character
+        if char then
+            for _, p in ipairs(char:GetDescendants()) do
+                if p:IsA("BasePart") and p.LocalTransparencyModifier ~= 0 then
+                    p.LocalTransparencyModifier = 0
+                end
+            end
+        end
+    end))
+    addConn(lp.CharacterAdded:Connect(function()
+        if Wall.conn then Wall.conn:Disconnect(); Wall.conn = nil end
+        Wall.on = false
+        if Wall.savedMin then lp.CameraMinZoomDistance = Wall.savedMin end
+        if Wall.savedMax then lp.CameraMaxZoomDistance = Wall.savedMax end
+    end))
+end
+
+--========================================================
+-- FAKE LAG
+--========================================================
+
+local function setFakeLag(on)
+    if FakeLag.task then task.cancel(FakeLag.task); FakeLag.task = nil end
+    FakeLag.on = on
+    if not on then
+        local char = lp.Character
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then hrp.Anchored = false end
+        end
+        return
+    end
+    FakeLag.task = task.spawn(function()
+        while FakeLag.on do
+            local char = lp.Character
+            if char then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    local freeze = math.clamp(0.8 / (FakeLag.value * 3), 0.05, 0.8)
+                    local thaw = math.clamp(0.2 / (FakeLag.value * 3), 0.05, 0.5)
+                    hrp.Anchored = true
+                    task.wait(freeze)
+                    hrp.Anchored = false
+                    task.wait(thaw)
+                else
+                    task.wait(0.2)
+                end
+            else
+                task.wait(0.2)
+            end
         end
     end)
 end
 
-function Hopper.destroy() Hopper._state.destroyed = true end
+--========================================================
+-- ANIM SPEED
+--========================================================
 
-Players.PlayerRemoving:Connect(function(plr)
-    if plr == LocalPlayer then writePrev(game.JobId) end
-end)
-
--- ============================================================
--- ROOT GUI
--- ============================================================
-local gui = Instance.new("ScreenGui")
-gui.Name = "GongHub"
-gui.DisplayOrder = 999999999
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-
-if not RunService:IsStudio() then
-    local ok = pcall(function() gui.Parent = CoreGui end)
-    if not ok then gui.Parent = PlayerGui end
-else
-    gui.Parent = PlayerGui
-end
-
-gui.Destroying:Connect(function() Hopper.destroy() end)
-
--- ============================================================
--- MAIN WINDOW
--- ============================================================
-local root = Instance.new("Frame")
-root.Name = "Root"
-root.AnchorPoint = Vector2.new(0.5, 0)
-root.Position = UDim2.new(0.5, 0, 0.5, -190)
-root.Size = UDim2.new(0, 580, 0, 380)
-root.BackgroundColor3 = C.bg
-root.BorderSizePixel = 0
-root.Active = true
-root.Draggable = true
-root.Parent = gui
-corner(root, 10)
-stroke(root, C.stroke, 1)
-
--- ============================================================
--- TOP BAR
--- ============================================================
-local topBar = Instance.new("Frame", root)
-topBar.Name = "TopBar"
-topBar.Size = UDim2.new(1, 0, 0, 40)
-topBar.BackgroundColor3 = C.panel
-topBar.BorderSizePixel = 0
-corner(topBar, 10)
-
-local topCover = Instance.new("Frame", topBar)
-topCover.Size = UDim2.new(1, 0, 0, 10)
-topCover.Position = UDim2.new(0, 0, 1, -10)
-topCover.BackgroundColor3 = C.panel
-topCover.BorderSizePixel = 0
-
-local title = Instance.new("TextLabel", topBar)
-title.BackgroundTransparency = 1
-title.Text = "GONG HUB"
-title.TextColor3 = C.text
-title.TextSize = 16
-title.FontFace = FONT
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Size = UDim2.new(0, 140, 1, 0)
-title.Position = UDim2.new(0, 16, 0, 0)
-
-local dot = Instance.new("Frame", topBar)
-dot.BackgroundColor3 = C.accent
-dot.Size = UDim2.new(0, 8, 0, 8)
-dot.Position = UDim2.new(0, 128, 0.5, -4)
-dot.BorderSizePixel = 0
-corner(dot, 4)
-
-local stats = Instance.new("TextLabel", topBar)
-stats.BackgroundTransparency = 1
-stats.TextColor3 = C.textDim
-stats.TextSize = 13
-stats.FontFace = FONT
-stats.TextXAlignment = Enum.TextXAlignment.Left
-stats.Size = UDim2.new(0, 320, 1, 0)
-stats.Position = UDim2.new(0, 160, 0, 0)
-stats.Text = ""
-
-local minBtn = Instance.new("TextButton", topBar)
-minBtn.Text = "—"
-minBtn.TextColor3 = C.textDim
-minBtn.TextSize = 16
-minBtn.BackgroundColor3 = C.panelAlt
-minBtn.BorderSizePixel = 0
-minBtn.FontFace = FONT
-minBtn.Size = UDim2.new(0, 28, 0, 24)
-minBtn.Position = UDim2.new(1, -68, 0.5, -12)
-minBtn.AutoButtonColor = false
-corner(minBtn, 5)
-stroke(minBtn, C.stroke, 1)
-
-local closeBtn = Instance.new("TextButton", topBar)
-closeBtn.Text = "x"
-closeBtn.TextColor3 = C.danger
-closeBtn.TextSize = 16
-closeBtn.BackgroundColor3 = C.panelAlt
-closeBtn.BorderSizePixel = 0
-closeBtn.FontFace = FONT
-closeBtn.Size = UDim2.new(0, 28, 0, 24)
-closeBtn.Position = UDim2.new(1, -36, 0.5, -12)
-closeBtn.AutoButtonColor = false
-corner(closeBtn, 5)
-stroke(closeBtn, C.stroke, 1)
-
-local smoothedFPS = 60
-local lastTick = tick()
-RunService.RenderStepped:Connect(function()
-    if not gui.Parent then return end
-    local now = tick()
-    local dt = now - lastTick
-    lastTick = now
-    if dt > 0 then
-        smoothedFPS = smoothedFPS + (1/dt - smoothedFPS) * 0.05
-    end
-    local ping = math.floor((LocalPlayer:GetNetworkPing() or 0) * 1000)
-    stats.Text = string.format("fps %d  ·  ping %dms  ·  %d players",
-        math.floor(smoothedFPS + 0.5), ping, #Players:GetPlayers())
-end)
-
--- ============================================================
--- SIDEBAR
--- ============================================================
-local sidebar = Instance.new("Frame", root)
-sidebar.Name = "Sidebar"
-sidebar.BackgroundColor3 = C.panel
-sidebar.BorderSizePixel = 0
-sidebar.Size = UDim2.new(0, 140, 1, -56)
-sidebar.Position = UDim2.new(0, 12, 0, 48)
-corner(sidebar, 8)
-
-local sbLayout = Instance.new("UIListLayout", sidebar)
-sbLayout.Padding = UDim.new(0, 4)
-sbLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-local sbPad = Instance.new("UIPadding", sidebar)
-sbPad.PaddingTop = UDim.new(0, 8)
-sbPad.PaddingLeft = UDim.new(0, 8)
-sbPad.PaddingRight = UDim.new(0, 8)
-sbPad.PaddingBottom = UDim.new(0, 8)
-
-local tabs = {}
-local tabOrder = {}
-
-local function makeTab(id, label)
-    local btn = Instance.new("TextButton", sidebar)
-    btn.Name = "Tab_" .. id
-    btn.Text = label
-    btn.TextSize = 13
-    btn.TextColor3 = C.textDim
-    btn.BackgroundColor3 = C.panel
-    btn.BorderSizePixel = 0
-    btn.FontFace = FONT
-    btn.Size = UDim2.new(1, 0, 0, 32)
-    btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.AutoButtonColor = false
-    btn.LayoutOrder = #tabOrder + 1
-    corner(btn, 6)
-    local pad = Instance.new("UIPadding", btn)
-    pad.PaddingLeft = UDim.new(0, 10)
-    tabs[id] = btn
-    table.insert(tabOrder, id)
-    return btn
-end
-
-makeTab("hopper", "Server Hopper")
-makeTab("grief", "Delete Aura")
-makeTab("info", "Info")
-
-local credit = Instance.new("TextLabel", sidebar)
-credit.Name = "Credit"
-credit.Text = "all credits to gong"
-credit.TextColor3 = C.textDim
-credit.TextSize = 11
-credit.FontFace = FONT
-credit.BackgroundTransparency = 1
-credit.TextXAlignment = Enum.TextXAlignment.Left
-credit.Size = UDim2.new(1, -16, 0, 16)
-credit.Position = UDim2.new(0, 8, 1, -22)
-credit.LayoutOrder = 99
-
--- ============================================================
--- CONTENT AREA
--- ============================================================
-local content = Instance.new("Frame", root)
-content.Name = "Content"
-content.BackgroundColor3 = C.panel
-content.BorderSizePixel = 0
-content.Size = UDim2.new(1, -164, 1, -56)
-content.Position = UDim2.new(0, 156, 0, 48)
-corner(content, 8)
-
-local pages = {}
-local function makePage(id)
-    local p = Instance.new("ScrollingFrame", content)
-    p.Name = "Page_" .. id
-    p.BackgroundTransparency = 1
-    p.BorderSizePixel = 0
-    p.ScrollBarThickness = 3
-    p.ScrollBarImageColor3 = C.strokeLit
-    p.CanvasSize = UDim2.new(0, 0, 0, 0)
-    p.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    p.Size = UDim2.new(1, 0, 1, 0)
-    p.Visible = false
-    p.Active = true
-    local pad = Instance.new("UIPadding", p)
-    pad.PaddingTop = UDim.new(0, 12)
-    pad.PaddingLeft = UDim.new(0, 12)
-    pad.PaddingRight = UDim.new(0, 12)
-    pad.PaddingBottom = UDim.new(0, 12)
-    local lay = Instance.new("UIListLayout", p)
-    lay.Padding = UDim.new(0, 8)
-    lay.SortOrder = Enum.SortOrder.LayoutOrder
-    pages[id] = p
-    return p
-end
-
-local function setPage(id)
-    for pid, p in pairs(pages) do p.Visible = (pid == id) end
-    for tid, btn in pairs(tabs) do
-        local active = (tid == id)
-        btn.TextColor3 = active and C.text or C.textDim
-        btn.BackgroundColor3 = active and C.panelAlt or C.panel
-        local s = btn:FindFirstChildOfClass("UIStroke")
-        if s then s.Visible = active end
+local function applyAnimSpeed(sp)
+    local char = lp.Character; if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid"); if not hum then return end
+    for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
+        pcall(function() track:AdjustSpeed(sp) end)
     end
 end
 
-local function mkBtn(parent, text, primary)
-    local b = Instance.new("TextButton", parent)
-    b.Text = text
-    b.TextColor3 = primary and C.bg or C.text
-    b.TextSize = 13
-    b.BackgroundColor3 = primary and C.accent or C.panelAlt
-    b.BorderSizePixel = 0
-    b.FontFace = FONT
-    b.Size = UDim2.new(1, 0, 0, 30)
-    b.AutoButtonColor = false
-    corner(b, 6)
-    if not primary then stroke(b, C.stroke, 1) end
-    return b
+local function setAnimSpeed(on)
+    if AnimSpeed.conn then AnimSpeed.conn:Disconnect(); AnimSpeed.conn = nil end
+    AnimSpeed.on = on
+    if not on then applyAnimSpeed(1); return end
+    AnimSpeed.conn = addConn(RunService.Heartbeat:Connect(function()
+        applyAnimSpeed(AnimSpeed.value)
+    end))
 end
 
-local function mkLabel(parent, text, color, size)
-    local l = Instance.new("TextLabel", parent)
-    l.Text = text
-    l.TextColor3 = color or C.text
-    l.TextSize = size or 13
-    l.FontFace = FONT
-    l.BackgroundTransparency = 1
-    l.TextXAlignment = Enum.TextXAlignment.Left
-    l.Size = UDim2.new(1, 0, 0, 22)
-    return l
+--========================================================
+-- SPIN
+--========================================================
+
+local function setSpin(on)
+    if Spin.conn then Spin.conn:Disconnect(); Spin.conn = nil end
+    Spin.on = on
+    if not on then return end
+    local angle = 0
+    Spin.conn = addConn(RunService.RenderStepped:Connect(function(dt)
+        local char = lp.Character; if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
+        angle = angle + (-Spin.value * 3 * dt * 60)
+        hrp.CFrame = CFrame.new(hrp.Position) * CFrame.Angles(0, math.rad(angle), 0)
+    end))
 end
 
-local function mkSection(parent, text)
-    local f = Instance.new("Frame", parent)
-    f.BackgroundColor3 = C.panelAlt
-    f.BorderSizePixel = 0
-    f.Size = UDim2.new(1, 0, 0, 0)
-    f.AutomaticSize = Enum.AutomaticSize.Y
-    corner(f, 8)
-    stroke(f, C.stroke, 1)
-    local pad = Instance.new("UIPadding", f)
-    pad.PaddingTop = UDim.new(0, 10)
-    pad.PaddingBottom = UDim.new(0, 10)
-    pad.PaddingLeft = UDim.new(0, 10)
-    pad.PaddingRight = UDim.new(0, 10)
-    local lay = Instance.new("UIListLayout", f)
-    lay.Padding = UDim.new(0, 8)
-    lay.SortOrder = Enum.SortOrder.LayoutOrder
-    local t = Instance.new("TextLabel", f)
-    t.Text = text
-    t.TextColor3 = C.accent
-    t.TextSize = 14
-    t.FontFace = FONT
-    t.BackgroundTransparency = 1
-    t.TextXAlignment = Enum.TextXAlignment.Left
-    t.Size = UDim2.new(1, 0, 0, 20)
-    t.LayoutOrder = 0
-    return f
+--========================================================
+-- ESP
+--========================================================
+
+local function espCreateName(plr)
+    local char = plr.Character; if not char then return end
+    local head = char:FindFirstChild("Head"); if not head then return end
+    local old = head:FindFirstChild("GH_ESPName"); if old then old:Destroy() end
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "GH_ESPName"
+    bb.Size = UDim2.new(0, 200, 0, 30)
+    bb.StudsOffset = Vector3.new(0, 3, 0)
+    bb.Adornee = head
+    bb.AlwaysOnTop = true
+    bb.Enabled = true
+    bb.Parent = head
+    local lbl = Instance.new("TextLabel")
+    lbl.Name = "NameLabel"
+    lbl.Size = UDim2.new(1, 0, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = plr.Name
+    lbl.TextColor3 = ESPState.color
+    lbl.TextStrokeTransparency = 0
+    lbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    lbl.TextSize = 14
+    lbl.Font = Enum.Font.GothamSemibold
+    lbl.Parent = bb
+    ESPState.guis[plr] = ESPState.guis[plr] or {}
+    ESPState.guis[plr].name = bb
 end
 
--- ============================================================
--- HOPPER PAGE
--- ============================================================
-local hopperPage = makePage("hopper")
-local hopSection = mkSection(hopperPage, "Server Hopper")
-local hopStatus = mkLabel(hopSection, "ready", C.textDim, 12)
-local hopCount = mkLabel(hopSection, "servers: —", C.textDim, 12)
-local sortBtn = mkBtn(hopSection, "Sort: Descending", false)
-local refreshBtn = mkBtn(hopSection, "Refresh Servers", false)
-local hopBtn = mkBtn(hopSection, "Hop to Highest Player Server", true)
-
-local serverList = Instance.new("ScrollingFrame", hopperPage)
-serverList.BackgroundColor3 = C.panelAlt
-serverList.BorderSizePixel = 0
-serverList.ScrollBarThickness = 3
-serverList.ScrollBarImageColor3 = C.strokeLit
-serverList.CanvasSize = UDim2.new(0, 0, 0, 0)
-serverList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-serverList.Size = UDim2.new(1, 0, 0, 220)
-corner(serverList, 8)
-stroke(serverList, C.stroke, 1)
-
-local slPad = Instance.new("UIPadding", serverList)
-slPad.PaddingTop = UDim.new(0, 8)
-slPad.PaddingLeft = UDim.new(0, 8)
-slPad.PaddingRight = UDim.new(0, 8)
-slPad.PaddingBottom = UDim.new(0, 8)
-
-local slLay = Instance.new("UIListLayout", serverList)
-slLay.Padding = UDim.new(0, 4)
-slLay.SortOrder = Enum.SortOrder.LayoutOrder
-
-local function tagColor(kind)
-    if kind == "self" or kind == "max-self" then return C.tagSelf end
-    if kind == "prev" or kind == "max-prev" then return C.tagPrev end
-    if kind == "max" then return C.tagMax end
-    return C.panel
-end
-
-local function renderServers(list)
-    for _, child in ipairs(serverList:GetChildren()) do
-        if child:IsA("TextButton") then child:Destroy() end
+local function espCreateOutline(plr)
+    local char = plr.Character; if not char then return end
+    for _, v in ipairs(char:GetChildren()) do
+        if v:IsA("Highlight") and v.Name == "GH_ESPOutline" then v:Destroy() end
     end
-    if not list or #list == 0 then
-        local e = Instance.new("TextLabel", serverList)
-        e.Text = "no servers found"
-        e.TextColor3 = C.textDim
-        e.TextSize = 12
-        e.FontFace = FONT
-        e.BackgroundTransparency = 1
-        e.Size = UDim2.new(1, 0, 0, 24)
-        return
-    end
-    for i, s in ipairs(list) do
-        local row = Instance.new("TextButton", serverList)
-        row.BackgroundColor3 = tagColor(s.tagKind)
-        row.BorderSizePixel = 0
-        row.Text = ""
-        row.AutoButtonColor = false
-        row.Size = UDim2.new(1, 0, 0, 34)
-        row.LayoutOrder = i
-        corner(row, 6)
-        stroke(row, C.stroke, 1)
+    local hl = Instance.new("Highlight")
+    hl.Name = "GH_ESPOutline"
+    hl.FillTransparency = 1
+    hl.OutlineColor = ESPState.color
+    hl.OutlineTransparency = 0
+    hl.Parent = char
+    ESPState.guis[plr] = ESPState.guis[plr] or {}
+    ESPState.guis[plr].outline = hl
+end
 
-        local fill = (s.max > 0) and (s.playing / s.max) or 0
-        local bar = Instance.new("Frame", row)
-        bar.BackgroundColor3 = C.accentDim
-        bar.BorderSizePixel = 0
-        bar.Size = UDim2.new(fill * 0.98, 0, 1, 0)
-        bar.BackgroundTransparency = 0.8
-        bar.ZIndex = 1
-        corner(bar, 6)
+local function espRemove(plr)
+    local data = ESPState.guis[plr]
+    if not data then return end
+    if data.name then pcall(function() data.name:Destroy() end) end
+    if data.outline then pcall(function() data.outline:Destroy() end) end
+    ESPState.guis[plr] = nil
+end
 
-        local lbl = Instance.new("TextLabel", row)
-        lbl.BackgroundTransparency = 1
-        lbl.ZIndex = 2
-        lbl.Text = string.format("%d/%d · ping %d%s",
-            s.playing, s.max, s.ping or 0,
-            (s.tag ~= "" and (" · " .. s.tag) or ""))
-        lbl.TextColor3 = C.text
-        lbl.TextSize = 12
-        lbl.FontFace = FONT
-        lbl.TextXAlignment = Enum.TextXAlignment.Left
-        lbl.Size = UDim2.new(1, -80, 1, 0)
-        lbl.Position = UDim2.new(0, 10, 0, 0)
-
-        local join = Instance.new("TextButton", row)
-        join.ZIndex = 3
-        join.Text = "Join"
-        join.TextSize = 12
-        join.TextColor3 = C.bg
-        join.BackgroundColor3 = C.accent
-        join.BorderSizePixel = 0
-        join.FontFace = FONT
-        join.Size = UDim2.new(0, 60, 0, 22)
-        join.Position = UDim2.new(1, -70, 0.5, -11)
-        corner(join, 5)
-
-        join.MouseButton1Click:Connect(function()
-            if s.id == game.JobId then
-                hopStatus.Text = "already in that server"
-                hopStatus.TextColor3 = C.danger
-                return
+local function espStartRender()
+    if ESPState.renderConn then ESPState.renderConn:Disconnect(); ESPState.renderConn = nil end
+    ESPState.renderConn = addConn(RunService.RenderStepped:Connect(function()
+        if not ESPState.on then return end
+        local char = lp.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        for plr, data in pairs(ESPState.guis) do
+            local pchar = plr.Character
+            local phrp = pchar and pchar:FindFirstChild("HumanoidRootPart")
+            local ok = true
+            if hrp and phrp then
+                ok = (hrp.Position - phrp.Position).Magnitude <= ESPState.maxDist
             end
-            hopStatus.Text = "teleporting..."
-            hopStatus.TextColor3 = C.accent
-            Hopper.hop(s.id)
-        end)
-    end
-end
-
-local function onRefresh(list, err)
-    if err then
-        hopStatus.Text = err == "busy" and "still fetching..." or ("fetch failed: " .. err)
-        hopStatus.TextColor3 = err == "busy" and C.textDim or C.danger
-        return
-    end
-    hopStatus.Text = "ready"
-    hopStatus.TextColor3 = C.good
-    hopCount.Text = string.format("servers: %d", #list)
-    renderServers(list)
-end
-
-sortBtn.MouseButton1Click:Connect(function()
-    Hopper.setAscending(not Hopper.isAscending())
-    sortBtn.Text = Hopper.isAscending() and "Sort: Ascending" or "Sort: Descending"
-    Hopper.refresh(onRefresh)
-end)
-
-refreshBtn.MouseButton1Click:Connect(function()
-    hopStatus.Text = "fetching servers..."
-    hopStatus.TextColor3 = C.textDim
-    Hopper.refresh(onRefresh)
-end)
-
-hopBtn.MouseButton1Click:Connect(function()
-    if #Hopper.getCached() == 0 then
-        hopStatus.Text = "no servers cached, refresh first"
-        hopStatus.TextColor3 = C.danger
-        return
-    end
-    if Hopper.hopToHighest() then
-        hopStatus.Text = "hopping..."
-        hopStatus.TextColor3 = C.accent
-    else
-        hopStatus.Text = "already in highest server"
-        hopStatus.TextColor3 = C.danger
-    end
-end)
-
--- ============================================================
--- GRIEF PAGE (delete aura)
--- ============================================================
-local griefPage = makePage("grief")
-local griefSection = mkSection(griefPage, "Delete Aura")
-
-local toolStatus = mkLabel(griefSection, "delete tool: checking...", C.textDim, 12)
-local auraStatus = mkLabel(griefSection, "aura: idle", C.textDim, 12)
-local blockCount = mkLabel(griefSection, "blocks targetable: —", C.textDim, 12)
-local hlStatus = mkLabel(griefSection, "highlight: off", C.textDim, 12)
-
-local startBtn = mkBtn(griefSection, "Start Delete Aura", true)
-local hlBtn = mkBtn(griefSection, "Highlight Blocks: OFF", false)
-local refreshStatusBtn = mkBtn(griefSection, "Recheck Delete Tool", false)
-
-local griefInfoLabel = mkLabel(griefPage,
-    "delete aura fires every Delete tool you own at every Brick in workspace.Bricks. needs at least one Delete tool. griefs everyone's builds.",
-    C.textDim, 11)
-
-local auraActive = false
-local hlActive = false
-local auraLoop = nil
-local hlLoop = nil
-local highlights = {}
-local FIRE_DELAY = 0.05
-local TOOL_REFRESH = 5
-
-local function findDeleteTools()
-    local dtools = {}
-    local function scan(container)
-        if not container then return end
-        for _, v in ipairs(container:GetChildren()) do
-            if v:IsA("Tool") and v.Name == "Delete" then
-                local s = v:FindFirstChild("Script")
-                local e = s and s:FindFirstChild("Event")
-                if e then table.insert(dtools, { bt = v, e = e }) end
+            if data.name then data.name.Enabled = ok and (ESPState.showNames or ESPState.showDist) end
+            if data.name and data.name.Enabled then
+                local n = plr.Name
+                local d = phrp and hrp and string.format("%.0f", (hrp.Position - phrp.Position).Magnitude) or "?"
+                if ESPState.showNames and ESPState.showDist then
+                    data.name.NameLabel.Text = n .. " [" .. d .. "]"
+                elseif ESPState.showNames then
+                    data.name.NameLabel.Text = n
+                else
+                    data.name.NameLabel.Text = d
+                end
+                data.name.NameLabel.TextColor3 = ESPState.color
+            end
+            if data.outline then
+                data.outline.Enabled = ok and ESPState.showOutline
+                data.outline.OutlineColor = ESPState.color
             end
         end
-    end
-    scan(LocalPlayer:FindFirstChild("Backpack"))
-    if LocalPlayer.Character then scan(LocalPlayer.Character) end
-    return dtools
+    end))
 end
 
-local function getAllBricks()
-    local bricks = {}
-    local folder = workspace:FindFirstChild("Bricks")
-    if not folder then return bricks end
-    for _, brick in ipairs(folder:GetDescendants()) do
-        if brick:IsA("BasePart") and brick.Name == "Brick" then
-            table.insert(bricks, brick)
-        end
-    end
-    return bricks
-end
-
-local function refreshToolStatus()
-    local tools = findDeleteTools()
-    if #tools == 0 then
-        toolStatus.Text = "delete tool: none found (need at least 1)"
-        toolStatus.TextColor3 = C.danger
-        startBtn.BackgroundColor3 = C.panelAlt
-        startBtn.TextColor3 = C.textDim
-        return false
-    end
-    toolStatus.Text = string.format("delete tool: %d found", #tools)
-    toolStatus.TextColor3 = C.good
-    startBtn.BackgroundColor3 = C.accent
-    startBtn.TextColor3 = C.bg
-    return true
-end
-
-local function clearHighlights()
-    for _, h in ipairs(highlights) do
-        if h and h.Parent then pcall(function() h:Destroy() end) end
-    end
-    highlights = {}
-end
-
-local function applyHighlights()
-    clearHighlights()
-    local bricks = getAllBricks()
-    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if hrp and #bricks > 0 then
-        table.sort(bricks, function(a, b)
-            return (a.Position - hrp.Position).Magnitude < (b.Position - hrp.Position).Magnitude
-        end)
-    end
-    local limit = math.min(#bricks, 80)
-    for i = 1, limit do
-        local brick = bricks[i]
-        if brick and brick.Parent then
-            local h = Instance.new("Highlight")
-            h.Adornee = brick
-            h.FillColor = Color3.fromRGB(255, 0, 0)
-            h.OutlineColor = Color3.fromRGB(255, 0, 0)
-            h.FillTransparency = 0.5
-            h.OutlineTransparency = 1
-            h.Parent = brick
-            table.insert(highlights, h)
-        end
-    end
-end
-
-local function startAura()
-    if not refreshToolStatus() then
-        auraStatus.Text = "aura: no delete tool"
-        auraStatus.TextColor3 = C.danger
-        return
-    end
-    auraActive = true
-    auraStatus.Text = "aura: running"
-    auraStatus.TextColor3 = C.good
-    startBtn.Text = "Stop Delete Aura"
-    startBtn.BackgroundColor3 = C.danger
-
-    auraLoop = safeTaskSpawn(function()
-        local dti = 0
-        local lastRefresh = tick()
-        while auraActive do
-            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if not hrp then
-                safeWait(0.5)
-            else
-                local tools = findDeleteTools()
-                if #tools == 0 then
-                    auraStatus.Text = "aura: delete tool lost"
-                    auraStatus.TextColor3 = C.danger
-                    auraActive = false
-                    break
-                end
-                if tick() - lastRefresh >= TOOL_REFRESH then
-                    lastRefresh = tick()
-                end
-                local bricks = getAllBricks()
-                blockCount.Text = string.format("blocks targetable: %d", #bricks)
-                for _, brick in ip
+local function espEnable()
+    ESPState.on = true
+    for _, plr in
