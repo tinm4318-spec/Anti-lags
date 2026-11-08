@@ -743,213 +743,180 @@ home:Slider({
     Callback = function(v) deleteRange = v end,
 })
 
--- ============================================================
--- RepStorage tab
+
+-- =-- ============================================================
+-- Server Hopper 
 -- ============================================================
 hub:Tab({ Title = "────>OP<────", Icon = "", Locked = true, Border = false })
 
-local repTab = hub:Tab({ Title = "RepStorage", Icon = "cuboid" })
-local repBaseColor = Color3.fromRGB(163, 162, 165)
-local repMaterial = "plastic"
-local repTop    = { text = "", color = Color3.fromRGB(255,255,255) }
-local repBottom = { text = "", color = Color3.fromRGB(255,255,255) }
-local repLeft   = { text = "", color = Color3.fromRGB(255,255,255) }
-local repRight  = { text = "", color = Color3.fromRGB(255,255,255) }
-local repFront  = { text = "", color = Color3.fromRGB(255,255,255) }
-local repBack   = { text = "", color = Color3.fromRGB(255,255,255) }
+local hopTab = hub:Tab({ Title = "Server Hopper", Icon = "server" })
 
-local function richWrap(text)
-    if not text or text == "" then return " " end
-    local out = ""
-    for i = 1, #text do
-        out = out .. text:sub(i, i) .. '<font size="0">x</font>'
+local hop = {
+    asc = false,
+    servers = {},
+    updating = false,
+    supportsFiles = false,
+    prevServer = "0",
+    maxServers = 100,
+}
+
+pcall(function()
+    writefile("gonghub_probe.tmp", "x")
+    hop.supportsFiles = readfile("gonghub_probe.tmp") == "x"
+    delfile("gonghub_probe.tmp")
+end)
+if hop.supportsFiles then
+    pcall(function() hop.prevServer = readfile("gonghub_prevserver.txt") end)
+end
+players.PlayerRemoving:Connect(function(plr)
+    if plr == localPlayer and hop.supportsFiles then
+        pcall(function() writefile("gonghub_prevserver.txt", tostring(game.JobId)) end)
     end
-    return out
-end
+end)
 
-local function hexOf(color)
-    return string.format("#%02x%02x%02x",
-        math.floor(color.R*255), math.floor(color.G*255), math.floor(color.B*255))
-end
+hopTab:Section({ Title = "Controls" })
+local hopStatus = hopTab:Paragraph({ Title = "Status", Desc = "idle" })
+local hopCounter = hopTab:Paragraph({ Title = "Servers", Desc = "0 loaded" })
 
-local function sprayFace(paint, brick, face, cfg, pos, mode)
-    if cfg.text == "" then return end
-    local wrapped = '<font color="' .. hexOf(cfg.color) .. '">' .. richWrap(cfg.text) .. "</font>"
-    paint:FireServer(brick, face, pos, mode or "both 🤝", repBaseColor, "spray", wrapped)
-    task.wait(userInputService.TouchEnabled and 0.7 or 0.3)
-end
+local hopRowGui = Instance.new("ScreenGui")
+hopRowGui.Name = "GongHubHopRows"
+hopRowGui.ResetOnSpawn = false
+hopRowGui.Parent = coreGui
 
-repTab:Section({ Title = "Base" })
-repTab:Colorpicker({
-    Title = "Base Block Color",
-    Default = repBaseColor,
-    Callback = function(v) repBaseColor = v end,
-})
-repTab:Dropdown({
-    Title = "Material",
-    Values = { "Smooth", "Plastic", "Tiles", "Bricks", "Planks", "Ice", "Grass", "Sand", "Snow",
-        "Glass", "Wood", "Stone", "Pebble", "Marble", "Granite", "Steel", "Metal",
-        "Asphalt", "Concrete", "Pavement", "Neon", "Toxic" },
-    Callback = function(v) repMaterial = string.lower(typeof(v) == "table" and v[1] or v) end,
-})
+local hopListContainer = nil
 
-local function makeFaceSection(title, cfg, face)
-    repTab:Section({ Title = title })
-    repTab:Input({
-        Title = title .. " Text",
-        Placeholder = "",
-        Callback = function(v) cfg.text = v end,
-    })
-    repTab:Colorpicker({
-        Title = title .. " Color",
-        Default = Color3.fromRGB(255,255,255),
-        Callback = function(v) cfg.color = v end,
-    })
-    repTab:Button({
-        Title = "Apply " .. title,
-        Callback = function()
-            local brick = replicatedStorage:FindFirstChild("Brick")
-            local paint = toolEventAny("Paint")
-            local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if not brick or not paint or not hrp then
-                WindUI:Notify({ Title = "Error", Content = "Equip Paint first.", Duration = 2 })
-                return
-            end
-            sprayFace(paint, brick, face, cfg, hrp.Position)
-            WindUI:Notify({ Title = "Applied", Content = title .. " applied.", Duration = 2 })
-        end,
-    })
-end
-
-makeFaceSection("Top",    repTop,    Enum.NormalId.Top)
-makeFaceSection("Bottom", repBottom, Enum.NormalId.Bottom)
-makeFaceSection("Left",   repLeft,   Enum.NormalId.Left)
-makeFaceSection("Right",  repRight,  Enum.NormalId.Right)
-makeFaceSection("Front",  repFront,  Enum.NormalId.Front)
-makeFaceSection("Back",   repBack,   Enum.NormalId.Back)
-
-repTab:Section({ Title = "Apply All" })
-repTab:Button({
-    Title = "Apply Base Color & Material",
-    Callback = function()
-        local brick = replicatedStorage:FindFirstChild("Brick")
-        local paint = toolEventAny("Paint")
-        local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if not brick or not paint or not hrp then
-            WindUI:Notify({ Title = "Error", Content = "Equip Paint first.", Duration = 2 })
+local function findHopContainer()
+    -- Walk the WindUI frame tree to find where hop tab buttons live
+    for _, obj in ipairs(coreGui:GetDescendants()) do
+        if obj:IsA("Frame") and obj:FindFirstChild("GongHubHopSlot", true) then
+            hopListContainer = obj
             return
         end
-        paint:FireServer(brick, Enum.NormalId.Top, hrp.Position, "both 🤝", repBaseColor, repMaterial, "")
-        WindUI:Notify({ Title = "Applied", Content = "Base color + material set.", Duration = 2 })
-    end,
-})
-repTab:Button({
-    Title = "Apply All Faces",
-    Callback = function()
-        local brick = replicatedStorage:FindFirstChild("Brick")
-        local paint = toolEventAny("Paint")
-        local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if not brick or not paint or not hrp then
-            WindUI:Notify({ Title = "Error", Content = "Equip Paint first.", Duration = 2 })
-            return
-        end
-        local pos = hrp.Position
-        paint:FireServer(brick, Enum.NormalId.Top, pos, "both 🤝", repBaseColor, repMaterial, "")
-        task.wait(userInputService.TouchEnabled and 0.8 or 0.4)
-        sprayFace(paint, brick, Enum.NormalId.Top,    repTop,    pos)
-        sprayFace(paint, brick, Enum.NormalId.Bottom, repBottom, pos)
-        sprayFace(paint, brick, Enum.NormalId.Left,   repLeft,   pos)
-        sprayFace(paint, brick, Enum.NormalId.Right,  repRight,  pos)
-        sprayFace(paint, brick, Enum.NormalId.Front,  repFront,  pos)
-        sprayFace(paint, brick, Enum.NormalId.Back,   repBack,   pos)
-        WindUI:Notify({ Title = "Done", Content = "All faces applied.", Duration = 2 })
-    end,
-})
-
-repTab:Section({ Title = "More" })
-repTab:Button({
-    Title = "Toxic Brick",
-    Callback = function()
-        local brick = replicatedStorage:WaitForChild("Brick", 5)
-        local paint = toolEventAny("Paint")
-        if not paint or not brick then return end
-        paint:FireServer(brick, "Front", brick.Position, "both 🤝", Color3.new(211,211,211), "toxic", "")
-    end,
-})
-repTab:Button({
-    Title = "Anchor Brick",
-    Callback = function()
-        local brick = replicatedStorage:WaitForChild("Brick", 5)
-        local paint = toolEventAny("Paint")
-        if not paint or not brick then return end
-        paint:FireServer(brick, "Front", brick.Position, "both 🤝", Color3.new(211,211,211), "anchor", "")
-    end,
-})
-repTab:Button({
-    Title = "Revert RepStorage",
-    Callback = function()
-        local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-        local brick = replicatedStorage:FindFirstChild("Brick")
-        local paint = toolEventAny("Paint")
-        if not paint or not brick then return end
-        local pos = char.HumanoidRootPart.Position
-        local grey = Color3.fromRGB(211,211,211)
-        local black = Color3.new(0,0,0)
-        paint:FireServer(brick, Enum.NormalId.Top, pos, "both 🤝", grey, "plastic", "")
-        task.wait(0.5)
-        for _, face in ipairs({ Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Top,
-            Enum.NormalId.Bottom, Enum.NormalId.Right, Enum.NormalId.Left }) do
-            paint:FireServer(brick, face, pos, "both 🤝", grey, "spray", " ")
-            task.wait(userInputService.TouchEnabled and 0.35 or 0.2)
-        end
-        if not brick.Anchored then
-            paint:FireServer(brick, Enum.NormalId.Top, pos, "material", black, "anchor", "")
-        end
-        WindUI:Notify({ Title = "GongHub", Content = "Reverted.", Duration = 2 })
-    end,
-})
-
-local function myBricks()
-    local folder = workspace:FindFirstChild("Bricks")
-    local mine = folder and folder:FindFirstChild(localPlayer.Name)
-    return mine and mine:GetChildren() or {}
+    end
 end
 
-repTab:Toggle({
-    Title = "Auto-Delete Bricks",
-    Desc = "Clears all bricks in workspace repeatedly",
-    Callback = function(on)
-        task.spawn(function()
-            while on do
-                local deleteRemote = toolEventAny("Delete")
-                local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if deleteRemote and hrp then
-                    for _, obj in pairs(workspace:GetDescendants()) do
-                        if not on then break end
-                        if obj.Name == "Brick" and obj:IsA("BasePart") then
-                            deleteRemote:FireServer(obj, hrp.Position)
-                            task.wait(0.01)
-                        end
-                    end
-                end
-                task.wait(0.5)
+local function renderHopList()
+    if not hopListContainer then return end
+    for _, child in ipairs(hopListContainer:GetChildren()) do
+        if child.Name == "GongHubHopRow" then child:Destroy() end
+    end
+
+    for idx, srv in ipairs(hop.servers) do
+        local playing = tonumber(srv.playing) or 0
+        local maxP    = tonumber(srv.maxPlayers) or 0
+        local isFull  = playing >= maxP
+        local isCurr  = srv.id == game.JobId
+        local isPrev  = hop.supportsFiles and tostring(srv.id) == tostring(hop.prevServer)
+
+        local label = "Playing: " .. playing .. "/" .. maxP
+        if isCurr then label = label .. " (yours)"
+        elseif isPrev then label = label .. " (prev)"
+        elseif isFull then label = label .. " (full)" end
+
+        local rowBtn = Instance.new("TextButton")
+        rowBtn.Name = "GongHubHopRow"
+        rowBtn.Size = UDim2.new(1, 0, 0, 34)
+        rowBtn.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+        rowBtn.BorderSizePixel = 0
+        rowBtn.Font = Enum.Font.Code
+        rowBtn.TextSize = 11
+        rowBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
+        rowBtn.TextXAlignment = Enum.TextXAlignment.Left
+        rowBtn.Text = string.format("%d  ·  %s  ·  %s", idx, tostring(srv.id):sub(1, 12), label)
+        rowBtn.AutoButtonColor = false
+        rowBtn.Parent = hopListContainer
+        Instance.new("UICorner", rowBtn).CornerRadius = UDim.new(0, 4)
+
+        rowBtn.MouseButton1Click:Connect(function()
+            rowBtn.Text = "Joining..."
+            pcall(function()
+                teleportService:TeleportToPlaceInstance(game.PlaceId, srv.id, localPlayer)
+            end)
+        end)
+    end
+end
+
+local function fetchHop()
+    if hop.updating then return end
+    hop.updating = true
+    hopStatus:SetDesc("fetching...")
+    task.spawn(function()
+        local order = hop.asc and "Asc" or "Desc"
+        local url = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=%s&limit=100")
+            :format(game.PlaceId, order)
+        local body
+        if _req then
+            pcall(function()
+                local res = _req({ Url = url, Method = "GET" })
+                body = res and res.Body
+            end)
+        end
+        if not body then
+            pcall(function() body = game:HttpGet(url) end)
+        end
+        local data
+        if body then
+            local ok, decoded = pcall(function() return httpService:JSONDecode(body) end)
+            if ok and decoded and decoded.data then data = decoded.data end
+        end
+        if not data then
+            hopStatus:SetDesc("rate limited / failed")
+            hopCounter:SetDesc("0 loaded")
+            hop.updating = false
+            return
+        end
+        hop.servers = {}
+        for _, v in ipairs(data) do
+            if type(v) == "table" and v.id and v.playing and v.maxPlayers then
+                table.insert(hop.servers, v)
             end
+        end
+        while #hop.servers > hop.maxServers do table.remove(hop.servers) end
+        hopStatus:SetDesc("ready")
+        hopCounter:SetDesc(string.format("%d servers", #hop.servers))
+        renderHopList()
+        hop.updating = false
+    end)
+end
+
+hopTab:Button({ Title = "Refresh", Callback = fetchHop })
+hopTab:Button({
+    Title = "Toggle Sort (Desc / Asc)",
+    Callback = function()
+        hop.asc = not hop.asc
+        fetchHop()
+    end,
+})
+hopTab:Button({
+    Title = "Rejoin Current Server",
+    Callback = function()
+        pcall(function()
+            teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, localPlayer)
         end)
     end,
 })
 
-repTab:Button({
-    Title = "Break Bkit",
-    Callback = function()
-        local brick = replicatedStorage:FindFirstChild("Brick")
-        local deleteRemote = toolEventAny("Delete")
-        if deleteRemote and brick and localPlayer.Character then
-            deleteRemote:FireServer(brick, localPlayer.Character.HumanoidRootPart.Position)
-        end
-    end,
-})
+-- locate the container after WindUI builds the frame
+task.spawn(function()
+    for _ = 1, 60 do
+        task.wait(0.25)
+        if findHopContainer() then break end
+    end
+    if hopListContainer then
+        fetchHop()
+        -- auto refresh every 70s
+        task.spawn(function()
+            while true do
+                task.wait(70)
+                fetchHop()
+            end
+        end)
+    else
+        hopStatus:SetDesc("could not mount list (WindUI container not found)")
+    end
+end)
 
--- ============================================================
+
 -- Build tab
 -- ============================================================
 local buildTab = hub:Tab({ Title = "Build", Icon = "lucide:hammer" })
@@ -1629,144 +1596,6 @@ players.PlayerRemoving:Connect(function(plr)
     removeTag(plr)
 end)
 
--- ============================================================
--- Server Hopper (inline, in its own tab)
--- ============================================================
-hub:Tab({ Title = "────>HOP<────", Icon = "", Locked = true, Border = false })
-local hopTab = hub:Tab({ Title = "Server Hopper", Icon = "server" })
-
-local hop = {
-    asc = false,
-    servers = {},
-    updating = false,
-    supportsFiles = false,
-    prevServer = "0",
-    maxServers = 100,
-}
-
-pcall(function()
-    writefile("gonghub_probe.tmp", "x")
-    hop.supportsFiles = readfile("gonghub_probe.tmp") == "x"
-    delfile("gonghub_probe.tmp")
-end)
-if hop.supportsFiles then
-    pcall(function() hop.prevServer = readfile("gonghub_prevserver.txt") end)
-end
-players.PlayerRemoving:Connect(function(plr)
-    if plr == localPlayer and hop.supportsFiles then
-        pcall(function() writefile("gonghub_prevserver.txt", tostring(game.JobId)) end)
-    end
-end)
-
-hopTab:Section({ Title = "Controls" })
-local hopStatus = hopTab:Paragraph({
-    Title = "Status",
-    Desc = "idle",
-})
-local hopList = hopTab:Divider()
-
-local function renderHopList()
-    local function clearOld()
-        for _, child in ipairs(hopTab._frame:GetDescendants()) do
-            if child.Name == "GongHubHopRow" then child:Destroy() end
-        end
-    end
-    clearOld()
-
-    for idx, srv in ipairs(hop.servers) do
-        local playing = tonumber(srv.playing) or 0
-        local maxP    = tonumber(srv.maxPlayers) or 0
-        local isFull  = playing >= maxP
-        local isCurr  = srv.id == game.JobId
-        local isPrev  = hop.supportsFiles and tostring(srv.id) == tostring(hop.prevServer)
-
-        local label = "Playing: " .. playing .. "/" .. maxP
-        if isCurr then label = label .. " (yours)"
-        elseif isPrev then label = label .. " (prev)"
-        elseif isFull then label = label .. " (full)" end
-
-        hopTab:Button({
-            Title = string.format("%d  ·  %s", idx, tostring(srv.id):sub(1, 12)),
-            Desc = label,
-            Callback = function()
-                pcall(function()
-                    teleportService:TeleportToPlaceInstance(game.PlaceId, srv.id, localPlayer)
-                end)
-            end,
-        })
-    end
-end
-
-local function fetchHop()
-    if hop.updating then return end
-    hop.updating = true
-    hopStatus:SetDesc("fetching...")
-    task.spawn(function()
-        local order = hop.asc and "Asc" or "Desc"
-        local url = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=%s&limit=100")
-            :format(game.PlaceId, order)
-        local body
-        if _req then
-            pcall(function()
-                local res = _req({ Url = url, Method = "GET" })
-                body = res and res.Body
-            end)
-        end
-        if not body then
-            pcall(function() body = game:HttpGet(url) end)
-        end
-        local data
-        if body then
-            local ok, decoded = pcall(function() return httpService:JSONDecode(body) end)
-            if ok and decoded and decoded.data then data = decoded.data end
-        end
-        if not data then
-            hopStatus:SetDesc("rate limited / failed")
-            hop.updating = false
-            return
-        end
-        hop.servers = {}
-        for _, v in ipairs(data) do
-            if type(v) == "table" and v.id and v.playing and v.maxPlayers then
-                table.insert(hop.servers, v)
-            end
-        end
-        while #hop.servers > hop.maxServers do table.remove(hop.servers) end
-        hopStatus:SetDesc(string.format("%d servers", #hop.servers))
-        renderHopList()
-        hop.updating = false
-    end)
-end
-
-hopTab:Button({
-    Title = "Refresh",
-    Callback = fetchHop,
-})
-hopTab:Button({
-    Title = "Toggle Sort",
-    Callback = function()
-        hop.asc = not hop.asc
-        fetchHop()
-    end,
-})
-hopTab:Button({
-    Title = "Rejoin Current Server",
-    Callback = function()
-        pcall(function()
-            teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, localPlayer)
-        end)
-    end,
-})
-
-task.spawn(function()
-    while not loadingDone and not hub do task.wait(0.1) end
-    task.wait(0.5)
-    fetchHop()
-    while true do
-        task.wait(70)
-        fetchHop()
-    end
-end)
 
 -- ============================================================
 -- Finish
