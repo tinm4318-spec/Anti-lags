@@ -56,10 +56,8 @@ local autoGrabDropped   = false
 local autoDropOnDeath   = false
 local protectArkenstone = true
 local spyChat           = true
-local playerTags        = false
 
-local tagMap         = {}
-local stashPlatforms = {}
+local stashPlatforms   = {}
 local savedAtmoDensity = 0.3
 local atmo = lighting:FindFirstChildOfClass("Atmosphere")
 if atmo then savedAtmoDensity = atmo.Density end
@@ -81,9 +79,7 @@ for k, v in pairs(colorMap) do
     colorHex[k] = "#" .. Color3.fromRGB(table.unpack(v)):ToHex()
 end
 
-local humanoidRef  = nil
-local loadingDone  = false
-local spinnerAlive = true
+local humanoidRef = nil
 
 -- ============================================================
 -- Helpers
@@ -301,6 +297,8 @@ localPlayer.CharacterAdded:Connect(bindCharacter)
 -- ============================================================
 -- Loading screen
 -- ============================================================
+local spinnerAlive = true
+
 local loadingGui = Instance.new("ScreenGui")
 loadingGui.Name = "GongHubLoading"
 loadingGui.DisplayOrder = 9999
@@ -403,40 +401,41 @@ spinnerTxt.TextXAlignment = Enum.TextXAlignment.Center
 spinnerTxt.TextYAlignment = Enum.TextYAlignment.Center
 spinnerTxt.ZIndex = 3
 
+local tips = {
+    "Press K to toggle the menu open or closed.",
+    "Use tabs to organise your features.",
+    "Report bugs in the Discord.",
+    "Use the search bar to find features fast.",
+}
+
 task.spawn(function()
     local angle, dots, dotT, tipIdx, tipT = 0, 0, 0, 1, 0
     local last = os.clock()
-    local tips = {
-        "Press K to toggle the menu open or closed.",
-        "Use tabs to organise your features.",
-        "Report bugs in the Discord.",
-        "Use the search bar to find features fast.",
-    }
     while spinnerAlive do
         local now = os.clock()
         local dt = math.min(now - last, 0.05)
         last = now
         angle = (angle + dt * 230) % 360
-        spinnerFg.Rotation = angle
-        spinnerGrad.Rotation = angle * 0.75 % 360
+        pcall(function() spinnerFg.Rotation = angle end)
+        pcall(function() spinnerGrad.Rotation = angle * 0.75 % 360 end)
         dotT = dotT + dt
         if dotT >= 0.35 then
             dotT = 0
             dots = (dots + 1) % 4
-            spinnerTxt.Text = "Loading" .. string.rep(".", dots)
+            pcall(function() spinnerTxt.Text = "Loading" .. string.rep(".", dots) end)
         end
         tipT = tipT + dt
         if tipT >= 2.5 then
             tipT = 0
             tipIdx = tipIdx % #tips + 1
-            statusLbl.Text = "Tip: " .. tips[tipIdx]
+            pcall(function() statusLbl.Text = "Tip: " .. tips[tipIdx] end)
         end
         task.wait()
     end
 end)
 
 -- ============================================================
--- WindUI load
+-- WindUI load (guarded)
 -- ============================================================
 local WindUI
 local okLoad, loadErr = pcall(function()
@@ -449,7 +448,7 @@ if not okLoad or not WindUI then
     warn("[GongHub] WindUI load failed: " .. tostring(loadErr))
     spinnerAlive = false
     task.wait(0.1)
-    loadingGui:Destroy()
+    pcall(function() loadingGui:Destroy() end)
     return
 end
 
@@ -493,7 +492,7 @@ about:Paragraph({
 })
 about:Paragraph({
     Title = "Credits",
-    Desc = "Owner: gong/gongy\nHelper: MadeInHeaven\nCleanup: Gonghub ",
+    Desc = "Owner: st1k/stik\nHelper: MadeInHeaven\nCleanup: GongHub build",
 })
 
 hub:Tab({ Title = "────────────", Icon = "", Locked = true, Border = false })
@@ -790,12 +789,14 @@ hopTab:Section({ Title = "Controls" })
 local hopStatus  = hopTab:Paragraph({ Title = "Status",  Desc = "idle" })
 local hopCounter = hopTab:Paragraph({ Title = "Servers", Desc = "0 loaded" })
 
-hopTab:Button({ Title = "Refresh", Callback = function() fetchHop(true) end })
+local fetchHop
+
+hopTab:Button({ Title = "Refresh", Callback = function() if fetchHop then fetchHop() end end })
 hopTab:Button({
     Title = "Toggle Sort (Desc / Asc)",
     Callback = function()
         hop.asc = not hop.asc
-        fetchHop(true)
+        if fetchHop then fetchHop() end
     end,
 })
 hopTab:Button({
@@ -807,9 +808,7 @@ hopTab:Button({
     end,
 })
 
-local hopListSection = hopTab:Section({ Title = "Servers" })
 local hopRowCache = {}
-
 local function clearHopRows()
     for _, btn in ipairs(hopRowCache) do
         pcall(function() btn:Destroy() end)
@@ -823,19 +822,16 @@ local function renderHopList()
         hopStatus:SetDesc("no servers")
         return
     end
-
     for idx, srv in ipairs(hop.servers) do
         local playing = tonumber(srv.playing) or 0
         local maxP    = tonumber(srv.maxPlayers) or 0
         local isFull  = playing >= maxP
         local isCurr  = srv.id == game.JobId
         local isPrev  = hop.supportsFiles and tostring(srv.id) == tostring(hop.prevServer)
-
         local tag = ""
         if isCurr then tag = " (yours)"
         elseif isPrev then tag = " (prev)"
         elseif isFull then tag = " (full)" end
-
         local btn = hopTab:Button({
             Title = string.format("%d · %s", idx, tostring(srv.id):sub(1, 12)),
             Desc  = string.format("Playing %d/%d%s", playing, maxP, tag),
@@ -850,7 +846,7 @@ local function renderHopList()
     hopStatus:SetDesc("ready")
 end
 
-function fetchHop(force)
+function fetchHop()
     if hop.updating then return end
     hop.updating = true
     hopStatus:SetDesc("fetching...")
@@ -1305,14 +1301,11 @@ local function buildPlayerList()
     return names
 end
 
-local playerDropdown = targetTab:Dropdown({
+targetTab:Dropdown({
     Title = "Select Player",
+    Desc = "Snapshot at load. Re-execute to refresh list.",
     Values = buildPlayerList(),
     Callback = function(v) selectedPlayer = playerMap[v] end,
-})
-targetTab:Button({
-    Title = "Refresh List",
-    Callback = function() playerDropdown:SetValues(buildPlayerList()) end,
 })
 
 targetTab:Section({ Title = "Offensive" })
@@ -1397,9 +1390,6 @@ targetTab:Button({
             or localPlayer.Character:FindFirstChild("Humanoid")
     end,
 })
-players.PlayerAdded:Connect(function()
-    playerDropdown:SetValues(buildPlayerList())
-end)
 
 -- ============================================================
 -- Mod & Mgmt
@@ -1466,12 +1456,10 @@ modTab:Button({
 })
 
 -- ============================================================
--- Chat color renderer (chained)
+-- Chat color renderer — Roblox blocks reading OnIncomingMessage,
+-- so we set it directly once. No chaining possible.
 -- ============================================================
-local prevIncoming = textChatService.OnIncomingMessage
 textChatService.OnIncomingMessage = function(mdata)
-    if prevIncoming then pcall(prevIncoming, mdata) end
-
     local src = mdata.TextSource and mdata.TextSource.UserId
         and players:GetPlayerByUserId(mdata.TextSource.UserId)
     if not src then return end
@@ -1495,7 +1483,7 @@ textChatService.OnIncomingMessage = function(mdata)
 end
 
 -- ============================================================
--- Character loop
+-- Character loop (auto pickup, auto drop)
 -- ============================================================
 task.spawn(function()
     while true do
@@ -1527,85 +1515,13 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- Player tags
--- ============================================================
-local function removeTag(plr)
-    if tagMap[plr] then tagMap[plr]:Destroy() tagMap[plr] = nil end
-end
-
-local function addTag(plr)
-    if not playerTags then return end
-    if plr == localPlayer then return end
-    if tagMap[plr] then return end
-    local char = plr.Character
-    if not char then return end
-    local head = char:FindFirstChild("Head")
-    if not head then return end
-
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "GongHubTag"
-    billboard.Size = UDim2.fromOffset(140, 42)
-    billboard.StudsOffset = Vector3.new(0, 3.2, 0)
-    billboard.AlwaysOnTop = true
-    billboard.ResetOnSpawn = false
-    billboard.Parent = head
-
-    local frame = Instance.new("Frame", billboard)
-    frame.Size = UDim2.fromScale(1, 1)
-    frame.BackgroundColor3 = Color3.fromRGB(6, 19, 10)
-    frame.BackgroundTransparency = 0.25
-    frame.BorderSizePixel = 0
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-    local s = Instance.new("UIStroke", frame)
-    s.Color = tagColor
-    s.Thickness = 1
-
-    local nameLbl = Instance.new("TextLabel", frame)
-    nameLbl.Size = UDim2.new(1, -8, 0, 20)
-    nameLbl.Position = UDim2.fromOffset(4, 2)
-    nameLbl.BackgroundTransparency = 1
-    nameLbl.Text = plr.Name
-    nameLbl.TextColor3 = Color3.fromRGB(229, 231, 235)
-    nameLbl.TextSize = 12
-    nameLbl.Font = Enum.Font.GothamBold
-
-    local roleLbl = Instance.new("TextLabel", frame)
-    roleLbl.Size = UDim2.new(1, -8, 0, 16)
-    roleLbl.Position = UDim2.fromOffset(4, 24)
-    roleLbl.BackgroundTransparency = 1
-    local role = rank(plr)
-    roleLbl.Text = role
-    roleLbl.TextColor3 = role == "Dev" and Color3.fromRGB(34, 197, 94)
-        or role == "Premium" and Color3.fromRGB(234, 179, 8)
-        or Color3.fromRGB(148, 163, 184)
-    roleLbl.TextSize = 10
-    roleLbl.Font = Enum.Font.GothamMedium
-
-    tagMap[plr] = billboard
-end
-
-players.PlayerAdded:Connect(function(plr)
-    if playerTags then
-        plr.CharacterAdded:Connect(function()
-            task.wait(0.5)
-            addTag(plr)
-        end)
-        if plr.Character then addTag(plr) end
-    end
-end)
-players.PlayerRemoving:Connect(function(plr)
-    removeTag(plr)
-end)
-
--- ============================================================
--- Hopper background fetch (async, after all tabs are wired)
+-- Hopper background fetch — spawned so it can't block loading
 -- ============================================================
 task.spawn(function()
     task.wait(1)
-    fetchHop()
+    if fetchHop then fetchHop() end
 end)
 
--- periodic: only when hop tab visible AND at least 30s since last fetch
 local lastHopFetch = 0
 task.spawn(function()
     while true do
@@ -1614,25 +1530,78 @@ task.spawn(function()
             local now = tick()
             if now - lastHopFetch >= 30 and not hop.updating then
                 lastHopFetch = now
-                fetchHop()
+                if fetchHop then fetchHop() end
             end
         end
     end
 end)
 
 -- ============================================================
--- Finish 
+-- Kill spinner + destroy loading FIRST.
+-- DevTab/PremTab come after — guarded so non-Dev accounts
+-- cannot crash the loader.
 -- ============================================================
-loadingDone = true
 spinnerAlive = false
-task.wait(0.3)
-tweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0.5, -150, 0.5, -90),
-}):Play()
-tweenService:Create(back, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {
-    BackgroundTransparency = 1,
-}):Play()
+pcall(function() spinnerTxt.Text = "Done!" end)
+pcall(function()
+    tweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0.5, -150, 0.5, -90),
+    }):Play()
+end)
+pcall(function()
+    tweenService:Create(back, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {
+        BackgroundTransparency = 1,
+    }):Play()
+end)
 task.wait(0.6)
-loadingGui:Destroy()
+pcall(function()
+    if loadingGui and loadingGui.Parent then loadingGui:Destroy() end
+end)
+pcall(function()
+    local leftover = playerGui:FindFirstChild("GongHubLoading")
+    if leftover then leftover:Destroy() end
+    local wind = coreGui:FindFirstChild("WindUI_Loading")
+    if wind then wind:Destroy() end
+end)
 print("[GongHub] loading destroyed")
+
+-- ============================================================
+-- Premium tab — guarded
+-- ============================================================
+local premiumPremTab
+pcall(function()
+    premiumPremTab = hub:PremTab({ Title = "Premium", Icon = "lucide:crown" })
+end)
+
+if premiumPremTab then
+    pcall(function()
+        premiumPremTab:PremToggle({
+            Title = "Player Tags",
+            Desc = "Show a floating tag above every player.",
+            Icon = "lucide:tag",
+            Value = false,
+            Callback = function() end,
+        })
+    end)
+end
+
+-- ============================================================
+-- Dev tab — guarded, no remote blacklist, no GitHub token
+-- ============================================================
+local devDevTab
+pcall(function()
+    devDevTab = hub:DevTab({ Title = "Dev", Icon = "lucide:shield" })
+end)
+
+if devDevTab then
+    pcall(function()
+        devDevTab:Button({
+            Title = "Close Panel",
+            Desc = "Destroys the GongHub GUI.",
+            Callback = function()
+                pcall(function() hub:Destroy() end)
+            end,
+        })
+    end)
+end 
