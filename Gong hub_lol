@@ -51,6 +51,7 @@ local alphabet     = "abcdefghijklmnopqrstuvwxyz"
 local antiBlind, antiMyopic, antiVamp, antiJail
 local antiFreeze, antiGlitch, antiFog, antiMorph
 local antiColorless, antiDumb = false, false
+local antiMaptide, antiGlow   = false, false
 
 local autoGrabDropped   = false
 local autoDropOnDeath   = false
@@ -757,7 +758,7 @@ home:Slider({
 })
 
 -- ============================================================
--- Server Hopper (replaces RepStorage tab)
+-- Server Hopper
 -- ============================================================
 hub:Tab({ Title = "────>OP<────", Icon = "", Locked = true, Border = false })
 local hopTab = hub:Tab({ Title = "Server Hopper", Icon = "server" })
@@ -1201,6 +1202,141 @@ auraTab:Slider({
 })
 
 -- ============================================================
+-- Anti-Maptide + Anti-NaN (merged)
+-- ============================================================
+local maptideConn = nil
+local maptideLoop = nil
+
+local function isNaN(n)
+    return n ~= n
+end
+
+local function isSafe(cf)
+    local p = cf.Position
+    return not (
+        isNaN(p.X) or isNaN(p.Y) or isNaN(p.Z)
+        or math.abs(p.X) == math.huge
+        or math.abs(p.Y) == math.huge
+        or math.abs(p.Z) == math.huge
+        or math.abs(p.Y) > 500000
+    )
+end
+
+local function isVoided()
+    local spawn = workspace:FindFirstChild("Spawn")
+    if not spawn then return false end
+    local acm = spawn.AssemblyCenterOfMass
+    return acm.X == 0 and acm.Y == -1000000 and acm.Z == 0
+end
+
+local function onMaptideCharacter(character)
+    if not antiMaptide then return end
+
+    local hrp = character:WaitForChild("HumanoidRootPart", 10)
+    if not hrp then return end
+
+    if isVoided() then
+        hrp.Anchored = true
+        task.wait(0.1)
+        hrp.CFrame = CFrame.new(0, 3, 0)
+        hrp.Anchored = false
+        return
+    end
+
+    hrp.Anchored = true
+    task.wait(0.05)
+
+    if not isSafe(hrp.CFrame) then
+        local recovered = false
+        for _, plr in ipairs(players:GetPlayers()) do
+            if plr ~= localPlayer and plr.Character
+                and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local otherHRP = plr.Character.HumanoidRootPart
+                if isSafe(otherHRP.CFrame) then
+                    hrp.CFrame = otherHRP.CFrame + Vector3.new(0, 5, 0)
+                    recovered = true
+                    break
+                end
+            end
+        end
+        if not recovered then
+            hrp.CFrame = CFrame.new(0, 50, 0)
+        end
+    end
+
+    hrp.Anchored = false
+end
+
+local function enableAntiMaptide()
+    antiMaptide = true
+    if maptideConn then maptideConn:Disconnect() end
+    maptideConn = localPlayer.CharacterAdded:Connect(onMaptideCharacter)
+
+    if localPlayer.Character then
+        onMaptideCharacter(localPlayer.Character)
+    end
+
+    if maptideLoop then maptideLoop:Disconnect() end
+    maptideLoop = runService.Heartbeat:Connect(function()
+        if not antiMaptide then return end
+        local char = localPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp and not isSafe(hrp.CFrame) then
+            hrp.CFrame = CFrame.new(0, 50, 0)
+        end
+    end)
+end
+
+local function disableAntiMaptide()
+    antiMaptide = false
+    if maptideConn then
+        maptideConn:Disconnect()
+        maptideConn = nil
+    end
+    if maptideLoop then
+        maptideLoop:Disconnect()
+        maptideLoop = nil
+    end
+end
+
+-- ============================================================
+-- Anti-Glow
+-- ============================================================
+local antiGlowConnections = {}
+
+local function enableAntiGlow()
+    antiGlow = true
+    for _, c in ipairs(antiGlowConnections) do
+        if c then c:Disconnect() end
+    end
+    antiGlowConnections = {}
+
+    table.insert(antiGlowConnections, runService.Heartbeat:Connect(function()
+        if not antiGlow then return end
+        local char = localPlayer.Character
+        if not char then return end
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                if part.Material == Enum.Material.Neon then
+                    part.Material = Enum.Material.Plastic
+                end
+                if part.Color == Color3.fromRGB(0, 0, 0) then
+                    part.Color = Color3.fromRGB(163, 162, 165)
+                end
+            end
+        end
+    end))
+end
+
+local function disableAntiGlow()
+    antiGlow = false
+    for _, c in ipairs(antiGlowConnections) do
+        if c then c:Disconnect() end
+    end
+    antiGlowConnections = {}
+end
+
+-- ============================================================
 -- Antis
 -- ============================================================
 local antis = hub:Tab({ Title = "Antis", Icon = "lucide:shield-x" })
@@ -1226,6 +1362,13 @@ antis:Toggle({
 antis:Toggle({ Title = "Anti-Colorless", Callback = function(v) antiColorless = v end })
 antis:Toggle({ Title = "Anti-Blind",     Callback = function(v) antiBlind = v end })
 antis:Toggle({ Title = "Anti-Myopic",    Callback = function(v) antiMyopic = v end })
+antis:Toggle({
+    Title = "Anti-Glow",
+    Desc = "Reverts neon material and pitch-black parts back to grey",
+    Callback = function(v)
+        if v then enableAntiGlow() else disableAntiGlow() end
+    end,
+})
 
 antis:Section({ Title = "Player" })
 antis:Toggle({ Title = "Anti-Morph",  Callback = function(v) antiMorph = v end })
@@ -1263,6 +1406,20 @@ antis:Toggle({
     end,
 })
 antis:Toggle({ Title = "Anti-Freeze", Callback = function(v) antiFreeze = v end })
+antis:Toggle({
+    Title = "Anti-Maptide",
+    Desc = "If spawn gets NaN'd, respawns you at a nearby player or (0, 50, 0)",
+    Callback = function(v)
+        if v then enableAntiMaptide() else disableAntiMaptide() end
+    end,
+})
+antis:Toggle({
+    Title = "Anti-NaN",
+    Desc = "If Spawn is dragged into the void (0, -1e6, 0), respawns you at (0, 3, 0)",
+    Callback = function(v)
+        if v then enableAntiMaptide() else disableAntiMaptide() end
+    end,
+})
 
 antis:Section({ Title = "Chat" })
 antis:Toggle({ Title = "Anti-Dumb", Callback = function(v) antiDumb = v end })
@@ -1456,8 +1613,7 @@ modTab:Button({
 })
 
 -- ============================================================
--- Chat color renderer — Roblox blocks reading OnIncomingMessage,
--- so we set it directly once. No chaining possible.
+-- Chat color renderer
 -- ============================================================
 textChatService.OnIncomingMessage = function(mdata)
     local src = mdata.TextSource and mdata.TextSource.UserId
@@ -1483,7 +1639,7 @@ textChatService.OnIncomingMessage = function(mdata)
 end
 
 -- ============================================================
--- Character loop (auto pickup, auto drop)
+-- Character loop
 -- ============================================================
 task.spawn(function()
     while true do
@@ -1515,7 +1671,7 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- Hopper background fetch — spawned so it can't block loading
+-- Hopper background fetch
 -- ============================================================
 task.spawn(function()
     task.wait(1)
@@ -1537,9 +1693,7 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- Kill spinner + destroy loading FIRST.
--- DevTab/PremTab come after — guarded so non-Dev accounts
--- cannot crash the loader.
+-- Kill loading FIRST
 -- ============================================================
 spinnerAlive = false
 pcall(function() spinnerTxt.Text = "Done!" end)
@@ -1567,7 +1721,7 @@ end)
 print("[GongHub] loading destroyed")
 
 -- ============================================================
--- Premium tab — guarded
+-- Premium tab (guarded)
 -- ============================================================
 local premiumPremTab
 pcall(function()
@@ -1587,7 +1741,7 @@ if premiumPremTab then
 end
 
 -- ============================================================
--- Dev tab — guarded, no remote blacklist, no GitHub token
+-- Dev tab (guarded, no remote blacklist)
 -- ============================================================
 local devDevTab
 pcall(function()
@@ -1604,4 +1758,4 @@ if devDevTab then
             end,
         })
     end)
-end 
+end
