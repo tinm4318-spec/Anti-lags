@@ -1,6 +1,6 @@
+
 -- GongHub
--- antis
--- best script frfr
+
 
 local coreGui = game:GetService("CoreGui")
 local players = game:GetService("Players")
@@ -13,535 +13,461 @@ local lighting = game:GetService("Lighting")
 local starterGui = game:GetService("StarterGui")
 local textChatService = game:GetService("TextChatService")
 local tweenService = game:GetService("TweenService")
-local pathfindingService = game:GetService("PathfindingService")
 local teleportService = game:GetService("TeleportService")
-local virtualInputManager = game:GetService("VirtualInputManager")
 
-local ok, result = pcall(function()
-  local localPlayer, playerGui, system, v1, list, list2, list3, list4, list5, material, text,
-    v2, deleteRange, v3, v4, rainbowPaint, shovel, delete, blockTrail, killAura, color2, v5,
-    map, v6, bypassInput, text2, buildAura, signAura, rainbowAura, deleteAura, deleteRange2,
-    paintRange, antiBlind, antiMyopic, antiVamp, antiJail, antiFreeze, antiGlitch, antiFog,
-    antiMorph, antiColorless, antiDumb, v7, rbxGeneral, sendAsync, list6, v8, v9,
-    protectArkenstone, spyChat, cubes, map2, v10, map3, list7, flag, v11, targetUser, flag2,
-    humanoid2, loadingScreen, instance8, instance9, instance15, instance18, instance19,
-    instance20, v23, atmosphere, density, gongHubWindow, repStorageTab, color4, lower, v33, v34,
-    v35, v36, v37, v38, modMgmtTab
+-- ============================================================
+-- Globals
+-- ============================================================
+local localPlayer = players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+local system = replicatedStorage:WaitForChild("System")
 
-  do
-    local color = Color3.fromRGB(34, 197, 94)
+local _req = request or (syn and syn.request) or (http and http.request)
+    or (fluxus and fluxus.request) or http_request
 
-    _G.GongHub_TITLE = "Loading GongHub"
-    _G.GongHub_ACCENT = color
+-- ============================================================
+-- State
+-- ============================================================
+local DevIds     = { 4260088397, 9693065023 }
+local PremiumIds = { 4260088397, 9693065023 }
+local tagColor   = Color3.fromRGB(34, 197, 94)
 
-    _G.GongHub_TIPS = {
-      "Press K to toggle the menu open or closed.",
-      "Use tabs to organise your features.",
-      "Report bugs in the Discord.",
-      "Use the search bar to find features fast.",
-    }
+local material       = "smooth"
+local trailType      = "detailed"
+local rainbowPaint   = false
+local shovel         = false
+local deleteMode     = false
+local blockTrail     = false
+local killAura       = false
+local buildAura      = false
+local signAura       = false
+local rainbowAura    = false
+local deleteAura     = false
+local deleteRange    = 500
+local deleteRange2   = 20
+local paintRange     = 20
+local hue            = 0
+local hueSpeed       = 0.005
+local bypassInput    = ""
+local alphabet       = "abcdefghijklmnopqrstuvwxyz"
 
-    _G.GongHub_GITHUB_LINK = "https://raw.githubusercontent.com/s0lmain/DevLib/refs/heads/main/main.lua"
-  end
+local antiBlind, antiMyopic, antiVamp, antiJail
+local antiFreeze, antiGlitch, antiFog, antiMorph
+local antiColorless, antiDumb = false, false
 
-  localPlayer = players.LocalPlayer
-  playerGui = localPlayer:WaitForChild("PlayerGui")
-  system = replicatedStorage:WaitForChild("System")
-  v1 = syn and syn.request or http_request or request
-  list = { 4260088397, 9693065023 }
-  list2 = { 4260088397, 9693065023 }
-  list3 = {}
-  list4 = {}
-  list5 = {}
+local autoGrabDropped  = false
+local autoDropOnDeath  = false
+local protectArkenstone = true
+local spyChat          = true
+local playerTags       = false
 
-  material = "smooth"
-  text = "detailed"
-  v2 = false
-  deleteRange = 500
-  v3 = 0
-  v4 = 0.005
-  rainbowPaint = false
-  shovel = false
-  delete = false
-  blockTrail = false
-  killAura = false
-  color2 = Color3.fromRGB(34, 197, 94)
+local tagMap = {}
+local stashPlatforms = {}
+local savedAtmoDensity = 0.3
+local atmo = lighting:FindFirstChildOfClass("Atmosphere")
+if atmo then savedAtmoDensity = atmo.Density end
 
-  v5 = {
-    Dev = Color3.fromRGB(34, 197, 94),
-    Premium = Color3.fromRGB(234, 179, 8),
-    Freemium = Color3.fromRGB(148, 163, 184),
-  }
+local cubes = workspace:FindFirstChild("Cubes")
 
-  map = {}
-  v6 = false
-  bypassInput = ""
-  text2 = "abcdefghijklmnopqrstuvwxyz"
-  buildAura = false
-  signAura = false
-  rainbowAura = false
-  deleteAura = false
-  deleteRange2 = 20
-  paintRange = 20
-  antiBlind = false
-  antiMyopic = false
-  antiVamp = false
-  antiJail = false
-  antiFreeze = false
-  antiGlitch = false
-  antiFog = false
-  antiMorph = false
-  antiColorless = false
-  antiDumb = false
-  v7 = {}
+local colorMap = {
+    peasant  = {150, 103, 102},
+    arken    = {4, 175, 236},
+    admin    = {245, 205, 48},
+    hidden   = {0, 95, 2},
+    iqgenius = {98, 129, 65},
+    iqdumb   = {98, 129, 65},
+}
+if cubes then colorMap.peasant = {128, 128, 128} end
 
-  rbxGeneral = textChatService:FindFirstChild("TextChannels")
-    and textChatService.TextChannels:FindFirstChild("RBXGeneral")
+local colorHex = {}
+for k, v in pairs(colorMap) do
+    colorHex[k] = "#" .. Color3.fromRGB(table.unpack(v)):ToHex()
+end
 
-  sendAsync = rbxGeneral and rbxGeneral.SendAsync
+local humanoidRef = nil
+local loadingDone = false
 
-  list6 = {
-    "Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "UpperTorso",
-    "LowerTorso", "LeftUpperArm", "LeftLowerArm", "LeftHand", "RightUpperArm", "RightLowerArm",
-    "RightHand", "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg",
-    "RightFoot", "HumanoidRootPart", "Humanoid", "Animate", "Health", "Sound",
-  }
-
-  v8 = false
-  v9 = false
-  protectArkenstone = true
-  spyChat = true
-  cubes = workspace:FindFirstChild("Cubes")
-
-  map2 = {
-    peasant = { 150, 103, 102 },
-    arken = { 4, 175, 236 },
-    admin = { 245, 205, 48 },
-    hidden = { 0, 95, 2 },
-    iqgenius = { 98, 129, 65 },
-    iqdumb = { 98, 129, 65 },
-  }
-
-  if cubes then
-    map2.peasant = { 128, 128, 128 }
-  end
-
-  v10 = {}
-  for key, value in pairs(map2) do
-    v10[key] = "#" .. Color3.fromRGB(table.unpack(value)):ToHex()
-  end
-
-  map3 = { joinxl = "JoinXL", joinvc = "JoinVC", joinog = "JoinOG" }
-  list7 = {}
-  flag = false
-  v11 = {}
-  targetUser = ""
-  flag2 = true
-
-  -- rank check (no hidden visibility effects, color label only)
-  local function f5(p2)
-    for _, value3 in ipairs(list) do
-      if p2.UserId == value3 then return "Dev" end
+-- ============================================================
+-- Helpers
+-- ============================================================
+local function rank(p)
+    for _, id in ipairs(DevIds) do
+        if p.UserId == id then return "Dev" end
     end
-    for _, value4 in ipairs(list2) do
-      if p2.UserId == value3 then return "Premium" end
+    for _, id in ipairs(PremiumIds) do
+        if p.UserId == id then return "Premium" end
     end
     return "Freemium"
-  end
+end
 
-  -- tool helpers
-  local function getFindFirstChild(p4)
-    local character = localPlayer.Character
-    if not character then return nil end
-    local findFirstChild = character:FindFirstChild(p4)
-      or localPlayer.Backpack:FindFirstChild(p4)
-    return findFirstChild and findFirstChild:FindFirstChild("Event", true)
-  end
+local function toolEvent(name)
+    local char = localPlayer.Character
+    if not char then return nil end
+    local tool = char:FindFirstChild(name) or localPlayer.Backpack:FindFirstChild(name)
+    return tool and tool:FindFirstChild("Event", true)
+end
 
-  local function getFindFirstChild2(p5)
-    local findFirstChild2 = localPlayer.Backpack:FindFirstChild(p5)
-      or (localPlayer.Character and localPlayer.Character:FindFirstChild(p5))
-    if findFirstChild2 then
-      return findFirstChild2:FindFirstChild("Event", true)
-        or findFirstChild2:FindFirstChildWhichIsA("RemoteEvent", true)
-    end
-    return nil
-  end
+local function toolEventAny(name)
+    local tool = localPlayer.Backpack:FindFirstChild(name)
+        or (localPlayer.Character and localPlayer.Character:FindFirstChild(name))
+    if not tool then return nil end
+    return tool:FindFirstChild("Event", true)
+        or tool:FindFirstChildWhichIsA("RemoteEvent", true)
+end
 
-  local function getFindFirstChild3(p6)
-    local findFirstChild3 = localPlayer.Backpack:FindFirstChild(p6)
-    if findFirstChild3 and localPlayer.Character then
-      localPlayer.Character.Humanoid:EquipTool(findFirstChild3)
+local function equipTool(name)
+    local t = localPlayer.Backpack:FindFirstChild(name)
+    if t and localPlayer.Character then
+        localPlayer.Character.Humanoid:EquipTool(t)
     end
     return localPlayer.Character
-      and (localPlayer.Character:FindFirstChild(p6) or localPlayer.Backpack:FindFirstChild(p6))
-  end
+        and (localPlayer.Character:FindFirstChild(name) or localPlayer.Backpack:FindFirstChild(name))
+end
 
-  -- bypass input generator
-  local function getText(bypassInput2)
-    local text6 = ""
+local function bypassText(src)
+    local out = ""
     math.randomseed(tick())
-    for k = 1, #bypassInput2 do
-      local sub = bypassInput2:sub(k, k)
-      if sub == " " then
-        text6 = text6 .. sub
-      else
-        local roll = math.random(1, #text2)
-        local sub2 = text2:sub(roll, roll)
-        local roll2 = math.random(1, 3)
-        if roll2 == 1 then
-          text6 = text6 .. string.format("<%s>%s</%s>", sub2, sub, sub2)
-        elseif roll2 == 2 then
-          text6 = text6 .. string.format("<%s>%s", sub2, sub)
+    for i = 1, #src do
+        local c = src:sub(i, i)
+        if c == " " then
+            out = out .. c
         else
-          text6 = text6 .. sub
+            local r1 = math.random(1, #alphabet)
+            local r2 = math.random(1, 3)
+            local ch = alphabet:sub(r1, r1)
+            if r2 == 1 then
+                out = out .. string.format("<%s>%s</%s>", ch, c, ch)
+            elseif r2 == 2 then
+                out = out .. string.format("<%s>%s", ch, c)
+            else
+                out = out .. c
+            end
         end
-      end
     end
-    return text6
-  end
+    return out
+end
 
-  -- sphere point in range for auras
-  local function f12(humanoidRootPart, p7, p8)
-    local v13 = math.random() * (p8 - p7) + p7
-    local v14 = math.random() * math.pi * 2
-    local v15 = math.acos(2 * math.random() - 1)
-    return humanoidRootPart.Position + Vector3.new(
-      v13 * math.sin(v15) * math.cos(v14), v13 * math.cos(v15),
-      v13 * math.sin(v15) * math.sin(v14)
+local function randomAroundSphere(hrp, lo, hi)
+    local r  = math.random() * (hi - lo) + lo
+    local th = math.random() * math.pi * 2
+    local ph = math.acos(2 * math.random() - 1)
+    return hrp.Position + Vector3.new(
+        r * math.sin(ph) * math.cos(th),
+        r * math.cos(ph),
+        r * math.sin(ph) * math.sin(th)
     )
-  end
+end
 
-  -- find brick in range
-  local function f13(p9)
-    local list10 = {}
-    local humanoidRootPart2 = localPlayer.Character
-      and localPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not humanoidRootPart2 then return end
-    local bricks = workspaceService:FindFirstChild("Bricks")
-      or workspaceService:FindFirstChild("PlacedBlocks")
-    if not bricks then return end
-    for _, value10 in ipairs(bricks:GetDescendants()) do
-      if value10:IsA("BasePart") then
-        if (humanoidRootPart2.Position - value10.Position).Magnitude <= p9 then
-          table.insert(list10, value10)
+local function nearestBrickInRange(range)
+    local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+    local folder = workspace:FindFirstChild("Bricks") or workspace:FindFirstChild("PlacedBlocks")
+    if not folder then return nil end
+    local pool = {}
+    for _, p in ipairs(folder:GetDescendants()) do
+        if p:IsA("BasePart") and (hrp.Position - p.Position).Magnitude <= range then
+            table.insert(pool, p)
         end
-      end
     end
-    return #list10 > 0 and list10[math.random(1, #list10)] or nil
-  end
+    return #pool > 0 and pool[math.random(1, #pool)] or nil
+end
 
-  local function f14()
+local function restoreCamera()
     pcall(function()
-      starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
-      starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+        starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
+        starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
     end)
-    local currentCamera = workspaceService.CurrentCamera
+    local cam = workspace.CurrentCamera
     if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
-      currentCamera.CameraType = Enum.CameraType.Custom
-      currentCamera.CameraSubject = localPlayer.Character.Humanoid
-      currentCamera.FieldOfView = 70
+        cam.CameraType = Enum.CameraType.Custom
+        cam.CameraSubject = localPlayer.Character.Humanoid
+        cam.FieldOfView = 70
     end
-  end
+end
 
-  local function f15(instance5)
-    if not instance5 then return end
-    for _, value11 in ipairs(instance5:GetDescendants()) do
-      if value11:IsA("BasePart") then
-        value11.CanCollide = false
-      end
+local function unclip(instance)
+    if not instance then return end
+    for _, d in ipairs(instance:GetDescendants()) do
+        if d:IsA("BasePart") then d.CanCollide = false end
     end
-  end
+end
 
-  local function f16()
-    if localPlayer.Character then
-      local humanoid = localPlayer.Character:FindFirstChildOfClass("Humanoid")
-      if humanoid then humanoid.Health = 0 end
-      localPlayer.Character:BreakJoints()
-    end
-  end
+local function killSelf()
+    local char = localPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then hum.Health = 0 end
+    char:BreakJoints()
+end
 
-  local function f17(p10)
-    local function f18()
-      replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(p10, "All")
-    end
-    if pcall(f18) then return end
-    if pcall(function() textChatService.TextChannels.RBXGeneral:SendAsync(p10) end) then return end
+local function say(msg)
+    local ok = pcall(function()
+        replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
+    end)
+    if ok then return end
+    if pcall(function() textChatService.TextChannels.RBXGeneral:SendAsync(msg) end) then return end
     pcall(function()
-      for _, value12 in pairs(replicatedStorage:GetDescendants()) do
-        if value12:IsA("RemoteEvent")
-          and (value12.Name:lower():find("say") or value12.Name:lower():find("chat")
-            or value12.Name:lower():find("message")) then
-          value12:FireServer(p10, "All")
-          break
+        for _, r in pairs(replicatedStorage:GetDescendants()) do
+            if r:IsA("RemoteEvent")
+                and (r.Name:lower():find("say") or r.Name:lower():find("chat")
+                    or r.Name:lower():find("message")) then
+                r:FireServer(msg, "All")
+                break
+            end
         end
-      end
     end)
-  end
+end
 
-  -- stash platform
-  local function makePart(p11)
-    local character3 = localPlayer.Character
-    if not character3 or not character3:FindFirstChild("HumanoidRootPart") then return end
-    local humanoidRootPart3 = character3.HumanoidRootPart
-    for m = #list7, 1, -1 do
-      local instance6 = list7[m]
-      if instance6 and instance6.Parent then instance6:Destroy() end
-      table.remove(list7, m)
+local function buildStash(position)
+    local char = localPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+    for i = #stashPlatforms, 1, -1 do
+        local p = stashPlatforms[i]
+        if p and p.Parent then p:Destroy() end
+        table.remove(stashPlatforms, i)
     end
-    for n = -2, 2 do
-      for i6 = -2, 2 do
-        local devX2StashPlatform = Instance.new("Part")
-        devX2StashPlatform.Name = "GongHubStashPlatform"
-        devX2StashPlatform.Size = Vector3.new(4, 1, 4)
-        devX2StashPlatform.CFrame = CFrame.new(p11 + Vector3.new(n * 4, 0, i6 * 4))
-        devX2StashPlatform.Anchored = true
-        devX2StashPlatform.CanCollide = true
-        devX2StashPlatform.Locked = true
-        devX2StashPlatform.Color = Color3.fromRGB(30, 30, 30)
-        devX2StashPlatform.Material = Enum.Material.SmoothPlastic
-        devX2StashPlatform.CastShadow = false
-        devX2StashPlatform.Parent = workspaceService
-        table.insert(list7, devX2StashPlatform)
-      end
+    for x = -2, 2 do
+        for z = -2, 2 do
+            local part = Instance.new("Part")
+            part.Name = "GongHubStashPlatform"
+            part.Size = Vector3.new(4, 1, 4)
+            part.CFrame = CFrame.new(position + Vector3.new(x * 4, 0, z * 4))
+            part.Anchored = true
+            part.CanCollide = true
+            part.Locked = true
+            part.Color = Color3.fromRGB(30, 30, 30)
+            part.Material = Enum.Material.SmoothPlastic
+            part.CastShadow = false
+            part.Parent = workspace
+            table.insert(stashPlatforms, part)
+        end
     end
-    humanoidRootPart3.CFrame = CFrame.new(p11 + Vector3.new(0, 6, 0))
-  end
+    hrp.CFrame = CFrame.new(position + Vector3.new(0, 6, 0))
+end
 
-  local function f19()
-    for i7 = #list7, 1, -1 do
-      local instance7 = list7[i7]
-      if instance7 and instance7.Parent then instance7:Destroy() end
-      table.remove(list7, i7)
+local function clearStash()
+    for i = #stashPlatforms, 1, -1 do
+        local p = stashPlatforms[i]
+        if p and p.Parent then p:Destroy() end
+        table.remove(stashPlatforms, i)
     end
-  end
+end
 
-  local function f20(p12)
-    local character4 = localPlayer.Character
-    if not character4 then return end
-    local findFirstChild4 = localPlayer.Backpack:FindFirstChild(p12)
-      or character4:FindFirstChild(p12)
-    if findFirstChild4 then findFirstChild4.Parent = character4 end
-  end
+local function forceEquip(name)
+    local char = localPlayer.Character
+    if not char then return end
+    local t = localPlayer.Backpack:FindFirstChild(name) or char:FindFirstChild(name)
+    if t then t.Parent = char end
+end
 
-  local connect
-  local function f21()
-    flag = true
-    if connect then connect:Disconnect() end
-    connect = runService.Stepped:Connect(function()
-      if not flag then return end
-      f20("The Arkenstone")
-      f20("Classic Bucket")
-      f20("25162389")
+local arkenConn
+local arkenForce = false
+local function startArkenForce()
+    arkenForce = true
+    if arkenConn then arkenConn:Disconnect() end
+    arkenConn = runService.Stepped:Connect(function()
+        if not arkenForce then return end
+        forceEquip("The Arkenstone")
+        forceEquip("Classic Bucket")
+        forceEquip("25162389")
     end)
-  end
-  local function f22()
-    flag = false
-    if connect then connect:Disconnect() connect = nil end
-  end
+end
+local function stopArkenForce()
+    arkenForce = false
+    if arkenConn then arkenConn:Disconnect() arkenConn = nil end
+end
 
-  local function getVector(p13)
-    local roll3 = math.random(0, 1)
-    local roll4 = math.random(0, 1)
-    local roll5 = math.random(30000, 60000)
-    local roll6 = math.random(30000, 60000)
-    return Vector3.new((roll3 == 0 and 1 or -1) * roll5, 1000, (roll4 == 0 and 1 or -1) * roll6)
-  end
+local function randOffsetVector()
+    local sx = math.random(0, 1) == 0 and 1 or -1
+    local sz = math.random(0, 1) == 0 and 1 or -1
+    return Vector3.new(sx * math.random(30000, 60000), 1000, sz * math.random(30000, 60000))
+end
 
-  local function f23(character5)
-    local connect2 = character5.ChildAdded:Connect(function(child)
-      if not child then return end
-      if child:IsA("Humanoid") then
-        humanoid2 = child
-      elseif child:IsA("Tool") and not child:HasTag("DroppedByScript") then
-        child:AddTag("DroppedByScript")
-      end
+local stashPoints = {}
+for i = 1, 10 do stashPoints[i] = randOffsetVector() end
+
+local function bindCharacter(char)
+    char.ChildAdded:Connect(function(child)
+        if child:IsA("Humanoid") then humanoidRef = child end
+        if child:IsA("Tool") and not child:HasTag("DroppedByScript") then
+            child:AddTag("DroppedByScript")
+        end
     end)
-    if character5:FindFirstChild("Humanoid") then humanoid2 = character5.Humanoid end
-    coroutine.wrap(function()
-      local v16
-      repeat task.wait(1) v16 = character5 == nil or character5.Parent == nil until v16
-      connect2:Disconnect()
-    end)()
-  end
+    if char:FindFirstChild("Humanoid") then humanoidRef = char.Humanoid end
+end
 
-  -- ============================================================
-  -- LOADING SCREEN
-  -- ============================================================
-  loadingScreen = Instance.new("ScreenGui")
-  loadingScreen.Name = "GongHubLoading"
-  loadingScreen.DisplayOrder = 9999
-  loadingScreen.IgnoreGuiInset = true
-  loadingScreen.ResetOnSpawn = false
-  loadingScreen.Parent = playerGui
+if localPlayer.Character then bindCharacter(localPlayer.Character) end
+localPlayer.CharacterAdded:Connect(bindCharacter)
 
-  instance8 = Instance.new("Frame", loadingScreen)
-  instance8.Size = UDim2.fromScale(1, 1)
-  instance8.BackgroundColor3 = Color3.fromRGB(6, 19, 10)
-  instance8.BorderSizePixel = 0
+-- ============================================================
+-- Loading screen
+-- ============================================================
+local loadingGui = Instance.new("ScreenGui")
+loadingGui.Name = "GongHubLoading"
+loadingGui.DisplayOrder = 9999
+loadingGui.IgnoreGuiInset = true
+loadingGui.ResetOnSpawn = false
+loadingGui.Parent = playerGui
 
-  instance9 = Instance.new("Frame", instance8)
-  instance9.Size = UDim2.fromOffset(300, 220)
-  instance9.Position = UDim2.new(0.5, -150, 0.5, -110)
-  instance9.BackgroundColor3 = Color3.fromRGB(12, 28, 18)
-  instance9.BorderSizePixel = 0
-  Instance.new("UICorner", instance9).CornerRadius = UDim.new(0, 12)
+local back = Instance.new("Frame", loadingGui)
+back.Size = UDim2.fromScale(1, 1)
+back.BackgroundColor3 = Color3.fromRGB(6, 19, 10)
+back.BorderSizePixel = 0
 
-  local instance10 = Instance.new("UIStroke", instance9)
-  instance10.Color = Color3.fromRGB(31, 41, 55)
-  instance10.Thickness = 1
+local card = Instance.new("Frame", back)
+card.Size = UDim2.fromOffset(300, 220)
+card.Position = UDim2.new(0.5, -150, 0.5, -110)
+card.BackgroundColor3 = Color3.fromRGB(12, 28, 18)
+card.BorderSizePixel = 0
+Instance.new("UICorner", card).CornerRadius = UDim.new(0, 12)
+local cardStroke = Instance.new("UIStroke", card)
+cardStroke.Color = Color3.fromRGB(31, 41, 55)
+cardStroke.Thickness = 1
 
-  local instance11 = Instance.new("Frame", instance8)
-  instance11.Size = UDim2.fromOffset(90, 22)
-  instance11.Position = UDim2.fromOffset(12, 12)
-  instance11.BackgroundColor3 = Color3.fromRGB(20, 40, 26)
-  instance11.BorderSizePixel = 0
-  Instance.new("UICorner", instance11).CornerRadius = UDim.new(0, 5)
+local userPill = Instance.new("Frame", back)
+userPill.Size = UDim2.fromOffset(90, 22)
+userPill.Position = UDim2.fromOffset(12, 12)
+userPill.BackgroundColor3 = Color3.fromRGB(20, 40, 26)
+userPill.BorderSizePixel = 0
+Instance.new("UICorner", userPill).CornerRadius = UDim.new(0, 5)
 
-  local instance12 = Instance.new("TextLabel", instance11)
-  instance12.Size = UDim2.fromScale(1, 1)
-  instance12.BackgroundTransparency = 1
-  instance12.Text = "● " .. localPlayer.Name:sub(1, 6):upper()
-  instance12.TextColor3 = Color3.fromRGB(34, 197, 94)
-  instance12.TextSize = 11
-  instance12.Font = Enum.Font.GothamMedium
+local userLbl = Instance.new("TextLabel", userPill)
+userLbl.Size = UDim2.fromScale(1, 1)
+userLbl.BackgroundTransparency = 1
+userLbl.Text = "● " .. localPlayer.Name:sub(1, 6):upper()
+userLbl.TextColor3 = tagColor
+userLbl.TextSize = 11
+userLbl.Font = Enum.Font.GothamMedium
 
-  local instance13 = Instance.new("TextLabel", instance9)
-  instance13.Size = UDim2.new(1, -40, 0, 26)
-  instance13.Position = UDim2.fromOffset(20, 18)
-  instance13.BackgroundTransparency = 1
-  instance13.Text = _G.GongHub_TITLE
-  instance13.TextColor3 = Color3.fromRGB(229, 231, 235)
-  instance13.TextSize = 20
-  instance13.Font = Enum.Font.GothamBold
-  instance13.TextXAlignment = Enum.TextXAlignment.Center
+local titleLbl = Instance.new("TextLabel", card)
+titleLbl.Size = UDim2.new(1, -40, 0, 26)
+titleLbl.Position = UDim2.fromOffset(20, 18)
+titleLbl.BackgroundTransparency = 1
+titleLbl.Text = "Loading GongHub"
+titleLbl.TextColor3 = Color3.fromRGB(229, 231, 235)
+titleLbl.TextSize = 20
+titleLbl.Font = Enum.Font.GothamBold
+titleLbl.TextXAlignment = Enum.TextXAlignment.Center
 
-  local instance14 = Instance.new("TextLabel", instance9)
-  instance14.Size = UDim2.fromOffset(22, 22)
-  instance14.Position = UDim2.new(1, -28, 0, 16)
-  instance14.BackgroundTransparency = 1
-  instance14.Text = "👁"
-  instance14.TextSize = 13
-  instance14.Font = Enum.Font.Gotham
-  instance14.TextColor3 = Color3.fromRGB(75, 85, 99)
+local eyeLbl = Instance.new("TextLabel", card)
+eyeLbl.Size = UDim2.fromOffset(22, 22)
+eyeLbl.Position = UDim2.new(1, -28, 0, 16)
+eyeLbl.BackgroundTransparency = 1
+eyeLbl.Text = "👁"
+eyeLbl.TextSize = 13
+eyeLbl.Font = Enum.Font.Gotham
+eyeLbl.TextColor3 = Color3.fromRGB(75, 85, 99)
 
-  instance15 = Instance.new("TextLabel", instance9)
-  instance15.Size = UDim2.new(1, -20, 0, 16)
-  instance15.Position = UDim2.fromOffset(10, 48)
-  instance15.BackgroundTransparency = 1
-  instance15.Text = "Preparing your experience..."
-  instance15.TextColor3 = Color3.fromRGB(107, 114, 128)
-  instance15.TextSize = 12
-  instance15.Font = Enum.Font.Gotham
-  instance15.TextXAlignment = Enum.TextXAlignment.Center
+local statusLbl = Instance.new("TextLabel", card)
+statusLbl.Size = UDim2.new(1, -20, 0, 16)
+statusLbl.Position = UDim2.fromOffset(10, 48)
+statusLbl.BackgroundTransparency = 1
+statusLbl.Text = "Preparing your experience..."
+statusLbl.TextColor3 = Color3.fromRGB(107, 114, 128)
+statusLbl.TextSize = 12
+statusLbl.Font = Enum.Font.Gotham
+statusLbl.TextXAlignment = Enum.TextXAlignment.Center
 
-  local instance16 = Instance.new("Frame", instance9)
-  instance16.Size = UDim2.fromOffset(70, 70)
-  instance16.Position = UDim2.new(0.5, -35, 0, 68)
-  instance16.BackgroundTransparency = 1
+local spinnerWrap = Instance.new("Frame", card)
+spinnerWrap.Size = UDim2.fromOffset(70, 70)
+spinnerWrap.Position = UDim2.new(0.5, -35, 0, 68)
+spinnerWrap.BackgroundTransparency = 1
 
-  local instance17 = Instance.new("ImageLabel", instance16)
-  instance17.Size = UDim2.fromScale(1, 1)
-  instance17.BackgroundTransparency = 1
-  instance17.Image = "rbxassetid://4965945816"
-  instance17.ImageColor3 = Color3.fromRGB(20, 45, 28)
+local spinnerBg = Instance.new("ImageLabel", spinnerWrap)
+spinnerBg.Size = UDim2.fromScale(1, 1)
+spinnerBg.BackgroundTransparency = 1
+spinnerBg.Image = "rbxassetid://4965945816"
+spinnerBg.ImageColor3 = Color3.fromRGB(20, 45, 28)
 
-  instance18 = Instance.new("ImageLabel", instance16)
-  instance18.Size = UDim2.fromScale(1, 1)
-  instance18.BackgroundTransparency = 1
-  instance18.Image = "rbxassetid://4965945816"
-  instance18.ImageColor3 = _G.GongHub_ACCENT
-  instance18.ZIndex = 2
+local spinnerFg = Instance.new("ImageLabel", spinnerWrap)
+spinnerFg.Size = UDim2.fromScale(1, 1)
+spinnerFg.BackgroundTransparency = 1
+spinnerFg.Image = "rbxassetid://4965945816"
+spinnerFg.ImageColor3 = tagColor
+spinnerFg.ZIndex = 2
 
-  instance19 = Instance.new("UIGradient", instance18)
-  instance19.Transparency = NumberSequence.new({
-    NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.5, 0),
+local spinnerGrad = Instance.new("UIGradient", spinnerFg)
+spinnerGrad.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 0),
+    NumberSequenceKeypoint.new(0.5, 0),
     NumberSequenceKeypoint.new(1, 1),
-  })
+})
 
-  instance20 = Instance.new("TextLabel", instance16)
-  instance20.Size = UDim2.fromScale(1, 1)
-  instance20.BackgroundTransparency = 1
-  instance20.Text = "Loading..."
-  instance20.TextColor3 = Color3.fromRGB(229, 231, 235)
-  instance20.TextSize = 12
-  instance20.Font = Enum.Font.GothamMedium
-  instance20.TextXAlignment = Enum.TextXAlignment.Center
-  instance20.TextYAlignment = Enum.TextYAlignment.Center
-  instance20.ZIndex = 3
+local spinnerTxt = Instance.new("TextLabel", spinnerWrap)
+spinnerTxt.Size = UDim2.fromScale(1, 1)
+spinnerTxt.BackgroundTransparency = 1
+spinnerTxt.Text = "Loading..."
+spinnerTxt.TextColor3 = Color3.fromRGB(229, 231, 235)
+spinnerTxt.TextSize = 12
+spinnerTxt.Font = Enum.Font.GothamMedium
+spinnerTxt.TextXAlignment = Enum.TextXAlignment.Center
+spinnerTxt.TextYAlignment = Enum.TextYAlignment.Center
+spinnerTxt.ZIndex = 3
 
-  task.spawn(function()
-    local angle = 0
-    local dots = 0
-    local dotTimer = 0
-    local tipIdx = 1
-    local tipTimer = 0
+task.spawn(function()
+    local angle, dots, dotT, tipIdx, tipT = 0, 0, 0, 1, 0
     local last = os.clock()
-    while flag2 do
-      local now = os.clock()
-      local dt = math.min(now - last, 0.05)
-      last = now
-      angle = (angle + dt * 230) % 360
-      instance18.Rotation = angle
-      instance19.Rotation = angle * 0.75 % 360
-      dotTimer = dotTimer + dt
-      if dotTimer >= 0.35 then
-        dotTimer = 0
-        dots = (dots + 1) % 4
-        instance20.Text = "Loading" .. string.rep(".", dots)
-      end
-      tipTimer = tipTimer + dt
-      if tipTimer >= 2.5 then
-        tipTimer = 0
-        tipIdx = tipIdx % #_G.GongHub_TIPS + 1
-        tweenService:Create(instance22, TweenInfo.new(0.3), { TextTransparency = 1 }):Play()
-        task.wait(0.3)
-        instance22.Text = "Tip: " .. _G.GongHub_TIPS[tipIdx]
-        tweenService:Create(instance22, TweenInfo.new(0.3), { TextTransparency = 0 }):Play()
-      end
-      task.wait()
+    local tips = {
+        "Press K to toggle the menu open or closed.",
+        "Use tabs to organise your features.",
+        "Report bugs in the Discord.",
+        "Use the search bar to find features fast.",
+    }
+    while not loadingDone do
+        local now = os.clock()
+        local dt = math.min(now - last, 0.05)
+        last = now
+        angle = (angle + dt * 230) % 360
+        spinnerFg.Rotation = angle
+        spinnerGrad.Rotation = angle * 0.75 % 360
+        dotT = dotT + dt
+        if dotT >= 0.35 then
+            dotT = 0
+            dots = (dots + 1) % 4
+            spinnerTxt.Text = "Loading" .. string.rep(".", dots)
+        end
+        tipT = tipT + dt
+        if tipT >= 2.5 then
+            tipT = 0
+            tipIdx = tipIdx % #tips + 1
+            statusLbl.Text = "Tip: " .. tips[tipIdx]
+        end
+        task.wait()
     end
-  end)
+end)
 
-  local function step(text7, p14)
-    instance15.Text = text7
-    task.wait(0.1)
-    local ok4, result4 = pcall(p14)
-    if not ok4 then
-      warn("[GongHub] " .. text7 .. " — " .. tostring(result4))
-    end
-  end
+-- ============================================================
+-- WindUI load
+-- ============================================================
+local WindUI
+local okLoad, loadErr = pcall(function()
+    WindUI = loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/s0lmain/DevLib/refs/heads/main/main.lua"
+    ))()
+end)
 
-  step("Fetching WindUI...", function()
-    v23 = loadstring(game:HttpGet(_G.GongHub_GITHUB_LINK))()
-  end)
+if not okLoad or not WindUI then
+    warn("[GongHub] WindUI load failed: " .. tostring(loadErr))
+    loadingDone = true
+    loadingGui:Destroy()
+    return
+end
 
-  atmosphere = lighting:FindFirstChildOfClass("Atmosphere")
-  density = atmosphere and atmosphere.Density or 0.3
+WindUI:SetFont("rbxassetid://16658246179")
+WindUI:AddTheme({
+    Name = "GongHub",
+    Accent = Color3.fromHex("#14532D"),
+    Background = Color3.fromHex("#06130A"),
+    Outline = Color3.fromHex("#1F2937"),
+    Text = Color3.fromHex("#E5E7EB"),
+    Placeholder = Color3.fromHex("#4B5563"),
+    Button = Color3.fromHex("#166534"),
+    Icon = Color3.fromHex("#22C55E"),
+})
+WindUI:SetTheme("GongHub")
 
-  for i8 = 1, 10 do
-    v11[i8] = getVector(i8)
-  end
-
-  -- ============================================================
-  -- WINDOW BUILD
-  -- ============================================================
-  step("Building window...", function()
-    v23:SetFont("rbxassetid://16658246179")
-    v23:AddTheme({
-      Name = "GongHub",
-      Accent = Color3.fromHex("#14532D"),
-      Background = Color3.fromHex("#06130A"),
-      Outline = Color3.fromHex("#1F2937"),
-      Text = Color3.fromHex("#E5E7EB"),
-      Placeholder = Color3.fromHex("#4B5563"),
-      Button = Color3.fromHex("#166534"),
-      Icon = Color3.fromHex("#22C55E"),
-    })
-    v23:SetTheme("GongHub")
-  end)
-
-  gongHubWindow = v23:CreateWindow({
+local hub = WindUI:CreateWindow({
     Title = "GongHub",
     Icon = "code",
     Author = "GongHub",
@@ -553,197 +479,1306 @@ local ok, result = pcall(function()
     HideSearchBar = false,
     ScrollBarEnabled = true,
     User = { Enabled = true, Anonymous = true, Callback = function() end },
-  })
+})
 
-  gongHubWindow:Tag({ Title = "v1.0", Color = Color3.fromHex("#22CC5E") })
+hub:Tag({ Title = "v1.0", Color = Color3.fromHex("#22CC5E") })
+WindUI:Notify({ Title = "GongHub", Content = "Loaded. Press K to toggle.", Duration = 5 })
 
-  v23:Notify({
-    Title = "GongHub",
-    Content = "Loaded. Press K to toggle.",
-    Duration = 6,
-  })
-
-  local aboutTab = gongHubWindow:Tab({
-    Title = "About", Icon = "badge-question-mark", Locked = false, Border = true,
-  })
-  aboutTab:Paragraph({
+-- ============================================================
+-- About
+-- ============================================================
+local about = hub:Tab({ Title = "About", Icon = "badge-question-mark", Locked = false, Border = true })
+about:Paragraph({
     Title = "Information",
-    Desc = "Keyless build. Press K to show or hide the window.",
-  })
-  aboutTab:Paragraph({
+    Desc = "Keyless build. Press K to show or hide the window.\nNo data leaves the client.",
+})
+about:Paragraph({
     Title = "Credits",
     Desc = "Owner: st1k/stik\nHelper: MadeInHeaven\nCleanup: GongHub build",
-  })
+})
 
-  gongHubWindow:Tab({ Title = "────────────", Icon = "", Locked = true, Border = false })
+hub:Tab({ Title = "────────────", Icon = "", Locked = true, Border = false })
 
-  local renderStepped = runService.RenderStepped
-  local position
+-- ============================================================
+-- Render loop
+-- ============================================================
+local lastSafePos = nil
 
-  renderStepped:Connect(function()
-    local humanoidRootPart4 = localPlayer.Character
-      and localPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not humanoidRootPart4 then return end
-    v3 = (v3 + v4) % 1
-    local color3 = Color3.fromHSV(v3, 1, 1)
-    local position2 = localPlayer:GetMouse().Hit.Position
+runService.RenderStepped:Connect(function()
+    local char = localPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    hue = (hue + hueSpeed) % 1
+    local rainbowCol = Color3.fromHSV(hue, 1, 1)
+    local mousePos = localPlayer:GetMouse().Hit.Position
 
     if rainbowPaint then
-      getFindFirstChild3("Paint")
-      local paint = getFindFirstChild("Paint")
-      if paint then
-        paint:FireServer(workspaceService.Terrain, Enum.NormalId.Top, position2, "both 🤝",
-          color3, material, "")
-      end
+        equipTool("Paint")
+        local paint = toolEvent("Paint")
+        if paint then
+            paint:FireServer(workspace.Terrain, Enum.NormalId.Top, mousePos, "both 🤝", rainbowCol, material, "")
+        end
     end
 
     if killAura then
-      local nearest, nearestDist = nil, deleteRange
-      for _, value16 in ipairs(players:GetPlayers()) do
-        if value16 ~= localPlayer and value16.Character
-          and value16.Character:FindFirstChild("HumanoidRootPart") then
-          local mag = (value16.Character.HumanoidRootPart.Position
-            - humanoidRootPart4.Position).Magnitude
-          if mag < nearestDist then
-            nearest = value16.Character.HumanoidRootPart
-            nearestDist = mag
-          end
+        local nearest, nearestDist = nil, deleteRange
+        for _, p in ipairs(players:GetPlayers()) do
+            if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local d = (p.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+                if d < nearestDist then nearest = p.Character.HumanoidRootPart nearestDist = d end
+            end
         end
-      end
-      if nearest then
-        getFindFirstChild3("Build")
-        getFindFirstChild3("Paint")
-        local build = getFindFirstChild("Build")
-        local paint2 = getFindFirstChild("Paint")
-        if build and paint2 then
-          local bricks2 = workspaceService:FindFirstChild("Bricks")
-          local findFirstChild5 = bricks2 and workspaceService.Bricks:FindFirstChild(localPlayer.Name)
-          build:FireServer(workspaceService.Terrain, Enum.NormalId.Top, nearest.Position, "detailed")
-          local v26 = findFirstChild5
-          if findFirstChild5 then
-            v26 = findFirstChild5:GetChildren()[#findFirstChild5:GetChildren()]
-          end
-          if v26 then
-            paint2:FireServer(v26, Enum.NormalId.Top, nearest.Position, "both 🤝",
-              Color3.new(0, 0, 0), "toxic", "")
-          end
+        if nearest then
+            equipTool("Build") equipTool("Paint")
+            local build = toolEvent("Build") local paint = toolEvent("Paint")
+            if build and paint then
+                local folder = workspace:FindFirstChild("Bricks")
+                local mine = folder and folder:FindFirstChild(localPlayer.Name)
+                build:FireServer(workspace.Terrain, Enum.NormalId.Top, nearest.Position, "detailed")
+                local newBrick = mine and mine:GetChildren()[#mine:GetChildren()]
+                if newBrick then
+                    paint:FireServer(newBrick, Enum.NormalId.Top, nearest.Position, "both 🤝", Color3.new(0,0,0), "toxic", "")
+                end
+            end
         end
-      end
     end
 
     if shovel then
-      getFindFirstChild3("Shovel")
-      local shovel2 = getFindFirstChild("Shovel")
-      if shovel2 then
-        shovel2:FireServer(workspaceService.Terrain, Enum.NormalId.Top, position2, "dig")
-      end
+        equipTool("Shovel")
+        local s = toolEvent("Shovel")
+        if s then s:FireServer(workspace.Terrain, Enum.NormalId.Top, mousePos, "dig") end
     end
 
-    if delete then
-      getFindFirstChild3("Delete")
-      local delete2 = getFindFirstChild("Delete")
-      if delete2 then
-        local raycast = workspaceService:Raycast(humanoidRootPart4.Position,
-          (position2 - humanoidRootPart4.Position).Unit * deleteRange)
-        delete2:FireServer(raycast and raycast.Instance or workspaceService.Terrain,
-          humanoidRootPart4.Position)
-      end
+    if deleteMode then
+        equipTool("Delete")
+        local d = toolEvent("Delete")
+        if d then
+            local hit = workspace:Raycast(hrp.Position, (mousePos - hrp.Position).Unit * deleteRange)
+            d:FireServer(hit and hit.Instance or workspace.Terrain, hrp.Position)
+        end
     end
 
     if blockTrail then
-      getFindFirstChild3("Build")
-      local build2 = getFindFirstChild("Build")
-      if build2 then
-        local isRainbow = string.find(text, "rainbow")
-        local gsub = text:gsub("rainbow ", "")
-        build2:FireServer(workspaceService.Terrain, Enum.NormalId.Top, humanoidRootPart4.Position, gsub)
-        if isRainbow then
-          getFindFirstChild3("Paint")
-          local paint3 = getFindFirstChild("Paint")
-          local findFirstChild6 = workspaceService:FindFirstChild("Bricks")
-            and workspaceService.Bricks:FindFirstChild(localPlayer.Name)
-          local v28 = findFirstChild6 and findFirstChild6:GetChildren()[#findFirstChild6:GetChildren()]
-          if paint3 and v28 then
-            paint3:FireServer(v28, Enum.NormalId.Top, humanoidRootPart4.Position, "both 🤝",
-              color3, material, "")
-          end
+        equipTool("Build")
+        local b = toolEvent("Build")
+        if b then
+            local isRainbow = trailType:find("rainbow") ~= nil
+            local kind = trailType:gsub("rainbow ", "")
+            b:FireServer(workspace.Terrain, Enum.NormalId.Top, hrp.Position, kind)
+            if isRainbow then
+                equipTool("Paint")
+                local paint = toolEvent("Paint")
+                local folder = workspace:FindFirstChild("Bricks")
+                local mine = folder and folder:FindFirstChild(localPlayer.Name)
+                local newBrick = mine and mine:GetChildren()[#mine:GetChildren()]
+                if paint and newBrick then
+                    paint:FireServer(newBrick, Enum.NormalId.Top, hrp.Position, "both 🤝", rainbowCol, material, "")
+                end
+            end
         end
-      end
     end
 
     if buildAura then
-      local build3 = getFindFirstChild("Build")
-      if build3 then
-        build3:FireServer(workspaceService.Terrain, Enum.NormalId.Top,
-          f12(humanoidRootPart4, 3, 15), "normal")
-      end
+        local b = toolEvent("Build")
+        if b then b:FireServer(workspace.Terrain, Enum.NormalId.Top, randomAroundSphere(hrp, 3, 15), "normal") end
     end
 
     if deleteAura then
-      local delete3 = getFindFirstChild("Delete")
-      local v29 = f13(deleteRange2)
-      if delete3 and v29 then
-        delete3:FireServer(v29, humanoidRootPart4.Position)
-      end
+        local d = toolEvent("Delete")
+        local target = nearestBrickInRange(deleteRange2)
+        if d and target then d:FireServer(target, hrp.Position) end
     end
 
     if signAura then
-      local sign = getFindFirstChild("Sign")
-      if sign then
-        sign:FireServer(workspaceService.Terrain, Enum.NormalId.Top,
-          f12(humanoidRootPart4, 3, 15), "normal")
-      end
+        local s = toolEvent("Sign")
+        if s then s:FireServer(workspace.Terrain, Enum.NormalId.Top, randomAroundSphere(hrp, 3, 15), "normal") end
     end
 
     if rainbowAura then
-      local paint4 = getFindFirstChild("Paint")
-      local v30 = f13(paintRange)
-      if paint4 and v30 then
-        paint4:FireServer(v30, Enum.NormalId.Top, humanoidRootPart4.Position, "both 🤝",
-          color3, "plastic", "")
-      end
-    end
-
-    local character6 = localPlayer.Character
-    if not character6 then return end
-
-    if antiMorph and character6:FindFirstChildOfClass("Humanoid")
-      and character6:FindFirstChildOfClass("Humanoid").Health > 0 then
-      local name = character6.Name
-      local displayName = character6:GetAttribute("DisplayName") or character6.Name
-      local list11 = { "Enlightened", "Void", "Ghost", "Loading...", "R6", "R15" }
-      local v31 = name == localPlayer.Name
-      local v32 = displayName == localPlayer.DisplayName or displayName == localPlayer.Name
-      for _, value17 in ipairs(list11) do
-        if name == value17 then v31 = true end
-        if displayName == value17 then v32 = true end
-      end
-      if not v31 or not v32 then f16() end
-    end
-
-    if humanoidRootPart4 then
-      if antiGlitch and position then
-        if (humanoidRootPart4.Position - position).Magnitude > 1000 then
-          humanoidRootPart4.Velocity = Vector3.zero
-          humanoidRootPart4.CFrame = CFrame.new(position)
+        local p = toolEvent("Paint")
+        local target = nearestBrickInRange(paintRange)
+        if p and target then
+            p:FireServer(target, Enum.NormalId.Top, hrp.Position, "both 🤝", rainbowCol, "plastic", "")
         end
-      end
-      if humanoidRootPart4.Position.Y > -50 and humanoidRootPart4.Position.Y < 5000 then
-        position = humanoidRootPart4.Position
-      end
+    end
+
+    -- antis
+    if antiMorph and char:FindFirstChildOfClass("Humanoid")
+        and char:FindFirstChildOfClass("Humanoid").Health > 0 then
+        local name = char.Name
+        local disp = char:GetAttribute("DisplayName") or char.Name
+        local blacklist = { "Enlightened", "Void", "Ghost", "Loading...", "R6", "R15" }
+        local okName = name == localPlayer.Name
+        local okDisp = disp == localPlayer.DisplayName or disp == localPlayer.Name
+        for _, v in ipairs(blacklist) do
+            if name == v then okName = true end
+            if disp == v then okDisp = true end
+        end
+        if not okName or not okDisp then killSelf() end
+    end
+
+    if antiGlitch and lastSafePos then
+        if (hrp.Position - lastSafePos).Magnitude > 1000 then
+            hrp.Velocity = Vector3.zero
+            hrp.CFrame = CFrame.new(lastSafePos)
+        end
+    end
+    if hrp.Position.Y > -50 and hrp.Position.Y < 5000 then
+        lastSafePos = hrp.Position
     end
 
     if antiBlind then
-      local blind = localPlayer.PlayerGui:FindFirstChild("Blind")
-      if blind then
-        blind.Enabled = false
-        for _, value18 in ipairs(blind:GetDescendants()) do
-          if value18:IsA("Frame") or value18:IsA("ImageLabel") then
-            value18.Visible = false
-          end
+        local blind = playerGui:FindFirstChild("Blind")
+        if blind then
+            blind.Enabled = false
+            for _, d in ipairs(blind:GetDescendants()) do
+                if d:IsA("Frame") or d:IsA("ImageLabel") then d.Visible = false end
+            end
         end
-      end
     end
 
     if antiMyopic then
-      local
+        local blur = lighting:FindFirstChildOfClass("BlurEffect")
+        if blur then blur.Enabled = false blur.Size = 0 end
+    end
+
+    if antiVamp then
+        local cam = workspace.CurrentCamera
+        if cam.CameraType ~= Enum.CameraType.Custom then cam.CameraType = Enum.CameraType.Custom end
+    end
+
+    if antiFog and atmo then atmo.Density = 0.4 end
+
+    if antiColorless then
+        for _, e in ipairs(lighting:GetChildren()) do
+            if e:IsA("ColorCorrectionEffect") and e.Saturation < -0.5 then
+                e.Saturation = 0 e.Contrast = 0 e.Brightness = 0 e.TintColor = Color3.new(1,1,1)
+            end
+        end
+        for _, g in ipairs(playerGui:GetChildren()) do
+            if g.Name:lower():find("colorless") and g:IsA("ScreenGui") then g.Enabled = false end
+        end
+    end
+
+    if antiDumb then
+        for _, g in ipairs(playerGui:GetChildren()) do
+            if g.Name:lower():find("dumb") then g:Destroy() end
+        end
+    end
+end)
+
+-- ============================================================
+-- Home tab
+-- ============================================================
+local home = hub:Tab({ Title = "Home", Icon = "house", locked = false })
+home:Section({ Title = "Bypass" })
+home:Input({
+    Title = "Bypass Input",
+    PlaceholderText = "Type word here...",
+    Callback = function(v) bypassInput = v end,
+})
+home:Button({
+    Title = "Copy Bypassed Text",
+    Callback = function()
+        if bypassInput == "" then
+            WindUI:Notify({ Title = "Error", Content = "Type something first.", Duration = 2 })
+            return
+        end
+        local out = bypassText(bypassInput)
+        if setclipboard then
+            setclipboard(out)
+            WindUI:Notify({ Title = "Copied", Content = "Ready to paste.", Duration = 2 })
+        else
+            warn("[GongHub] setclipboard unavailable")
+        end
+    end,
+})
+
+home:Section({ Title = "Utility" })
+home:Button({ Title = "JoinXL", Callback = function() system:FireServer("xl") end })
+home:Button({ Title = "JoinVC", Callback = function() system:FireServer("vc") end })
+home:Button({ Title = "JoinOG", Callback = function() system:FireServer("og") end })
+home:Button({
+    Title = "Load Infinite Yield",
+    Callback = function()
+        pcall(function()
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/mxsynry/infiniteyield-reborn/refs/heads/master/source"
+            ))()
+        end)
+    end,
+})
+
+home:Section({ Title = "Tools" })
+home:Toggle({ Title = "Rainbow Paint", Callback = function(v) rainbowPaint = v end })
+home:Toggle({ Title = "Shovel",        Callback = function(v) shovel = v end })
+home:Toggle({ Title = "Delete",        Callback = function(v) deleteMode = v end })
+home:Dropdown({
+    Title = "Material",
+    Values = { "smooth", "plastic", "tiles", "bricks", "planks", "ice", "neon", "toxic", "anchor" },
+    Value = "smooth",
+    Callback = function(v) material = typeof(v) == "table" and v[1] or v end,
+})
+
+home:Section({ Title = "Trails" })
+home:Dropdown({
+    Title = "Block Trail Type",
+    Values = { "detailed", "normal", "rainbow detailed", "rainbow normal" },
+    Value = "detailed",
+    Callback = function(v) trailType = typeof(v) == "table" and v[1] or v end,
+})
+home:Toggle({ Title = "Block Trail", Callback = function(v) blockTrail = v end })
+
+home:Section({ Title = "Settings" })
+home:Slider({
+    Title = "Rainbow Speed",
+    Step = 0.001,
+    Value = { Min = 0.001, Max = 0.05, Default = 0.005 },
+    Callback = function(v) hueSpeed = v end,
+})
+home:Slider({
+    Title = "Delete Range",
+    Value = { Min = 10, Max = 1000, Default = 500 },
+    Callback = function(v) deleteRange = v end,
+})
+
+-- ============================================================
+-- RepStorage tab
+-- ============================================================
+hub:Tab({ Title = "────>OP<────", Icon = "", Locked = true, Border = false })
+
+local repTab = hub:Tab({ Title = "RepStorage", Icon = "cuboid" })
+local repBaseColor = Color3.fromRGB(163, 162, 165)
+local repMaterial = "plastic"
+local repTop    = { text = "", color = Color3.fromRGB(255,255,255) }
+local repBottom = { text = "", color = Color3.fromRGB(255,255,255) }
+local repLeft   = { text = "", color = Color3.fromRGB(255,255,255) }
+local repRight  = { text = "", color = Color3.fromRGB(255,255,255) }
+local repFront  = { text = "", color = Color3.fromRGB(255,255,255) }
+local repBack   = { text = "", color = Color3.fromRGB(255,255,255) }
+
+local function richWrap(text)
+    if not text or text == "" then return " " end
+    local out = ""
+    for i = 1, #text do
+        out = out .. text:sub(i, i) .. '<font size="0">x</font>'
+    end
+    return out
+end
+
+local function hexOf(color)
+    return string.format("#%02x%02x%02x",
+        math.floor(color.R*255), math.floor(color.G*255), math.floor(color.B*255))
+end
+
+local function sprayFace(paint, brick, face, cfg, pos, mode)
+    if cfg.text == "" then return end
+    local wrapped = '<font color="' .. hexOf(cfg.color) .. '">' .. richWrap(cfg.text) .. "</font>"
+    paint:FireServer(brick, face, pos, mode or "both 🤝", repBaseColor, "spray", wrapped)
+    task.wait(userInputService.TouchEnabled and 0.7 or 0.3)
+end
+
+repTab:Section({ Title = "Base" })
+repTab:Colorpicker({
+    Title = "Base Block Color",
+    Default = repBaseColor,
+    Callback = function(v) repBaseColor = v end,
+})
+repTab:Dropdown({
+    Title = "Material",
+    Values = { "Smooth", "Plastic", "Tiles", "Bricks", "Planks", "Ice", "Grass", "Sand", "Snow",
+        "Glass", "Wood", "Stone", "Pebble", "Marble", "Granite", "Steel", "Metal",
+        "Asphalt", "Concrete", "Pavement", "Neon", "Toxic" },
+    Callback = function(v) repMaterial = string.lower(typeof(v) == "table" and v[1] or v) end,
+})
+
+local function makeFaceSection(title, cfg, face)
+    repTab:Section({ Title = title })
+    repTab:Input({
+        Title = title .. " Text",
+        Placeholder = "",
+        Callback = function(v) cfg.text = v end,
+    })
+    repTab:Colorpicker({
+        Title = title .. " Color",
+        Default = Color3.fromRGB(255,255,255),
+        Callback = function(v) cfg.color = v end,
+    })
+    repTab:Button({
+        Title = "Apply " .. title,
+        Callback = function()
+            local brick = replicatedStorage:FindFirstChild("Brick")
+            local paint = toolEventAny("Paint")
+            local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if not brick or not paint or not hrp then
+                WindUI:Notify({ Title = "Error", Content = "Equip Paint first.", Duration = 2 })
+                return
+            end
+            sprayFace(paint, brick, face, cfg, hrp.Position)
+            WindUI:Notify({ Title = "Applied", Content = title .. " applied.", Duration = 2 })
+        end,
+    })
+end
+
+makeFaceSection("Top",    repTop,    Enum.NormalId.Top)
+makeFaceSection("Bottom", repBottom, Enum.NormalId.Bottom)
+makeFaceSection("Left",   repLeft,   Enum.NormalId.Left)
+makeFaceSection("Right",  repRight,  Enum.NormalId.Right)
+makeFaceSection("Front",  repFront,  Enum.NormalId.Front)
+makeFaceSection("Back",   repBack,   Enum.NormalId.Back)
+
+repTab:Section({ Title = "Apply All" })
+repTab:Button({
+    Title = "Apply Base Color & Material",
+    Callback = function()
+        local brick = replicatedStorage:FindFirstChild("Brick")
+        local paint = toolEventAny("Paint")
+        local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not brick or not paint or not hrp then
+            WindUI:Notify({ Title = "Error", Content = "Equip Paint first.", Duration = 2 })
+            return
+        end
+        paint:FireServer(brick, Enum.NormalId.Top, hrp.Position, "both 🤝", repBaseColor, repMaterial, "")
+        WindUI:Notify({ Title = "Applied", Content = "Base color + material set.", Duration = 2 })
+    end,
+})
+repTab:Button({
+    Title = "Apply All Faces",
+    Callback = function()
+        local brick = replicatedStorage:FindFirstChild("Brick")
+        local paint = toolEventAny("Paint")
+        local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not brick or not paint or not hrp then
+            WindUI:Notify({ Title = "Error", Content = "Equip Paint first.", Duration = 2 })
+            return
+        end
+        local pos = hrp.Position
+        paint:FireServer(brick, Enum.NormalId.Top, pos, "both 🤝", repBaseColor, repMaterial, "")
+        task.wait(userInputService.TouchEnabled and 0.8 or 0.4)
+        sprayFace(paint, brick, Enum.NormalId.Top,    repTop,    pos)
+        sprayFace(paint, brick, Enum.NormalId.Bottom, repBottom, pos)
+        sprayFace(paint, brick, Enum.NormalId.Left,   repLeft,   pos)
+        sprayFace(paint, brick, Enum.NormalId.Right,  repRight,  pos)
+        sprayFace(paint, brick, Enum.NormalId.Front,  repFront,  pos)
+        sprayFace(paint, brick, Enum.NormalId.Back,   repBack,   pos)
+        WindUI:Notify({ Title = "Done", Content = "All faces applied.", Duration = 2 })
+    end,
+})
+
+repTab:Section({ Title = "More" })
+repTab:Button({
+    Title = "Toxic Brick",
+    Callback = function()
+        local brick = replicatedStorage:WaitForChild("Brick", 5)
+        local paint = toolEventAny("Paint")
+        if not paint or not brick then return end
+        paint:FireServer(brick, "Front", brick.Position, "both 🤝", Color3.new(211,211,211), "toxic", "")
+    end,
+})
+repTab:Button({
+    Title = "Anchor Brick",
+    Callback = function()
+        local brick = replicatedStorage:WaitForChild("Brick", 5)
+        local paint = toolEventAny("Paint")
+        if not paint or not brick then return end
+        paint:FireServer(brick, "Front", brick.Position, "both 🤝", Color3.new(211,211,211), "anchor", "")
+    end,
+})
+repTab:Button({
+    Title = "Revert RepStorage",
+    Callback = function()
+        local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+        local brick = replicatedStorage:FindFirstChild("Brick")
+        local paint = toolEventAny("Paint")
+        if not paint or not brick then return end
+        local pos = char.HumanoidRootPart.Position
+        local grey = Color3.fromRGB(211,211,211)
+        local black = Color3.new(0,0,0)
+        paint:FireServer(brick, Enum.NormalId.Top, pos, "both 🤝", grey, "plastic", "")
+        task.wait(0.5)
+        for _, face in ipairs({ Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Top,
+            Enum.NormalId.Bottom, Enum.NormalId.Right, Enum.NormalId.Left }) do
+            paint:FireServer(brick, face, pos, "both 🤝", grey, "spray", " ")
+            task.wait(userInputService.TouchEnabled and 0.35 or 0.2)
+        end
+        if not brick.Anchored then
+            paint:FireServer(brick, Enum.NormalId.Top, pos, "material", black, "anchor", "")
+        end
+        WindUI:Notify({ Title = "GongHub", Content = "Reverted.", Duration = 2 })
+    end,
+})
+
+local function myBricks()
+    local folder = workspace:FindFirstChild("Bricks")
+    local mine = folder and folder:FindFirstChild(localPlayer.Name)
+    return mine and mine:GetChildren() or {}
+end
+
+repTab:Toggle({
+    Title = "Auto-Delete Bricks",
+    Desc = "Clears all bricks in workspace repeatedly",
+    Callback = function(on)
+        task.spawn(function()
+            while on do
+                local deleteRemote = toolEventAny("Delete")
+                local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if deleteRemote and hrp then
+                    for _, obj in pairs(workspace:GetDescendants()) do
+                        if not on then break end
+                        if obj.Name == "Brick" and obj:IsA("BasePart") then
+                            deleteRemote:FireServer(obj, hrp.Position)
+                            task.wait(0.01)
+                        end
+                    end
+                end
+                task.wait(0.5)
+            end
+        end)
+    end,
+})
+
+repTab:Button({
+    Title = "Break Bkit",
+    Callback = function()
+        local brick = replicatedStorage:FindFirstChild("Brick")
+        local deleteRemote = toolEventAny("Delete")
+        if deleteRemote and brick and localPlayer.Character then
+            deleteRemote:FireServer(brick, localPlayer.Character.HumanoidRootPart.Position)
+        end
+    end,
+})
+
+-- ============================================================
+-- Build tab
+-- ============================================================
+local buildTab = hub:Tab({ Title = "Build", Icon = "lucide:hammer" })
+local cubeSize = 3
+local building = false
+local termiting = false
+local termiteRange = 30
+
+local function getHrp()
+    return localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+end
+
+local function equipAndEvent(name)
+    local tool = localPlayer.Backpack:FindFirstChild(name)
+        or (localPlayer.Character and localPlayer.Character:FindFirstChild(name))
+    if tool and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+        localPlayer.Character.Humanoid:EquipTool(tool)
+    end
+    return tool and (tool:FindFirstChild("Event", true) or tool:FindFirstChildWhichIsA("RemoteEvent", true))
+end
+
+buildTab:Section({ Title = "Cube Builder" })
+buildTab:Slider({
+    Title = "Cube Size",
+    Value = { Min = 1, Max = 10, Default = 3, Step = 1, Suffix = " blocks" },
+    Callback = function(v) cubeSize = v end,
+})
+
+buildTab:Button({
+    Title = "Build Cube",
+    Callback = function()
+        if building then return end
+        local hrp = getHrp()
+        if not hrp then return end
+        local buildEvent = equipAndEvent("Build")
+        if not buildEvent then
+            WindUI:Notify({ Title = "Build", Content = "Equip Build first.", Duration = 2 })
+            return
+        end
+        building = true
+        local total = cubeSize * cubeSize * cubeSize
+        WindUI:Notify({ Title = "Building", Content = cubeSize .. "^3 = " .. total .. " blocks", Duration = 3 })
+        task.spawn(function()
+            local origin = hrp.Position + Vector3.new(0, 2, -cubeSize * 4)
+            local savedCF = hrp.CFrame
+            local center = Vector3.new((cubeSize - 1) * 4 / 2, (cubeSize - 1) * 4 / 2, (cubeSize - 1) * 4 / 2)
+            hrp.CFrame = CFrame.new(origin + center)
+            for layer = 0, cubeSize - 1 do
+                local row = {}
+                for i = 0, cubeSize - 1 do
+                    for j = 0, cubeSize - 1 do
+                        table.insert(row, Vector3.new(origin.X + i * 4, origin.Y + layer * 4, origin.Z + j * 4))
+                    end
+                end
+                table.sort(row, function(a, b)
+                    return (a.X - origin.X) / 4 + (a.Z - origin.Z) / 4
+                        < (b.X - origin.X) / 4 + (b.Z - origin.Z) / 4
+                end)
+                for _, p in ipairs(row) do
+                    if not building then break end
+                    buildEvent:FireServer(workspace.Terrain, Enum.NormalId.Top, p, "normal")
+                    task.wait(userInputService.TouchEnabled and 0.1 or 0.05)
+                end
+                task.wait(0.1)
+            end
+            hrp.CFrame = savedCF
+            building = false
+            WindUI:Notify({ Title = "Done", Content = total .. " blocks placed.", Duration = 3 })
+        end)
+    end,
+})
+buildTab:Button({
+    Title = "Stop Building",
+    Callback = function() building = false
+        WindUI:Notify({ Title = "Stopped", Content = "Build halted.", Duration = 2 }) end,
+})
+
+buildTab:Section({ Title = "Delete" })
+buildTab:Slider({
+    Title = "Termite Range",
+    Value = { Min = 5, Max = 200, Default = 30, Step = 5, Suffix = " studs" },
+    Callback = function(v) termiteRange = v end,
+})
+buildTab:Button({
+    Title = "Termite Delete",
+    Callback = function()
+        if termiting then return end
+        local hrp = getHrp()
+        if not hrp then return end
+        local candidates = {}
+        for _, b in ipairs(myBricks()) do
+            if b:IsA("BasePart") and (b.Position - hrp.Position).Magnitude <= termiteRange then
+                table.insert(candidates, b)
+            end
+        end
+        if #candidates == 0 then
+            WindUI:Notify({ Title = "Termite", Content = "No bricks in range.", Duration = 2 })
+            return
+        end
+        WindUI:Notify({ Title = "Termite", Content = "Eating " .. #candidates .. " bricks...", Duration = 3 })
+        termiting = true
+        task.spawn(function()
+            equipAndEvent("Paint")
+            local paintEvent = equipAndEvent("Paint")
+            local unanchored = {}
+            for _, b in ipairs(candidates) do
+                if not termiting then break end
+                if b.Parent and b.Anchored and paintEvent then
+                    pcall(function()
+                        paintEvent:FireServer(b, Enum.NormalId.Top, hrp.Position, "material", nil, "anchor", "")
+                    end)
+                    table.insert(unanchored, b)
+                    task.wait(0.1)
+                end
+            end
+            task.wait(0.5)
+            equipAndEvent("Delete")
+            local deleteEvent = equipAndEvent("Delete")
+            for _, b in ipairs(unanchored) do
+                if not termiting then break end
+                if b.Parent and deleteEvent then
+                    pcall(function() deleteEvent:FireServer(b, hrp.Position) end)
+                    task.wait(0.06)
+                end
+            end
+            termiting = false
+            WindUI:Notify({ Title = "Done", Content = "Termites finished.", Duration = 2 })
+        end)
+    end,
+})
+buildTab:Button({
+    Title = "Stop Termites",
+    Callback = function() termiting = false
+        WindUI:Notify({ Title = "Stopped", Content = "Termites halted.", Duration = 2 }) end,
+})
+
+-- ============================================================
+-- Stash tab
+-- ============================================================
+local stashTab = hub:Tab({ Title = "Stash", Icon = "archive" })
+local stashIndex = 1
+
+stashTab:Section({ Title = "Note" })
+stashTab:Paragraph({
+    Title = " ",
+    Desc = "Requires Enlighten. Enables a client-side platform for stashing. Turn on Auto Grab from Mod & Mgmt recommended.",
+})
+
+stashTab:Section({ Title = "Stash System" })
+stashTab:Slider({
+    Title = "Stash Location",
+    Value = { Min = 1, Max = 10, Default = 1, Step = 1 },
+    Callback = function(v) stashIndex = v end,
+})
+stashTab:Button({
+    Title = "Go to Stash",
+    Callback = function()
+        local char = localPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(stashPoints[stashIndex] + Vector3.new(0, 15, 0))
+        end
+    end,
+})
+stashTab:Button({
+    Title = "Make Stash",
+    Callback = function()
+        local char = localPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if not char or not hum then return end
+        local hasArken = localPlayer.Backpack:FindFirstChild("The Arkenstone")
+            or char:FindFirstChild("The Arkenstone")
+            or localPlayer.Backpack:FindFirstChild("Enlighten")
+            or char:FindFirstChild("Enlighten")
+        if not hasArken then
+            WindUI:Notify({ Title = "Stash", Content = "Need Arkenstone or Enlighten.", Duration = 4 })
+            return
+        end
+        local pos = stashPoints[stashIndex]
+        buildStash(pos)
+        task.wait(0.5)
+        char.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 15, 0))
+        local arken = localPlayer.Backpack:FindFirstChild("The Arkenstone") or char:FindFirstChild("The Arkenstone")
+        if arken then
+            arken.Parent = char
+            hum:EquipTool(arken)
+            task.wait(0.3)
+            arken.Parent = char
+        end
+        task.wait(1.5)
+        say(";mute me")    task.wait(0.7)
+        say(";freeze me")  task.wait(0.7)
+        startArkenForce()
+        local arken2 = localPlayer.Backpack:FindFirstChild("The Arkenstone") or char:FindFirstChild("The Arkenstone")
+        if arken2 then
+            arken2.Parent = char
+            hum:EquipTool(arken2)
+            task.wait(0.3)
+            arken2.Parent = char
+        end
+        say(";gear me 25162389")
+        task.wait(1.5)
+        local bucket = localPlayer.Backpack:FindFirstChild("25162389")
+            or localPlayer.Backpack:FindFirstChild("Classic Bucket")
+            or localPlayer.Backpack:FindFirstChildOfClass("Tool")
+        if bucket and bucket ~= arken2 then
+            bucket.Parent = char
+            if arken2 then arken2.Parent = char end
+        end
+        task.wait(0.7)
+        say(";clone me")   task.wait(0.7)
+        say(";unfreeze me") task.wait(0.7)
+        say(";unmute me")
+        stopArkenForce()
+        task.wait(0.5)
+        if arken2 then arken2.Parent = localPlayer.Backpack end
+        if bucket then bucket.Parent = localPlayer.Backpack end
+        task.wait(0.5)
+        local spawn = workspace:FindFirstChildOfClass("SpawnLocation")
+        if spawn and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = spawn.CFrame + Vector3.new(0, 5, 0)
+        else
+            char.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
+        end
+    end,
+})
+
+stashTab:Section({ Title = "Quick Actions" })
+stashTab:Button({
+    Title = "Equip & Clone",
+    Callback = function()
+        if not localPlayer.Character then return end
+        startArkenForce()
+        task.wait(0.3)
+        say(";clone me")
+        task.wait(0.5)
+        stopArkenForce()
+    end,
+})
+stashTab:Button({
+    Title = "Teleport to Spawn",
+    Callback = function()
+        local char = localPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local spawn = workspace:FindFirstChildOfClass("SpawnLocation")
+            if spawn then
+                char.HumanoidRootPart.CFrame = spawn.CFrame + Vector3.new(0, 5, 0)
+            else
+                char.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
+            end
+        end
+    end,
+})
+stashTab:Section({ Title = "Cleanup" })
+stashTab:Button({
+    Title = "Destroy Platform",
+    Callback = function()
+        clearStash()
+        WindUI:Notify({ Title = "Stash", Content = "Platform destroyed.", Duration = 2 })
+    end,
+})
+
+-- ============================================================
+-- Auras tab
+-- ============================================================
+hub:Tab({ Title = "────>GRIEF<────", Icon = "", Locked = true, Border = false })
+local auraTab = hub:Tab({ Title = "Auras", Icon = "lucide:zap" })
+
+auraTab:Section({ Title = "Auras" })
+auraTab:Toggle({ Title = "Build Aura",   Callback = function(v) buildAura = v end })
+auraTab:Toggle({ Title = "Sign Aura",    Callback = function(v) signAura = v end })
+auraTab:Toggle({ Title = "Delete Aura",  Callback = function(v) deleteAura = v end })
+auraTab:Toggle({ Title = "Rainbow Aura", Callback = function(v) rainbowAura = v end })
+auraTab:Toggle({ Title = "Kill Aura",    Callback = function(v) killAura = v end })
+
+auraTab:Section({ Title = "Configuration" })
+auraTab:Slider({
+    Title = "Rainbow Speed",
+    Step = 0.001,
+    Value = { Min = 0.001, Max = 0.05, Default = 0.005 },
+    Callback = function(v) hueSpeed = v end,
+})
+auraTab:Slider({
+    Title = "Delete Range",
+    Value = { Min = 5, Max = 500, Default = 20 },
+    Callback = function(v) deleteRange2 = v end,
+})
+auraTab:Slider({
+    Title = "Paint Range",
+    Value = { Min = 5, Max = 500, Default = 20 },
+    Callback = function(v) paintRange = v end,
+})
+
+-- ============================================================
+-- Antis tab
+-- ============================================================
+local antis = hub:Tab({ Title = "Antis", Icon = "lucide:shield-x" })
+
+antis:Section({ Title = "Vampire" })
+antis:Toggle({
+    Title = "Anti-Vamp",
+    Callback = function(v)
+        antiVamp = v
+        if v then restoreCamera() end
+    end,
+})
+antis:Button({ Title = "Restore Camera / Inventory", Callback = restoreCamera })
+
+antis:Section({ Title = "Visuals" })
+antis:Toggle({
+    Title = "Anti-Fog",
+    Callback = function(v)
+        antiFog = v
+        if not v and atmo then atmo.Density = savedAtmoDensity end
+    end,
+})
+antis:Toggle({ Title = "Anti-Colorless", Callback = function(v) antiColorless = v end })
+antis:Toggle({ Title = "Anti-Blind",     Callback = function(v) antiBlind = v end })
+antis:Toggle({ Title = "Anti-Myopic",    Callback = function(v) antiMyopic = v end })
+
+antis:Section({ Title = "Player" })
+antis:Toggle({ Title = "Anti-Morph",  Callback = function(v) antiMorph = v end })
+antis:Toggle({ Title = "Anti-Glitch", Callback = function(v) antiGlitch = v end })
+
+local focusConn1, focusConn2
+local function forceFocus()
+    for i = 1, 2 do
+        system:FireServer("Focused")
+        task.wait(0.1)
+    end
+end
+
+antis:Toggle({
+    Title = "Anti-AFK",
+    Callback = function(v)
+        if v then
+            focusConn1 = userInputService.WindowFocusReleased:Connect(forceFocus)
+            focusConn2 = userInputService.WindowFocused:Connect(forceFocus)
+            WindUI:Notify({ Title = "Anti-AFK", Content = "Active.", Duration = 2 })
+        else
+            if focusConn1 then focusConn1:Disconnect() focusConn1 = nil end
+            if focusConn2 then focusConn2:Disconnect() focusConn2 = nil end
+            WindUI:Notify({ Title = "Anti-AFK", Content = "Off.", Duration = 2 })
+        end
+    end,
+})
+antis:Toggle({
+    Title = "Anti-Jail",
+    Callback = function(v)
+        antiJail = v
+        if v and localPlayer.Character then
+            unclip(localPlayer.Character:FindFirstChild("Jail"))
+        end
+    end,
+})
+antis:Toggle({ Title = "Anti-Freeze", Callback = function(v) antiFreeze = v end })
+
+antis:Section({ Title = "Chat" })
+antis:Toggle({ Title = "Anti-Dumb", Callback = function(v) antiDumb = v end })
+
+-- character respawn handling
+localPlayer.CharacterAdded:Connect(function(char)
+    task.wait(0.2)
+    if antiVamp then task.wait(0.3) restoreCamera() end
+    char.ChildAdded:Connect(function(child)
+        if child.Name == "Hielo" and antiFreeze then
+            task.wait(0.1)
+            killSelf()
+        elseif child.Name == "Jail" and antiJail then
+            task.wait(0.1)
+            unclip(child)
+        end
+    end)
+end)
+
+-- ============================================================
+-- Target tab
+-- ============================================================
+hub:Tab({ Title = "───>PLAYER<───", Icon = "", Locked = true, Border = false })
+local targetTab = hub:Tab({ Title = "Target", Icon = "target", locked = false })
+local selectedPlayer = nil
+local playerMap = {}
+
+local function buildPlayerList()
+    local names = {}
+    playerMap = {}
+    for _, p in ipairs(players:GetPlayers()) do
+        local label = p.DisplayName .. " (@" .. p.Name .. ")"
+        if p == localPlayer then label = "[YOU] " .. p.DisplayName end
+        table.insert(names, label)
+        playerMap[label] = p
+    end
+    return names
+end
+
+local playerDropdown = targetTab:Dropdown({
+    Title = "Select Player",
+    Values = buildPlayerList(),
+    Callback = function(v) selectedPlayer = playerMap[v] end,
+})
+targetTab:Button({
+    Title = "Refresh List",
+    Callback = function() playerDropdown:SetValues(buildPlayerList()) end,
+})
+
+targetTab:Section({ Title = "Offensive" })
+targetTab:Button({
+    Title = "Abuse Target",
+    Callback = function()
+        if not selectedPlayer then
+            WindUI:Notify({ Title = "Error", Content = "Select a target.", Duration = 2 })
+            return
+        end
+        for _, cmd in ipairs({
+            ";mute "    .. selectedPlayer.DisplayName,
+            ";clearinv " .. selectedPlayer.DisplayName,
+            ";glitch "  .. selectedPlayer.DisplayName,
+            ";blind "   .. selectedPlayer.DisplayName,
+            ";myopic "  .. selectedPlayer.DisplayName,
+            ";freeze "  .. selectedPlayer.DisplayName,
+        }) do
+            say(cmd)
+            task.wait(0.3)
+        end
+    end,
+})
+targetTab:Button({
+    Title = "Delcubes Target",
+    Callback = function()
+        if not selectedPlayer then return end
+        local deleteRemote = toolEventAny("Delete")
+        if not deleteRemote then return end
+        local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        local delay = userInputService.TouchEnabled and 0.05 or 0.02
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if obj.Name == "Brick" and obj:IsA("BasePart") then
+                local ownerVal = obj:FindFirstChild("Owner")
+                local owned = false
+                if ownerVal then
+                    if ownerVal:IsA("ObjectValue") and ownerVal.Value == selectedPlayer then owned = true
+                    elseif tostring(ownerVal.Value) == selectedPlayer.Name
+                        or tostring(ownerVal) == selectedPlayer.Name then owned = true end
+                elseif obj:GetAttribute("Owner") == selectedPlayer.Name then
+                    owned = true
+                end
+                if owned then
+                    deleteRemote:FireServer(obj, hrp.Position)
+                    task.wait(delay)
+                end
+            end
+        end
+    end,
+})
+
+targetTab:Section({ Title = "Movement" })
+targetTab:Button({
+    Title = "TP to Player",
+    Callback = function()
+        if selectedPlayer and selectedPlayer.Character
+            and selectedPlayer.Character:FindFirstChild("HumanoidRootPart")
+            and localPlayer.Character then
+            localPlayer.Character.HumanoidRootPart.CFrame =
+                selectedPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 3, 0)
+        else
+            WindUI:Notify({ Title = "Error", Content = "Target has no character.", Duration = 2 })
+        end
+    end,
+})
+local viewTarget = false
+targetTab:Button({
+    Title = "View Target",
+    Callback = function()
+        if not selectedPlayer or not selectedPlayer.Character then return end
+        viewTarget = not viewTarget
+        local cam = workspace.CurrentCamera
+        cam.CameraSubject = viewTarget
+            and selectedPlayer.Character:FindFirstChild("Humanoid")
+            or localPlayer.Character:FindFirstChild("Humanoid")
+    end,
+})
+players.PlayerAdded:Connect(function() playerDropdown:SetValues(buildPlayerList()) end)
+
+-- ============================================================
+-- Mod & Mgmt
+-- ============================================================
+local modTab = hub:Tab({ Title = "Mod & Mgmt", Icon = "lucide:shield" })
+modTab:Section({ Title = "Chat" })
+modTab:Toggle({
+    Title = "Spy Chat",
+    Desc = "Reveals hidden/muted and colors names",
+    Value = true,
+    Callback = function(v) spyChat = v end,
+})
+modTab:Section({ Title = "Item Management" })
+modTab:Toggle({
+    Title = "Auto Pickup ALL Dropped Tools",
+    Callback = function(v) autoGrabDropped = v end,
+})
+modTab:Toggle({
+    Title = "Auto Drop Tools On Death",
+    Callback = function(v) autoDropOnDeath = v end,
+})
+modTab:Toggle({
+    Title = "Protect Arkenstone",
+    Value = true,
+    Callback = function(v) protectArkenstone = v end,
+})
+
+modTab:Section({ Title = "Command Runner" })
+local cmd1, cmd2, cmd3, cmd4, cmd5 = ";", ";", ";", ";", ";"
+local function runCmd(cmd)
+    if cmd == "" or cmd == ";" then return end
+    local msg = cmd
+    if msg:sub(1, 1) ~= ";" then msg = ";" .. msg end
+    if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        local ch = textChatService:FindFirstChild("RBXGeneral", true)
+            or textChatService:FindFirstChild("RBXSystem", true)
+        if ch and ch:IsA("TextChannel") then ch:SendAsync(msg) end
+    else
+        local sayReq = replicatedStorage:FindFirstChild("SayMessageRequest", true)
+        if sayReq then sayReq:FireServer(msg, "All") end
+    end
+end
+local c1 = modTab:Input({ Title = "Command 1", Default = ";", Callback = function(v) cmd1 = v end })
+modTab:Button({ Title = "Execute 1", Callback = function() runCmd(cmd1) end })
+local c2 = modTab:Input({ Title = "Command 2", Default = ";", Callback = function(v) cmd2 = v end })
+modTab:Button({ Title = "Execute 2", Callback = function() runCmd(cmd2) end })
+local c3 = modTab:Input({ Title = "Command 3", Default = ";", Callback = function(v) cmd3 = v end })
+modTab:Button({ Title = "Execute 3", Callback = function() runCmd(cmd3) end })
+local c4 = modTab:Input({ Title = "Command 4", Default = ";", Callback = function(v) cmd4 = v end })
+modTab:Button({ Title = "Execute 4", Callback = function() runCmd(cmd4) end })
+local c5 = modTab:Input({ Title = "Command 5", Default = ";", Callback = function(v) cmd5 = v end })
+modTab:Button({ Title = "Execute 5", Callback = function() runCmd(cmd5) end })
+modTab:Button({
+    Title = "Clear All Inputs",
+    Callback = function()
+        cmd1, cmd2, cmd3, cmd4, cmd5 = ";", ";", ";", ";", ";"
+        c1:Set(";") c2:Set(";") c3:Set(";") c4:Set(";") c5:Set(";")
+    end,
+})
+
+-- ============================================================
+-- Chat color renderer (chained)
+-- ============================================================
+local prevIncoming = textChatService.OnIncomingMessage
+textChatService.OnIncomingMessage = function(mdata)
+    if prevIncoming then pcall(prevIncoming, mdata) end
+
+    local src = mdata.TextSource and mdata.TextSource.UserId
+        and players:GetPlayerByUserId(mdata.TextSource.UserId)
+    if not src then return end
+
+    if spyChat then
+        local role = "admin"
+        if src:GetAttribute("Arken") == true then role = "arken"
+        elseif src.Neutral then role = "peasant" end
+        if src:HasTag("Muted") then role = "hidden" end
+        if mdata.Text:sub(1, 1) == ";" then role = "hidden" end
+        local iq = src:GetAttribute("IQ")
+        if iq and iq >= 200 then role = "iqgenius"
+        elseif iq and iq <= 50 then role = "iqdumb" end
+
+        local prefix = cubes and "[" or "("
+        local suffix = cubes and "]:" or ")"
+        mdata.PrefixText = '<font color="' .. colorHex[role] .. '"><b><font color="rgb('
+            .. table.concat(colorMap[role], ",") .. ')">'
+            .. prefix .. src.DisplayName .. suffix .. " </font></b></font>"
+    end
+end
+
+-- ============================================================
+-- Character loop (auto pickup, auto drop)
+-- ============================================================
+task.spawn(function()
+    while true do
+        task.wait(0.2)
+        local hum = humanoidRef
+        if hum and hum.Parent then
+            if autoGrabDropped and hum.Health > 0 then
+                for _, obj in pairs(workspace:GetChildren()) do
+                    if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
+                        hum:EquipTool(obj)
+                    end
+                end
+            end
+            if autoDropOnDeath and hum.Health <= 0 then
+                for _, tool in pairs(localPlayer.Backpack:GetChildren()) do
+                    if not (protectArkenstone and tool.Name == "The Arkenstone") then
+                        tool.Parent = localPlayer.Character
+                    end
+                end
+                for _, tool in pairs(localPlayer.Character:GetChildren()) do
+                    if tool:IsA("Tool") and not (protectArkenstone and tool.Name == "The Arkenstone") then
+                        tool.Parent = workspace
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- ============================================================
+-- Player tag system
+-- ============================================================
+local function removeTag(plr)
+    if tagMap[plr] then tagMap[plr]:Destroy() tagMap[plr] = nil end
+end
+
+local function addTag(plr)
+    if not playerTags then return end
+    if plr == localPlayer then return end
+    if tagMap[plr] then return end
+    local char = plr.Character
+    if not char then return end
+    local head = char:FindFirstChild("Head")
+    if not head then return end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "GongHubTag"
+    billboard.Size = UDim2.fromOffset(140, 42)
+    billboard.StudsOffset = Vector3.new(0, 3.2, 0)
+    billboard.AlwaysOnTop = true
+    billboard.ResetOnSpawn = false
+    billboard.Parent = head
+
+    local frame = Instance.new("Frame", billboard)
+    frame.Size = UDim2.fromScale(1, 1)
+    frame.BackgroundColor3 = Color3.fromRGB(6, 19, 10)
+    frame.BackgroundTransparency = 0.25
+    frame.BorderSizePixel = 0
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+    local s = Instance.new("UIStroke", frame)
+    s.Color = tagColor
+    s.Thickness = 1
+
+    local nameLbl = Instance.new("TextLabel", frame)
+    nameLbl.Size = UDim2.new(1, -8, 0, 20)
+    nameLbl.Position = UDim2.fromOffset(4, 2)
+    nameLbl.BackgroundTransparency = 1
+    nameLbl.Text = plr.Name
+    nameLbl.TextColor3 = Color3.fromRGB(229, 231, 235)
+    nameLbl.TextSize = 12
+    nameLbl.Font = Enum.Font.GothamBold
+
+    local roleLbl = Instance.new("TextLabel", frame)
+    roleLbl.Size = UDim2.new(1, -8, 0, 16)
+    roleLbl.Position = UDim2.fromOffset(4, 24)
+    roleLbl.BackgroundTransparency = 1
+    local role = rank(plr)
+    roleLbl.Text = role
+    roleLbl.TextColor3 = role == "Dev" and Color3.fromRGB(34, 197, 94)
+        or role == "Premium" and Color3.fromRGB(234, 179, 8)
+        or Color3.fromRGB(148, 163, 184)
+    roleLbl.TextSize = 10
+    roleLbl.Font = Enum.Font.GothamMedium
+
+    tagMap[plr] = billboard
+end
+
+local function clearTags()
+    for plr, b in pairs(tagMap) do
+        if b then b:Destroy() end
+        tagMap[plr] = nil
+    end
+end
+
+players.PlayerAdded:Connect(function(plr)
+    if playerTags then
+        plr.CharacterAdded:Connect(function()
+            task.wait(0.5)
+            addTag(plr)
+        end)
+        if plr.Character then addTag(plr) end
+    end
+end)
+players.PlayerRemoving:Connect(function(plr)
+    removeTag(plr)
+end)
+
+-- ============================================================
+-- Server Hopper (inline, in its own tab)
+-- ============================================================
+hub:Tab({ Title = "────>HOP<────", Icon = "", Locked = true, Border = false })
+local hopTab = hub:Tab({ Title = "Server Hopper", Icon = "server" })
+
+local hop = {
+    asc = false,
+    servers = {},
+    updating = false,
+    supportsFiles = false,
+    prevServer = "0",
+    maxServers = 100,
+}
+
+pcall(function()
+    writefile("gonghub_probe.tmp", "x")
+    hop.supportsFiles = readfile("gonghub_probe.tmp") == "x"
+    delfile("gonghub_probe.tmp")
+end)
+if hop.supportsFiles then
+    pcall(function() hop.prevServer = readfile("gonghub_prevserver.txt") end)
+end
+players.PlayerRemoving:Connect(function(plr)
+    if plr == localPlayer and hop.supportsFiles then
+        pcall(function() writefile("gonghub_prevserver.txt", tostring(game.JobId)) end)
+    end
+end)
+
+hopTab:Section({ Title = "Controls" })
+local hopStatus = hopTab:Paragraph({
+    Title = "Status",
+    Desc = "idle",
+})
+local hopList = hopTab:Divider()
+
+local function renderHopList()
+    local function clearOld()
+        for _, child in ipairs(hopTab._frame:GetDescendants()) do
+            if child.Name == "GongHubHopRow" then child:Destroy() end
+        end
+    end
+    clearOld()
+
+    for idx, srv in ipairs(hop.servers) do
+        local playing = tonumber(srv.playing) or 0
+        local maxP    = tonumber(srv.maxPlayers) or 0
+        local isFull  = playing >= maxP
+        local isCurr  = srv.id == game.JobId
+        local isPrev  = hop.supportsFiles and tostring(srv.id) == tostring(hop.prevServer)
+
+        local label = "Playing: " .. playing .. "/" .. maxP
+        if isCurr then label = label .. " (yours)"
+        elseif isPrev then label = label .. " (prev)"
+        elseif isFull then label = label .. " (full)" end
+
+        hopTab:Button({
+            Title = string.format("%d  ·  %s", idx, tostring(srv.id):sub(1, 12)),
+            Desc = label,
+            Callback = function()
+                pcall(function()
+                    teleportService:TeleportToPlaceInstance(game.PlaceId, srv.id, localPlayer)
+                end)
+            end,
+        })
+    end
+end
+
+local function fetchHop()
+    if hop.updating then return end
+    hop.updating = true
+    hopStatus:SetDesc("fetching...")
+    task.spawn(function()
+        local order = hop.asc and "Asc" or "Desc"
+        local url = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=%s&limit=100")
+            :format(game.PlaceId, order)
+        local body
+        if _req then
+            pcall(function()
+                local res = _req({ Url = url, Method = "GET" })
+                body = res and res.Body
+            end)
+        end
+        if not body then
+            pcall(function() body = game:HttpGet(url) end)
+        end
+        local data
+        if body then
+            local ok, decoded = pcall(function() return httpService:JSONDecode(body) end)
+            if ok and decoded and decoded.data then data = decoded.data end
+        end
+        if not data then
+            hopStatus:SetDesc("rate limited / failed")
+            hop.updating = false
+            return
+        end
+        hop.servers = {}
+        for _, v in ipairs(data) do
+            if type(v) == "table" and v.id and v.playing and v.maxPlayers then
+                table.insert(hop.servers, v)
+            end
+        end
+        while #hop.servers > hop.maxServers do table.remove(hop.servers) end
+        hopStatus:SetDesc(string.format("%d servers", #hop.servers))
+        renderHopList()
+        hop.updating = false
+    end)
+end
+
+hopTab:Button({
+    Title = "Refresh",
+    Callback = fetchHop,
+})
+hopTab:Button({
+    Title = "Toggle Sort",
+    Callback = function()
+        hop.asc = not hop.asc
+        fetchHop()
+    end,
+})
+hopTab:Button({
+    Title = "Rejoin Current Server",
+    Callback = function()
+        pcall(function()
+            teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, localPlayer)
+        end)
+    end,
+})
+
+task.spawn(function()
+    while not loadingDone and not hub do task.wait(0.1) end
+    task.wait(0.5)
+    fetchHop()
+    while true do
+        task.wait(70)
+        fetchHop()
+    end
+end)
+
+-- ============================================================
+-- Finish
+-- ============================================================
+loadingDone = true
+task.wait(0.3)
+tweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0.5, -150, 0.5, -90),
+}):Play()
+tweenService:Create(back, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {
+    BackgroundTransparency = 1,
+}):Play()
+task.wait(0.6)
+loadingGui:Destroy()
