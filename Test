@@ -52,6 +52,7 @@ local antiBlind, antiMyopic, antiVamp, antiJail
 local antiFreeze, antiGlitch, antiFog, antiMorph
 local antiColorless, antiDumb = false, false
 local antiMaptide, antiGlow   = false, false
+local godMode = false
 
 local autoGrabDropped   = false
 local autoDropOnDeath   = false
@@ -1337,6 +1338,82 @@ local function disableAntiGlow()
 end
 
 -- ============================================================
+-- GodMode
+-- ============================================================
+local godConnections = {}
+
+local function enableGodMode()
+    godMode = true
+    for _, c in pairs(godConnections) do
+        if c then c:Disconnect() end
+    end
+    godConnections = {}
+
+    local char = localPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    hum.MaxHealth = math.huge
+    hum.Health = math.huge
+
+    table.insert(godConnections, runService.RenderStepped:Connect(function()
+        if shared.GongHub_GodPaused then return end
+        if hum and hum.Parent then
+            hum.MaxHealth = math.huge
+            hum.Health = math.huge
+        end
+    end))
+
+    table.insert(godConnections, hum:GetPropertyChangedSignal("Health"):Connect(function()
+        if hum and hum.Parent and hum.Health < math.huge then
+            hum.MaxHealth = math.huge
+            hum.Health = math.huge
+        end
+    end))
+
+    table.insert(godConnections, hum.Died:Connect(function()
+        task.wait()
+        if hum and hum.Parent then hum.Health = math.huge end
+    end))
+end
+
+local function disableGodMode()
+    godMode = false
+    for _, c in pairs(godConnections) do
+        if c then c:Disconnect() end
+    end
+    godConnections = {}
+
+    task.wait()
+    local char = localPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.MaxHealth = 100
+            task.wait()
+            hum.Health = 100
+        end
+    end
+end
+
+-- re-enable on respawn if it was on
+localPlayer.CharacterAdded:Connect(function()
+    if godMode then
+        task.wait(0.3)
+        enableGodMode()
+    end
+end)
+
+-- force-reset helper that ignores GodMode
+local function forceReset()
+    shared.GongHub_GodPaused = true
+    killSelf()
+    task.wait(0.6)
+    shared.GongHub_GodPaused = false
+end
+
+-- ============================================================
 -- Antis
 -- ============================================================
 local antis = hub:Tab({ Title = "Antis", Icon = "lucide:shield-x" })
@@ -1371,6 +1448,13 @@ antis:Toggle({
 })
 
 antis:Section({ Title = "Player" })
+antis:Toggle({
+    Title = "GodMode",
+    Desc = "Infinite health (client-side). Server can still kill you.",
+    Callback = function(v)
+        if v then enableGodMode() else disableGodMode() end
+    end,
+})
 antis:Toggle({ Title = "Anti-Morph",  Callback = function(v) antiMorph = v end })
 antis:Toggle({ Title = "Anti-Glitch", Callback = function(v) antiGlitch = v end })
 
