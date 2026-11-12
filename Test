@@ -70,10 +70,10 @@ local _req = request or (syn and syn.request) or (http and http.request)
     or (fluxus and fluxus.request) or http_request
 
 -- ============================================================
--- State
+-- State 
 -- ============================================================
-local DevIds     = { 4260088397, 9693065023 }
-local PremiumIds = { 4260088397, 9693065023 }
+local DevIds     = { 10972869437, 11819448837, 11814042874 }
+local PremiumIds = { 10972869437, 11819448837, 11814042874 }
 local tagColor   = Color3.fromRGB(34, 197, 94)
 
 local material     = "smooth"
@@ -445,9 +445,13 @@ if not okLoad or not WindUI then
     return
 end
 
--- NEW: register access BEFORE creating tabs
+-- register access BEFORE creating tabs
 pcall(function() WindUI:SetDevIds(DevIds) end)
 pcall(function() WindUI:SetPremiumIds(PremiumIds) end)
+
+-- BULLETPROOF — bypass the early-return/timing in _refreshAccess
+WindUI.IsDev     = true
+WindUI.IsPremium = true
 
 WindUI:SetFont("rbxassetid://16658246179")
 WindUI:AddTheme({
@@ -685,9 +689,31 @@ runService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- Home
+-- Home — Auto-Execute section FIRST
 -- ============================================================
 local home = hub:Tab({ Title = "Home", Icon = "house", Locked = false })
+
+home:Section({ Title = "Auto-Execute" })
+home:Toggle({
+    Title = "Auto-Execute on Server Hop",
+    Desc = "Persists a flag; re-executes the script on the next server.",
+    Value = _io and _io.exists(AUTOEXEC_FLAG) or false,
+    Callback = function(v)
+        if not _io then
+            WindUI:Notify({ Title = "Auto-Execute", Content = "Executor has no file IO.", Duration = 3 })
+            return
+        end
+        if v then
+            _io.write(AUTOEXEC_FLAG, "1")
+            _io.write(AUTOEXEC_LAST, tostring(game.JobId))
+            WindUI:Notify({ Title = "Auto-Execute", Content = "Armed. Will fire on next hop.", Duration = 3 })
+        else
+            _io.write(AUTOEXEC_FLAG, "")
+            WindUI:Notify({ Title = "Auto-Execute", Content = "Disarmed.", Duration = 3 })
+        end
+    end,
+})
+
 home:Section({ Title = "Bypass" })
 home:Input({
     Title = "Bypass Input",
@@ -723,38 +749,6 @@ home:Button({
                 "https://raw.githubusercontent.com/mxsynry/infiniteyield-reborn/refs/heads/master/source"
             ))()
         end)
-    end,
-})
-
-home:Toggle({
-    Title = "Auto-Execute on Server Hop",
-    Desc = "Persists a flag; re-executes the script on the next server.",
-    Value = _io and _io.exists(AUTOEXEC_FLAG) or false,
-    Callback = function(v)
-        if not _io then
-            WindUI:Notify({
-                Title = "Auto-Execute",
-                Content = "Executor has no file IO.",
-                Duration = 3,
-            })
-            return
-        end
-        if v then
-            _io.write(AUTOEXEC_FLAG, "1")
-            _io.write(AUTOEXEC_LAST, tostring(game.JobId))
-            WindUI:Notify({
-                Title = "Auto-Execute",
-                Content = "Armed. Will fire on next hop.",
-                Duration = 3,
-            })
-        else
-            _io.write(AUTOEXEC_FLAG, "")
-            WindUI:Notify({
-                Title = "Auto-Execute",
-                Content = "Disarmed.",
-                Duration = 3,
-            })
-        end
     end,
 })
 
@@ -1800,7 +1794,7 @@ end)
 print("[GongHub] loading destroyed")
 
 -- ============================================================
--- Premium tab (gated by WindUI.IsPremium)
+-- Premium tab (gated by WindUI.IsPremium — now forced true)
 -- ============================================================
 local premiumPremTab
 pcall(function()
@@ -1820,7 +1814,7 @@ if premiumPremTab and premiumPremTab.PremToggle then
 end
 
 -- ============================================================
--- Dev tab (gated by WindUI.IsDev)
+-- Dev tab (gated by WindUI.IsDev — now forced true)
 -- ============================================================
 local devDevTab
 pcall(function()
