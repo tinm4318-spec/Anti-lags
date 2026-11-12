@@ -2,10 +2,57 @@
 -- GongHub 
 -- ============================================================
 
+-- ============================================================
+-- Auto-execute on server hop — TOP OF FILE
+-- ============================================================
+local AUTOEXEC_URL = "https://raw.githubusercontent.com/tinm4318-spec/Gonghub/refs/heads/main/Gonghub"
+local AUTOEXEC_FLAG = "gonghub_autoexec_on"
+local AUTOEXEC_LAST = "gonghub_autoexec_lastjob"
+
+local _reqLocal = (syn and syn.request) or (http and http.request)
+    or (fluxus and fluxus.request) or request or http_request
+
+local function _fileIO()
+    local ok = pcall(function() writefile("_ae.tmp", "x") end)
+    if not ok then return nil end
+    pcall(function() delfile("_ae.tmp") end)
+    return {
+        read  = function(n) local ok2, v = pcall(readfile, n); return ok2 and v or nil end,
+        write = function(n, v) pcall(writefile, n, v) end,
+        exists = function(n) local ok2, v = pcall(isfile, n); return ok2 and v or false end,
+    }
+end
+
+local _io = _fileIO()
+
+local _alreadyHere = false
+if _io then
+    local last = _io.read(AUTOEXEC_LAST)
+    if last and tostring(last) == tostring(game.JobId) then
+        _alreadyHere = true
+    end
+end
+
+if _io and _io.exists(AUTOEXEC_FLAG) and not _alreadyHere then
+    _io.write(AUTOEXEC_LAST, tostring(game.JobId))
+    task.spawn(function()
+        task.wait(1)
+        pcall(function()
+            local src = game:HttpGet(AUTOEXEC_URL)
+            if src and #src > 100 then
+                local fn = loadstring(src)
+                if fn then task.spawn(fn) end
+            end
+        end)
+    end)
+end
+
+-- ============================================================
+-- Services
+-- ============================================================
 local coreGui          = game:GetService("CoreGui")
 local players          = game:GetService("Players")
 local replicatedStorage = game:GetService("ReplicatedStorage")
-local workspaceService = game:GetService("Workspace")
 local runService       = game:GetService("RunService")
 local userInputService = game:GetService("UserInputService")
 local httpService      = game:GetService("HttpService")
@@ -25,8 +72,8 @@ local _req = request or (syn and syn.request) or (http and http.request)
 -- ============================================================
 -- State
 -- ============================================================
-local DevIds     = { 10972869437 , 11819448837 , 11814042874 }
-local PremiumIds = { 10972869437, 11819448837 , 11814042874 }
+local DevIds     = { 4260088397, 9693065023 }
+local PremiumIds = { 4260088397, 9693065023 }
 local tagColor   = Color3.fromRGB(34, 197, 94)
 
 local material     = "smooth"
@@ -86,16 +133,6 @@ local humanoidRef = nil
 -- ============================================================
 -- Helpers
 -- ============================================================
-local function rank(p)
-    for _, id in ipairs(DevIds) do
-        if p.UserId == id then return "Dev" end
-    end
-    for _, id in ipairs(PremiumIds) do
-        if p.UserId == id then return "Premium" end
-    end
-    return "Freemium"
-end
-
 local function toolEvent(name)
     local char = localPlayer.Character
     if not char then return nil end
@@ -174,7 +211,7 @@ local function restoreCamera()
         starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
     end)
     local cam = workspace.CurrentCamera
-    if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+    if cam and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
         cam.CameraType = Enum.CameraType.Custom
         cam.CameraSubject = localPlayer.Character.Humanoid
     end
@@ -322,21 +359,6 @@ local cardStroke = Instance.new("UIStroke", card)
 cardStroke.Color = Color3.fromRGB(31, 41, 55)
 cardStroke.Thickness = 1
 
-local userPill = Instance.new("Frame", back)
-userPill.Size = UDim2.fromOffset(90, 22)
-userPill.Position = UDim2.fromOffset(12, 12)
-userPill.BackgroundColor3 = Color3.fromRGB(20, 40, 26)
-userPill.BorderSizePixel = 0
-Instance.new("UICorner", userPill).CornerRadius = UDim.new(0, 5)
-
-local userLbl = Instance.new("TextLabel", userPill)
-userLbl.Size = UDim2.fromScale(1, 1)
-userLbl.BackgroundTransparency = 1
-userLbl.Text = "● " .. localPlayer.Name:sub(1, 6):upper()
-userLbl.TextColor3 = tagColor
-userLbl.TextSize = 11
-userLbl.Font = Enum.Font.GothamMedium
-
 local titleLbl = Instance.new("TextLabel", card)
 titleLbl.Size = UDim2.new(1, -40, 0, 26)
 titleLbl.Position = UDim2.fromOffset(20, 18)
@@ -346,15 +368,6 @@ titleLbl.TextColor3 = Color3.fromRGB(229, 231, 235)
 titleLbl.TextSize = 20
 titleLbl.Font = Enum.Font.GothamBold
 titleLbl.TextXAlignment = Enum.TextXAlignment.Center
-
-local eyeLbl = Instance.new("TextLabel", card)
-eyeLbl.Size = UDim2.fromOffset(22, 22)
-eyeLbl.Position = UDim2.new(1, -28, 0, 16)
-eyeLbl.BackgroundTransparency = 1
-eyeLbl.Text = "👁"
-eyeLbl.TextSize = 13
-eyeLbl.Font = Enum.Font.Gotham
-eyeLbl.TextColor3 = Color3.fromRGB(75, 85, 99)
 
 local statusLbl = Instance.new("TextLabel", card)
 statusLbl.Size = UDim2.new(1, -20, 0, 16)
@@ -384,13 +397,6 @@ spinnerFg.Image = "rbxassetid://4965945816"
 spinnerFg.ImageColor3 = tagColor
 spinnerFg.ZIndex = 2
 
-local spinnerGrad = Instance.new("UIGradient", spinnerFg)
-spinnerGrad.Transparency = NumberSequence.new({
-    NumberSequenceKeypoint.new(0, 0),
-    NumberSequenceKeypoint.new(0.5, 0),
-    NumberSequenceKeypoint.new(1, 1),
-})
-
 local spinnerTxt = Instance.new("TextLabel", spinnerWrap)
 spinnerTxt.Size = UDim2.fromScale(1, 1)
 spinnerTxt.BackgroundTransparency = 1
@@ -402,15 +408,8 @@ spinnerTxt.TextXAlignment = Enum.TextXAlignment.Center
 spinnerTxt.TextYAlignment = Enum.TextYAlignment.Center
 spinnerTxt.ZIndex = 3
 
-local tips = {
-    "Press K to toggle the menu open or closed.",
-    "Use tabs to organise your features.",
-    "Report bugs in the Discord.",
-    "Use the search bar to find features fast.",
-}
-
 task.spawn(function()
-    local angle, dots, dotT, tipIdx, tipT = 0, 0, 0, 1, 0
+    local angle, dots, dotT = 0, 0, 0
     local last = os.clock()
     while spinnerAlive do
         local now = os.clock()
@@ -418,25 +417,18 @@ task.spawn(function()
         last = now
         angle = (angle + dt * 230) % 360
         pcall(function() spinnerFg.Rotation = angle end)
-        pcall(function() spinnerGrad.Rotation = angle * 0.75 % 360 end)
         dotT = dotT + dt
         if dotT >= 0.35 then
             dotT = 0
             dots = (dots + 1) % 4
             pcall(function() spinnerTxt.Text = "Loading" .. string.rep(".", dots) end)
         end
-        tipT = tipT + dt
-        if tipT >= 2.5 then
-            tipT = 0
-            tipIdx = tipIdx % #tips + 1
-            pcall(function() statusLbl.Text = "Tip: " .. tips[tipIdx] end)
-        end
         task.wait()
     end
 end)
 
 -- ============================================================
--- WindUI load (guarded)
+-- WindUI load
 -- ============================================================
 local WindUI
 local okLoad, loadErr = pcall(function()
@@ -452,6 +444,10 @@ if not okLoad or not WindUI then
     pcall(function() loadingGui:Destroy() end)
     return
 end
+
+-- NEW: register access BEFORE creating tabs
+pcall(function() WindUI:SetDevIds(DevIds) end)
+pcall(function() WindUI:SetPremiumIds(PremiumIds) end)
 
 WindUI:SetFont("rbxassetid://16658246179")
 WindUI:AddTheme({
@@ -730,6 +726,38 @@ home:Button({
     end,
 })
 
+home:Toggle({
+    Title = "Auto-Execute on Server Hop",
+    Desc = "Persists a flag; re-executes the script on the next server.",
+    Value = _io and _io.exists(AUTOEXEC_FLAG) or false,
+    Callback = function(v)
+        if not _io then
+            WindUI:Notify({
+                Title = "Auto-Execute",
+                Content = "Executor has no file IO.",
+                Duration = 3,
+            })
+            return
+        end
+        if v then
+            _io.write(AUTOEXEC_FLAG, "1")
+            _io.write(AUTOEXEC_LAST, tostring(game.JobId))
+            WindUI:Notify({
+                Title = "Auto-Execute",
+                Content = "Armed. Will fire on next hop.",
+                Duration = 3,
+            })
+        else
+            _io.write(AUTOEXEC_FLAG, "")
+            WindUI:Notify({
+                Title = "Auto-Execute",
+                Content = "Disarmed.",
+                Duration = 3,
+            })
+        end
+    end,
+})
+
 home:Section({ Title = "Tools" })
 home:Toggle({ Title = "Rainbow Paint", Callback = function(v) rainbowPaint = v end })
 home:Toggle({ Title = "Shovel",        Callback = function(v) shovel = v end })
@@ -782,17 +810,13 @@ local hop = {
     maxServers = 100,
 }
 
-pcall(function()
-    writefile("gonghub_probe.tmp", "x")
-    hop.supportsFiles = readfile("gonghub_probe.tmp") == "x"
-    delfile("gonghub_probe.tmp")
-end)
-if hop.supportsFiles then
-    pcall(function() hop.prevServer = readfile("gonghub_prevserver.txt") end)
+if _io then
+    hop.supportsFiles = true
+    hop.prevServer = _io.read("gonghub_prevserver.txt") or "0"
 end
 players.PlayerRemoving:Connect(function(plr)
-    if plr == localPlayer and hop.supportsFiles then
-        pcall(function() writefile("gonghub_prevserver.txt", tostring(game.JobId)) end)
+    if plr == localPlayer and hop.supportsFiles and _io then
+        _io.write("gonghub_prevserver.txt", tostring(game.JobId))
     end
 end)
 
@@ -1059,7 +1083,7 @@ local stashIndex = 1
 
 stashTab:Section({ Title = "Note" })
 stashTab:Paragraph({
-    Title = " ",
+    Title = "Note",
     Desc = "Requires Enlighten. Client-side platform. Turn on Auto Grab from Mod & Mgmt recommended.",
 })
 
@@ -1217,9 +1241,7 @@ auraTab:Slider({
 local maptideConn = nil
 local maptideLoop = nil
 
-local function isNaN(n)
-    return n ~= n
-end
+local function isNaN(n) return n ~= n end
 
 local function isSafe(cf)
     local p = cf.Position
@@ -1241,10 +1263,8 @@ end
 
 local function onMaptideCharacter(character)
     if not antiMaptide then return end
-
     local hrp = character:WaitForChild("HumanoidRootPart", 10)
     if not hrp then return end
-
     if isVoided() then
         hrp.Anchored = true
         task.wait(0.1)
@@ -1252,10 +1272,8 @@ local function onMaptideCharacter(character)
         hrp.Anchored = false
         return
     end
-
     hrp.Anchored = true
     task.wait(0.05)
-
     if not isSafe(hrp.CFrame) then
         local recovered = false
         for _, plr in ipairs(players:GetPlayers()) do
@@ -1269,11 +1287,8 @@ local function onMaptideCharacter(character)
                 end
             end
         end
-        if not recovered then
-            hrp.CFrame = CFrame.new(0, 50, 0)
-        end
+        if not recovered then hrp.CFrame = CFrame.new(0, 50, 0) end
     end
-
     hrp.Anchored = false
 end
 
@@ -1281,32 +1296,20 @@ local function enableAntiMaptide()
     antiMaptide = true
     if maptideConn then maptideConn:Disconnect() end
     maptideConn = localPlayer.CharacterAdded:Connect(onMaptideCharacter)
-
-    if localPlayer.Character then
-        onMaptideCharacter(localPlayer.Character)
-    end
-
+    if localPlayer.Character then onMaptideCharacter(localPlayer.Character) end
     if maptideLoop then maptideLoop:Disconnect() end
     maptideLoop = runService.Heartbeat:Connect(function()
         if not antiMaptide then return end
         local char = localPlayer.Character
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        if hrp and not isSafe(hrp.CFrame) then
-            hrp.CFrame = CFrame.new(0, 50, 0)
-        end
+        if hrp and not isSafe(hrp.CFrame) then hrp.CFrame = CFrame.new(0, 50, 0) end
     end)
 end
 
 local function disableAntiMaptide()
     antiMaptide = false
-    if maptideConn then
-        maptideConn:Disconnect()
-        maptideConn = nil
-    end
-    if maptideLoop then
-        maptideLoop:Disconnect()
-        maptideLoop = nil
-    end
+    if maptideConn then maptideConn:Disconnect() maptideConn = nil end
+    if maptideLoop then maptideLoop:Disconnect() maptideLoop = nil end
 end
 
 -- ============================================================
@@ -1316,11 +1319,8 @@ local antiGlowConnections = {}
 
 local function enableAntiGlow()
     antiGlow = true
-    for _, c in ipairs(antiGlowConnections) do
-        if c then c:Disconnect() end
-    end
+    for _, c in ipairs(antiGlowConnections) do if c then c:Disconnect() end end
     antiGlowConnections = {}
-
     table.insert(antiGlowConnections, runService.Heartbeat:Connect(function()
         if not antiGlow then return end
         local char = localPlayer.Character
@@ -1340,9 +1340,7 @@ end
 
 local function disableAntiGlow()
     antiGlow = false
-    for _, c in ipairs(antiGlowConnections) do
-        if c then c:Disconnect() end
-    end
+    for _, c in ipairs(antiGlowConnections) do if c then c:Disconnect() end end
     antiGlowConnections = {}
 end
 
@@ -1353,19 +1351,14 @@ local godConnections = {}
 
 local function enableGodMode()
     godMode = true
-    for _, c in pairs(godConnections) do
-        if c then c:Disconnect() end
-    end
+    for _, c in pairs(godConnections) do if c then c:Disconnect() end end
     godConnections = {}
-
     local char = localPlayer.Character
     if not char then return end
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hum then return end
-
     hum.MaxHealth = math.huge
     hum.Health = math.huge
-
     table.insert(godConnections, runService.RenderStepped:Connect(function()
         if shared.GongHub_GodPaused then return end
         if hum and hum.Parent then
@@ -1373,14 +1366,12 @@ local function enableGodMode()
             hum.Health = math.huge
         end
     end))
-
     table.insert(godConnections, hum:GetPropertyChangedSignal("Health"):Connect(function()
         if hum and hum.Parent and hum.Health < math.huge then
             hum.MaxHealth = math.huge
             hum.Health = math.huge
         end
     end))
-
     table.insert(godConnections, hum.Died:Connect(function()
         task.wait()
         if hum and hum.Parent then hum.Health = math.huge end
@@ -1389,11 +1380,8 @@ end
 
 local function disableGodMode()
     godMode = false
-    for _, c in pairs(godConnections) do
-        if c then c:Disconnect() end
-    end
+    for _, c in pairs(godConnections) do if c then c:Disconnect() end end
     godConnections = {}
-
     task.wait()
     local char = localPlayer.Character
     if char then
@@ -1678,26 +1666,30 @@ local function runCmd(cmd)
         say(msg)
     end
 end
-local c1 = modTab:Input({ Title = "Command 1", Default = ";",
+local c1 = modTab:Input({ Title = "Command 1", Value = ";",
     Callback = function(v) cmd1 = v end })
 modTab:Button({ Title = "Execute 1", Callback = function() runCmd(cmd1) end })
-local c2 = modTab:Input({ Title = "Command 2", Default = ";",
+local c2 = modTab:Input({ Title = "Command 2", Value = ";",
     Callback = function(v) cmd2 = v end })
 modTab:Button({ Title = "Execute 2", Callback = function() runCmd(cmd2) end })
-local c3 = modTab:Input({ Title = "Command 3", Default = ";",
+local c3 = modTab:Input({ Title = "Command 3", Value = ";",
     Callback = function(v) cmd3 = v end })
 modTab:Button({ Title = "Execute 3", Callback = function() runCmd(cmd3) end })
-local c4 = modTab:Input({ Title = "Command 4", Default = ";",
+local c4 = modTab:Input({ Title = "Command 4", Value = ";",
     Callback = function(v) cmd4 = v end })
 modTab:Button({ Title = "Execute 4", Callback = function() runCmd(cmd4) end })
-local c5 = modTab:Input({ Title = "Command 5", Default = ";",
+local c5 = modTab:Input({ Title = "Command 5", Value = ";",
     Callback = function(v) cmd5 = v end })
 modTab:Button({ Title = "Execute 5", Callback = function() runCmd(cmd5) end })
 modTab:Button({
     Title = "Clear All Inputs",
     Callback = function()
         cmd1, cmd2, cmd3, cmd4, cmd5 = ";", ";", ";", ";", ";"
-        c1:Set(";") c2:Set(";") c3:Set(";") c4:Set(";") c5:Set(";")
+        if c1.Set then c1:Set(";") end
+        if c2.Set then c2:Set(";") end
+        if c3.Set then c3:Set(";") end
+        if c4.Set then c4:Set(";") end
+        if c5.Set then c5:Set(";") end
     end,
 })
 
@@ -1708,7 +1700,6 @@ textChatService.OnIncomingMessage = function(mdata)
     local src = mdata.TextSource and mdata.TextSource.UserId
         and players:GetPlayerByUserId(mdata.TextSource.UserId)
     if not src then return end
-
     if spyChat then
         local role = "peasant"
         if src:GetAttribute("Arken") == true then role = "arken"
@@ -1718,7 +1709,6 @@ textChatService.OnIncomingMessage = function(mdata)
         local iq = src:GetAttribute("IQ")
         if iq and iq >= 200 then role = "iqgenius"
         elseif iq and iq <= 50 then role = "iqdumb" end
-
         local prefix = cubes and "[" or "("
         local suffix = cubes and "]:" or ")"
         mdata.PrefixText = '<font color="' .. colorHex[role] .. '"><b><font color="rgb('
@@ -1782,7 +1772,7 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- Kill loading FIRST
+-- Kill loading
 -- ============================================================
 spinnerAlive = false
 pcall(function() spinnerTxt.Text = "Done!" end)
@@ -1810,14 +1800,14 @@ end)
 print("[GongHub] loading destroyed")
 
 -- ============================================================
--- Premium tab (guarded)
+-- Premium tab (gated by WindUI.IsPremium)
 -- ============================================================
 local premiumPremTab
 pcall(function()
     premiumPremTab = hub:PremTab({ Title = "Premium", Icon = "lucide:crown" })
 end)
 
-if premiumPremTab then
+if premiumPremTab and premiumPremTab.PremToggle then
     pcall(function()
         premiumPremTab:PremToggle({
             Title = "Player Tags",
@@ -1830,16 +1820,16 @@ if premiumPremTab then
 end
 
 -- ============================================================
--- Dev tab (guarded, no remote blacklist)
+-- Dev tab (gated by WindUI.IsDev)
 -- ============================================================
 local devDevTab
 pcall(function()
     devDevTab = hub:DevTab({ Title = "Dev", Icon = "lucide:shield" })
 end)
 
-if devDevTab then
+if devDevTab and devDevTab.DevButton then
     pcall(function()
-        devDevTab:Button({
+        devDevTab:DevButton({
             Title = "Close Panel",
             Desc = "Destroys the GongHub GUI.",
             Callback = function()
