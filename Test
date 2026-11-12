@@ -1,5 +1,5 @@
 -- ============================================================
--- GongHub
+-- GongHub 
 -- ============================================================
 
 local coreGui          = game:GetService("CoreGui")
@@ -177,7 +177,6 @@ local function restoreCamera()
     if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
         cam.CameraType = Enum.CameraType.Custom
         cam.CameraSubject = localPlayer.Character.Humanoid
-        cam.FieldOfView = 70
     end
 end
 
@@ -478,10 +477,10 @@ local hub = WindUI:CreateWindow({
     Resizable = false,
     HideSearchBar = false,
     ScrollBarEnabled = true,
-    User = { Enabled = true, Anonymous = true, Callback = function() end },
+    User = { Enabled = true, Anonymous = false, Callback = function() end },
 })
 
-hub:Tag({ Title = "v1.0", Color = Color3.fromHex("#22CC5E") })
+hub:Tag({ Title = "v1.0", Color = Color3.fromHex("#22C55E") })
 WindUI:Notify({ Title = "GongHub", Content = "Loaded. Press K to toggle.", Duration = 5 })
 
 -- ============================================================
@@ -541,7 +540,8 @@ runService.RenderStepped:Connect(function()
                 local folder = workspace:FindFirstChild("Bricks")
                 local mine = folder and folder:FindFirstChild(localPlayer.Name)
                 build:FireServer(workspace.Terrain, Enum.NormalId.Top, nearest.Position, "detailed")
-                local newBrick = mine and mine:GetChildren()[#mine:GetChildren()]
+                local kids = mine and mine:GetChildren()
+                local newBrick = kids and kids[#kids]
                 if newBrick then
                     paint:FireServer(newBrick, Enum.NormalId.Top, nearest.Position,
                         "both 🤝", Color3.new(0,0,0), "toxic", "")
@@ -561,7 +561,11 @@ runService.RenderStepped:Connect(function()
         local d = toolEvent("Delete")
         if d then
             local hit = workspace:Raycast(hrp.Position, (mousePos - hrp.Position).Unit * deleteRange)
-            d:FireServer(hit and hit.Instance or workspace.Terrain, hrp.Position)
+            local target = hit and hit.Instance
+            if target and not target:IsA("BasePart") then
+                target = target:FindFirstAncestorWhichIsA("BasePart")
+            end
+            d:FireServer(target or workspace.Terrain, hrp.Position)
         end
     end
 
@@ -577,7 +581,8 @@ runService.RenderStepped:Connect(function()
                 local paint = toolEvent("Paint")
                 local folder = workspace:FindFirstChild("Bricks")
                 local mine = folder and folder:FindFirstChild(localPlayer.Name)
-                local newBrick = mine and mine:GetChildren()[#mine:GetChildren()]
+                local kids = mine and mine:GetChildren()
+                local newBrick = kids and kids[#kids]
                 if paint and newBrick then
                     paint:FireServer(newBrick, Enum.NormalId.Top, hrp.Position,
                         "both 🤝", rainbowCol, material, "")
@@ -658,12 +663,12 @@ runService.RenderStepped:Connect(function()
 
     if antiVamp then
         local cam = workspace.CurrentCamera
-        if cam.CameraType ~= Enum.CameraType.Custom then
+        if cam and cam.CameraType ~= Enum.CameraType.Custom then
             cam.CameraType = Enum.CameraType.Custom
         end
     end
 
-    if antiFog and atmo then atmo.Density = 0.4 end
+    if antiFog and atmo then atmo.Density = 0 end
 
     if antiColorless then
         for _, e in ipairs(lighting:GetChildren()) do
@@ -686,7 +691,7 @@ end)
 -- ============================================================
 -- Home
 -- ============================================================
-local home = hub:Tab({ Title = "Home", Icon = "house", locked = false })
+local home = hub:Tab({ Title = "Home", Icon = "house", Locked = false })
 home:Section({ Title = "Bypass" })
 home:Input({
     Title = "Bypass Input",
@@ -733,7 +738,9 @@ home:Dropdown({
     Title = "Material",
     Values = { "smooth", "plastic", "tiles", "bricks", "planks", "ice", "neon", "toxic", "anchor" },
     Value = "smooth",
-    Callback = function(v) material = typeof(v) == "table" and v[1] or v end,
+    Callback = function(v)
+        material = typeof(v) == "table" and v[1] or v
+    end,
 })
 
 home:Section({ Title = "Trails" })
@@ -741,7 +748,9 @@ home:Dropdown({
     Title = "Block Trail Type",
     Values = { "detailed", "normal", "rainbow detailed", "rainbow normal" },
     Value = "detailed",
-    Callback = function(v) trailType = typeof(v) == "table" and v[1] or v end,
+    Callback = function(v)
+        trailType = typeof(v) == "table" and v[1] or v
+    end,
 })
 home:Toggle({ Title = "Block Trail", Callback = function(v) blockTrail = v end })
 
@@ -1011,11 +1020,11 @@ buildTab:Button({
             for _, b in ipairs(candidates) do
                 if not termiting then break end
                 if b.Parent and b.Anchored and paintEvent then
-                    pcall(function()
+                    local ok = pcall(function()
                         paintEvent:FireServer(b, Enum.NormalId.Top, hrp.Position,
                             "material", nil, "anchor", "")
                     end)
-                    table.insert(unanchored, b)
+                    if ok then table.insert(unanchored, b) end
                     task.wait(0.1)
                 end
             end
@@ -1397,15 +1406,15 @@ local function disableGodMode()
     end
 end
 
--- re-enable on respawn if it was on
 localPlayer.CharacterAdded:Connect(function()
     if godMode then
+        for _, c in pairs(godConnections) do if c then c:Disconnect() end end
+        godConnections = {}
         task.wait(0.3)
         enableGodMode()
     end
 end)
 
--- force-reset helper that ignores GodMode
 local function forceReset()
     shared.GongHub_GodPaused = true
     killSelf()
@@ -1491,15 +1500,8 @@ antis:Toggle({
 })
 antis:Toggle({ Title = "Anti-Freeze", Callback = function(v) antiFreeze = v end })
 antis:Toggle({
-    Title = "Anti-Maptide",
+    Title = "Anti-Maptide / Anti-NaN",
     Desc = "If spawn gets NaN'd, respawns you at a nearby player or (0, 50, 0)",
-    Callback = function(v)
-        if v then enableAntiMaptide() else disableAntiMaptide() end
-    end,
-})
-antis:Toggle({
-    Title = "Anti-NaN",
-    Desc = "If Spawn is dragged into the void (0, -1e6, 0), respawns you at (0, 3, 0)",
     Callback = function(v)
         if v then enableAntiMaptide() else disableAntiMaptide() end
     end,
@@ -1526,7 +1528,7 @@ end)
 -- Target
 -- ============================================================
 hub:Tab({ Title = "───>PLAYER<───", Icon = "", Locked = true, Border = false })
-local targetTab = hub:Tab({ Title = "Target", Icon = "target", locked = false })
+local targetTab = hub:Tab({ Title = "Target", Icon = "target", Locked = false })
 local selectedPlayer = nil
 local playerMap = {}
 
@@ -1546,7 +1548,10 @@ targetTab:Dropdown({
     Title = "Select Player",
     Desc = "Snapshot at load. Re-execute to refresh list.",
     Values = buildPlayerList(),
-    Callback = function(v) selectedPlayer = playerMap[v] end,
+    Callback = function(v)
+        local key = typeof(v) == "table" and v[1] or v
+        selectedPlayer = playerMap[key]
+    end,
 })
 
 targetTab:Section({ Title = "Offensive" })
@@ -1626,9 +1631,10 @@ targetTab:Button({
         if not selectedPlayer or not selectedPlayer.Character then return end
         viewTarget = not viewTarget
         local cam = workspace.CurrentCamera
-        cam.CameraSubject = viewTarget
+        local subj = viewTarget
             and selectedPlayer.Character:FindFirstChild("Humanoid")
-            or localPlayer.Character:FindFirstChild("Humanoid")
+            or (localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid"))
+        if cam and subj then cam.CameraSubject = subj end
     end,
 })
 
@@ -1669,8 +1675,7 @@ local function runCmd(cmd)
             or textChatService:FindFirstChild("RBXSystem", true)
         if ch and ch:IsA("TextChannel") then ch:SendAsync(msg) end
     else
-        local sayReq = replicatedStorage:FindFirstChild("SayMessageRequest", true)
-        if sayReq then sayReq:FireServer(msg, "All") end
+        say(msg)
     end
 end
 local c1 = modTab:Input({ Title = "Command 1", Default = ";",
@@ -1705,7 +1710,7 @@ textChatService.OnIncomingMessage = function(mdata)
     if not src then return end
 
     if spyChat then
-        local role = "admin"
+        local role = "peasant"
         if src:GetAttribute("Arken") == true then role = "arken"
         elseif src.Neutral then role = "peasant" end
         if src:HasTag("Muted") then role = "hidden" end
