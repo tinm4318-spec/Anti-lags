@@ -1688,29 +1688,85 @@ modTab:Button({
 })
 
 -- ============================================================
--- Chat color renderer
+-- SpyChat 
 -- ============================================================
 textChatService.OnIncomingMessage = function(mdata)
     local src = mdata.TextSource and mdata.TextSource.UserId
         and players:GetPlayerByUserId(mdata.TextSource.UserId)
     if not src then return end
-    if spyChat then
-        local role = "peasant"
-        if src:GetAttribute("Arken") == true then role = "arken"
-        elseif src.Neutral then role = "peasant" end
-        if src:HasTag("Muted") then role = "hidden" end
-        if mdata.Text:sub(1, 1) == ";" then role = "hidden" end
+
+    local role
+    if src.Neutral == true then
+        if src:GetAttribute("Arken") == true then
+            role = "arken"
+        else
+            role = "peasant"
+        end
+    else
+        role = "admin"
+    end
+
+    local isHidden = false
+    local muted = src:HasTag("Muted")
+    if muted then
+        role = "hidden"
+        if not spyChat then
+            mdata.Text = ""
+        end
+    end
+
+    local firstChar = mdata.Text:sub(1, 1)
+    local cmdPart = mdata.Text:sub(2, (mdata.Text:find(" ") or #mdata.Text + 1) - 1):lower()
+
+    if firstChar == ";" then
+        if spyChat then
+            role = "hidden"
+            isHidden = true
+        else
+            mdata.Text = ""
+        end
+    end
+
+    -- JoinXL / JoinVC / JoinOG hotkeys
+    if src == localPlayer and map3[cmdPart] then
+        for key, guiName in pairs(map3) do
+            local g = playerGui:FindFirstChild(guiName)
+            if g then g.Enabled = (key == cmdPart) end
+        end
+    end
+
+    local iqLabel
+    if spyChat and src:GetAttribute("IQ") then
         local iq = src:GetAttribute("IQ")
-        if iq and iq >= 200 then role = "iqgenius"
-        elseif iq and iq <= 50 then role = "iqdumb" end
-        local prefix = cubes and "[" or "("
-        local suffix = cubes and "]:" or ")"
-        mdata.PrefixText = '<font color="' .. colorHex[role] .. '"><b><font color="rgb('
-            .. table.concat(colorMap[role], ",") .. ')">'
-            .. prefix .. src.DisplayName .. suffix .. " </font></b></font>"
+        if iq >= 200 then
+            iqLabel = "genius 🧠"
+            role = "iqgenius"
+        elseif iq <= 50 then
+            iqLabel = "dumb 🤪"
+            role = "iqdumb"
+        end
+    end
+
+    local hiddenTag = isHidden and " (HIDDEN CHAT)" or ""
+    local iqTag     = iqLabel and (" (" .. iqLabel .. ")") or ""
+    local mutedTag  = muted and " (MUTED)" or ""
+
+    if cubes then
+        mdata.PrefixText = '<font color="' .. colorHex[role] .. '"><b><font color=\'rgb('
+            .. tostring(colorMap[role][1]) .. ","
+            .. tostring(colorMap[role][2]) .. ","
+            .. tostring(colorMap[role][3]) .. ")'>["
+            .. src.DisplayName .. hiddenTag .. iqTag .. mutedTag
+            .. "]: </font></b></font>"
+    else
+        mdata.PrefixText = '<font color="' .. colorHex[role] .. '"><i><font color=\'rgb('
+            .. tostring(colorMap[role][1]) .. ","
+            .. tostring(colorMap[role][2]) .. ","
+            .. tostring(colorMap[role][3]) .. ")'>("
+            .. src.DisplayName .. hiddenTag .. iqTag .. mutedTag
+            .. ") </font></i></font>"
     end
 end
-
 -- ============================================================
 -- Character loop
 -- ============================================================
