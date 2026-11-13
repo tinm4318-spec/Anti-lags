@@ -1689,83 +1689,121 @@ modTab:Button({
 -- ============================================================
 -- SpyChat 
 -- ============================================================
-textChatService.OnIncomingMessage = function(mdata)
-    local src = mdata.TextSource and mdata.TextSource.UserId
-        and players:GetPlayerByUserId(mdata.TextSource.UserId)
-    if not src then return end
+local spychat = true
 
-    local role
-    if src.Neutral == true then
-        if src:GetAttribute("Arken") == true then
-            role = "arken"
+modTab:Toggle({
+    Title = "SPY CHAT",
+    Callback = function(bool)
+        spychat = bool
+    end,
+    Value = true,
+})
+
+local namecolors = {
+    peasant  = {150, 103, 102},
+    arken    = {4, 175, 236},
+    admin    = {245, 205, 48},
+    hidden   = {0, 95, 2},
+    iqgenius = {98, 129, 65},
+    iqdumb   = {98, 129, 65},
+}
+}
+
+if cubes then
+    namecolors.peasant = {128, 128, 128}
+end
+
+local namecolorshex = {}
+for i, v in pairs(namecolors) do
+    namecolorshex[i] = "#" .. Color3.fromRGB(table.unpack(v)):ToHex()
+end
+
+local joincmds = {
+    joinxl = "JoinXL",
+    joinvc = "JoinVC",
+    joinog = "JoinOG",
+}
+
+local function oimremake(mdata)
+    local plr = mdata.TextSource and mdata.TextSource.UserId
+        and players:GetPlayerByUserId(mdata.TextSource.UserId)
+    if not plr then return end
+
+    local cn = ""
+    local hidden = false
+
+    if plr.Neutral == true then
+        if plr:GetAttribute("Arken") == true then
+            cn = "arken"
         else
-            role = "peasant"
+            cn = "peasant"
         end
     else
-        role = "admin"
+        cn = "admin"
     end
 
-    local isHidden = false
-    local muted = src:HasTag("Muted")
-
+    local muted = plr:HasTag("Muted")
     if muted then
-        role = "hidden"
-        if not spyChat then
+        cn = "hidden"
+        if not spychat then
             mdata.Text = ""
         end
     end
 
-    local firstChar = mdata.Text:sub(1, 1)
-    local cmdPart = mdata.Text:sub(2, (mdata.Text:find(" ") or #mdata.Text + 1) - 1):lower()
-
-    if firstChar == ";" then
-        if spyChat then
-            role = "hidden"
-            isHidden = true
+    local cmd = string.sub(mdata.Text, 1, string.find(mdata.Text, " ") or nil)
+    if string.sub(mdata.Text, 1, 1) == ";" then
+        cmd = string.sub(mdata.Text, 2, string.find(mdata.Text, " ") or nil)
+        if spychat then
+            cn = "hidden"
+            hidden = true
         else
             mdata.Text = ""
         end
     end
 
-    if src == localPlayer and map3[cmdPart] then
-        for key, guiName in pairs(map3) do
-            local g = playerGui:FindFirstChild(guiName)
-            if g then g.Enabled = (key == cmdPart) end
+    if plr == localPlayer and joincmds[cmd:lower()] then
+        for i, v in pairs(joincmds) do
+            if localPlayer.PlayerGui:FindFirstChild(v) then
+                localPlayer.PlayerGui[v].Enabled = (i == cmd:lower())
+            end
         end
     end
 
-    local iqLabel
-    if spyChat and src:GetAttribute("IQ") then
-        local iq = src:GetAttribute("IQ")
-        if iq >= 200 then
-            iqLabel = "genius 🧠"
-            role = "iqgenius"
-        elseif iq <= 50 then
-            iqLabel = "dumb 🤪"
-            role = "iqdumb"
+    local iq = nil
+    if spychat and plr:GetAttribute("IQ") then
+        if plr:GetAttribute("IQ") >= 200 then
+            iq = "genius 🧠"
+            cn = "iqgenius"
+        elseif plr:GetAttribute("IQ") <= 50 then
+            iq = "dumb 🤪"
+            cn = "iqdumb"
         end
     end
-
-    local hiddenTag = isHidden and " (HIDDEN CHAT)" or ""
-    local iqTag     = iqLabel and (" (" .. iqLabel .. ")") or ""
-    local mutedTag  = muted and " (MUTED)" or ""
 
     if cubes then
-        mdata.PrefixText = '<font color="' .. colorHex[role] .. '"><b><font color=\'rgb('
-            .. tostring(colorMap[role][1]) .. ","
-            .. tostring(colorMap[role][2]) .. ","
-            .. tostring(colorMap[role][3]) .. ")'>["
-            .. src.DisplayName .. hiddenTag .. iqTag .. mutedTag
+        mdata.PrefixText = "<font color=\"" .. namecolorshex[cn] .. "\"><b><font color='rgb("
+            .. tostring(namecolors[cn][1]) .. ","
+            .. tostring(namecolors[cn][2]) .. ","
+            .. tostring(namecolors[cn][3]) .. ")'>["
+            .. plr.DisplayName
+            .. (hidden and " (HIDDEN CHAT)" or "")
+            .. (iq and (" (" .. iq .. ")") or "")
+            .. (muted and " (MUTED)" or "")
             .. "]: </font></b></font>"
     else
-        mdata.PrefixText = '<font color="' .. colorHex[role] .. '"><i><font color=\'rgb('
-            .. tostring(colorMap[role][1]) .. ","
-            .. tostring(colorMap[role][2]) .. ","
-            .. tostring(colorMap[role][3]) .. ")'>("
-            .. src.DisplayName .. hiddenTag .. iqTag .. mutedTag
+        mdata.PrefixText = "<font color=\"" .. namecolorshex[cn] .. "\"><i><font color='rgb("
+            .. tostring(namecolors[cn][1]) .. ","
+            .. tostring(namecolors[cn][2]) .. ","
+            .. tostring(namecolors[cn][3]) .. ")'>("
+            .. plr.DisplayName
+            .. (hidden and " (HIDDEN CHAT)" or "")
+            .. (iq and (" (" .. iq .. ")") or "")
+            .. (muted and " (MUTED)" or "")
             .. ") </font></i></font>"
     end
 end
+
+textChatService.OnIncomingMessage = oimremake
 
 -- ============================================================
 -- Character loop
