@@ -1693,7 +1693,9 @@ modTab:Button({
 textChatService.OnIncomingMessage = function(mdata)
     local src = mdata.TextSource and mdata.TextSource.UserId
         and players:GetPlayerByUserId(mdata.TextSource.UserId)
-    if not src then return end
+if not src then return end
+ 
+if src == localPlayer then return end
 
     local role
     if src.Neutral == true then
