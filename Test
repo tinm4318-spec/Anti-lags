@@ -1693,9 +1693,7 @@ modTab:Button({
 textChatService.OnIncomingMessage = function(mdata)
     local src = mdata.TextSource and mdata.TextSource.UserId
         and players:GetPlayerByUserId(mdata.TextSource.UserId)
-if not src then return end
- 
-if src == localPlayer then return end
+    if not src then return end
 
     local role
     if src.Neutral == true then
@@ -1710,9 +1708,11 @@ if src == localPlayer then return end
 
     local isHidden = false
     local muted = src:HasTag("Muted")
+
     if muted then
         role = "hidden"
-        if not spyChat then
+        
+        if not spyChat and src ~= localPlayer then
             mdata.Text = ""
         end
     end
@@ -1725,11 +1725,13 @@ if src == localPlayer then return end
             role = "hidden"
             isHidden = true
         else
-            mdata.Text = ""
+            
+            if src ~= localPlayer then
+                mdata.Text = ""
+            end
         end
     end
 
-    -- JoinXL / JoinVC / JoinOG hotkeys
     if src == localPlayer and map3[cmdPart] then
         for key, guiName in pairs(map3) do
             local g = playerGui:FindFirstChild(guiName)
@@ -1769,6 +1771,7 @@ if src == localPlayer then return end
             .. ") </font></i></font>"
     end
 end
+
 -- ============================================================
 -- Character loop
 -- ============================================================
