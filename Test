@@ -1623,6 +1623,8 @@ targetTab:Button({
 -- ============================================================
 -- Mod & Mgmt
 -- ============================================================
+local okMod, errMod = pcall(function() 
+
 local modTab = hub:Tab({ Title = "Mod & Mgmt", Icon = "lucide:shield" })
 modTab:Section({ Title = "Chat" })
 modTab:Toggle({
@@ -1691,14 +1693,6 @@ modTab:Button({
 -- ============================================================
 local spychat = true
 
-modTab:Toggle({
-    Title = "Spy Chat",
-    Callback = function(bool)
-        spychat = bool
-    end,
-    Value = true,
-})
-
 local namecolors = {
     peasant  = {150, 103, 102},
     arken    = {4, 175, 236},
@@ -1706,7 +1700,6 @@ local namecolors = {
     hidden   = {0, 95, 2},
     iqgenius = {98, 129, 65},
     iqdumb   = {98, 129, 65},
-}
 }
 
 if cubes then
@@ -1725,6 +1718,8 @@ local joincmds = {
 }
 
 local function oimremake(mdata)
+    if not mdata or not mdata.Text or mdata.Text == "" then return end
+
     local plr = mdata.TextSource and mdata.TextSource.UserId
         and players:GetPlayerByUserId(mdata.TextSource.UserId)
     if not plr then return end
