@@ -1686,7 +1686,6 @@ modTab:Button({
         if c5.Set then c5:Set(";") end
     end,
 })
-
 -- ============================================================
 -- SpyChat 
 -- ============================================================
@@ -1711,8 +1710,7 @@ textChatService.OnIncomingMessage = function(mdata)
 
     if muted then
         role = "hidden"
-        
-        if not spyChat and src ~= localPlayer then
+        if not spyChat then
             mdata.Text = ""
         end
     end
@@ -1725,10 +1723,7 @@ textChatService.OnIncomingMessage = function(mdata)
             role = "hidden"
             isHidden = true
         else
-            
-            if src ~= localPlayer then
-                mdata.Text = ""
-            end
+            mdata.Text = ""
         end
     end
 
