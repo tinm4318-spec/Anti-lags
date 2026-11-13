@@ -1692,7 +1692,7 @@ modTab:Button({
 local spychat = true
 
 modTab:Toggle({
-    Title = "SPY CHAT",
+    Title = "Spy Chat",
     Callback = function(bool)
         spychat = bool
     end,
