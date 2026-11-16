@@ -1,7 +1,5 @@
 -- ============================================================
 -- GongHub
--- No tokens. No webhooks. No IP loggers. No remote blacklist.
--- Server Hopper replaces RepStorage. Auto Execute on hop included.
 -- ============================================================
 
 local coreGui          = game:GetService("CoreGui")
