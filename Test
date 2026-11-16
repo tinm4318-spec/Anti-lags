@@ -97,7 +97,6 @@ pcall(function()
     if isfile and readfile and isfile("gonghub_autoexec.json") then
         local data = httpService:JSONDecode(readfile("gonghub_autoexec.json"))
         if data.toggle ~= nil then autoExecute = data.toggle end
-        if data.loader and data.loader ~= "" then autoExecuteLoader = data.loader end
     end
 end)
 
@@ -860,30 +859,11 @@ hopTab:Button({
 hopTab:Section({ Title = "Auto Execute" })
 hopTab:Toggle({
     Title = "Auto Execute on Hop",
-    Desc = "Re-runs your loader after every teleport",
+    Desc = "Re-runs the default loader after every teleport",
     Value = autoExecute,
     Callback = function(v)
         autoExecute = v
         saveAutoExec()
-    end,
-})
-hopTab:Input({
-    Title = "Loader (URL or loadstring)",
-    Desc = "Runs after teleport. Default is Anti-lags loader.",
-    Placeholder = DEFAULT_AUTOEXEC_URL,
-    Callback = function(v)
-        if v and v ~= "" then
-            autoExecuteLoader = v
-            saveAutoExec()
-        end
-    end,
-})
-hopTab:Button({
-    Title = "Reset Loader to Default",
-    Callback = function()
-        autoExecuteLoader = 'loadstring(game:HttpGet("' .. DEFAULT_AUTOEXEC_URL .. '?t=" .. os.time(), true))()'
-        saveAutoExec()
-        WindUI:Notify({ Title = "Auto Execute", Content = "Loader reset to default.", Duration = 2 })
     end,
 })
 
