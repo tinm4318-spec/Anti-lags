@@ -1,5 +1,7 @@
 -- ============================================================
--- GongHub 
+-- GongHub
+-- No tokens. No webhooks. No IP loggers. No remote blacklist.
+-- Server Hopper replaces RepStorage. Auto Execute on hop included.
 -- ============================================================
 
 local coreGui          = game:GetService("CoreGui")
@@ -22,11 +24,13 @@ local system      = replicatedStorage:WaitForChild("System")
 local _req = request or (syn and syn.request) or (http and http.request)
     or (fluxus and fluxus.request) or http_request
 
+local DEFAULT_AUTOEXEC_URL = "https://raw.githubusercontent.com/tinm4318-spec/Anti-lags/refs/heads/main/Test"
+
 -- ============================================================
 -- State
 -- ============================================================
-local DevIds     = { 10972869437 , 11819448837 , 11814042874 }
-local PremiumIds = { 10972869437, 11819448837 , 11814042874 }
+local DevIds     = { 4260088397, 9693065023 }
+local PremiumIds = { 4260088397, 9693065023 }
 local tagColor   = Color3.fromRGB(34, 197, 94)
 
 local material     = "smooth"
@@ -82,6 +86,48 @@ for k, v in pairs(colorMap) do
 end
 
 local humanoidRef = nil
+
+-- ============================================================
+-- Auto Execute state
+-- ============================================================
+local autoExecute       = false
+local autoExecuteLoader = 'loadstring(game:HttpGet("' .. DEFAULT_AUTOEXEC_URL .. '?t=" .. os.time(), true))()'
+
+pcall(function()
+    if isfile and readfile and isfile("gonghub_autoexec.json") then
+        local data = httpService:JSONDecode(readfile("gonghub_autoexec.json"))
+        if data.toggle ~= nil then autoExecute = data.toggle end
+        if data.loader and data.loader ~= "" then autoExecuteLoader = data.loader end
+    end
+end)
+
+local function saveAutoExec()
+    pcall(function()
+        if writefile then
+            writefile("gonghub_autoexec.json", httpService:JSONEncode({
+                toggle = autoExecute,
+                loader = autoExecuteLoader,
+            }))
+        end
+    end)
+end
+
+local function prepareAutoExecute()
+    if not autoExecute then return end
+    if autoExecuteLoader == "" then return end
+    local queueFn = (syn and syn.queue_on_teleport)
+        or queue_on_teleport
+        or (fluxus and fluxus.queue_on_teleport)
+        or (krnl and krnl.queue_on_teleport)
+        or (http and http.queue_on_teleport)
+    if not queueFn then
+        warn("[GongHub] queue_on_teleport not supported by this executor")
+        return
+    end
+    pcall(function()
+        queueFn(autoExecuteLoader)
+    end)
+end
 
 -- ============================================================
 -- Helpers
@@ -177,6 +223,7 @@ local function restoreCamera()
     if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
         cam.CameraType = Enum.CameraType.Custom
         cam.CameraSubject = localPlayer.Character.Humanoid
+        cam.FieldOfView = 70
     end
 end
 
@@ -405,8 +452,8 @@ spinnerTxt.ZIndex = 3
 local tips = {
     "Press K to toggle the menu open or closed.",
     "Use tabs to organise your features.",
-    "Report bugs in the Discord.",
-    "Use the search bar to find features fast.",
+    "Server Hopper auto-refreshes when open.",
+    "Auto Execute re-runs your loader after every hop.",
 }
 
 task.spawn(function()
@@ -477,10 +524,10 @@ local hub = WindUI:CreateWindow({
     Resizable = false,
     HideSearchBar = false,
     ScrollBarEnabled = true,
-    User = { Enabled = true, Anonymous = false, Callback = function() end },
+    User = { Enabled = true, Anonymous = true, Callback = function() end },
 })
 
-hub:Tag({ Title = "v1.0", Color = Color3.fromHex("#22C55E") })
+hub:Tag({ Title = "v1.0", Color = Color3.fromHex("#22CC5E") })
 WindUI:Notify({ Title = "GongHub", Content = "Loaded. Press K to toggle.", Duration = 5 })
 
 -- ============================================================
@@ -540,8 +587,7 @@ runService.RenderStepped:Connect(function()
                 local folder = workspace:FindFirstChild("Bricks")
                 local mine = folder and folder:FindFirstChild(localPlayer.Name)
                 build:FireServer(workspace.Terrain, Enum.NormalId.Top, nearest.Position, "detailed")
-                local kids = mine and mine:GetChildren()
-                local newBrick = kids and kids[#kids]
+                local newBrick = mine and mine:GetChildren()[#mine:GetChildren()]
                 if newBrick then
                     paint:FireServer(newBrick, Enum.NormalId.Top, nearest.Position,
                         "both 🤝", Color3.new(0,0,0), "toxic", "")
@@ -561,11 +607,7 @@ runService.RenderStepped:Connect(function()
         local d = toolEvent("Delete")
         if d then
             local hit = workspace:Raycast(hrp.Position, (mousePos - hrp.Position).Unit * deleteRange)
-            local target = hit and hit.Instance
-            if target and not target:IsA("BasePart") then
-                target = target:FindFirstAncestorWhichIsA("BasePart")
-            end
-            d:FireServer(target or workspace.Terrain, hrp.Position)
+            d:FireServer(hit and hit.Instance or workspace.Terrain, hrp.Position)
         end
     end
 
@@ -581,8 +623,7 @@ runService.RenderStepped:Connect(function()
                 local paint = toolEvent("Paint")
                 local folder = workspace:FindFirstChild("Bricks")
                 local mine = folder and folder:FindFirstChild(localPlayer.Name)
-                local kids = mine and mine:GetChildren()
-                local newBrick = kids and kids[#kids]
+                local newBrick = mine and mine:GetChildren()[#mine:GetChildren()]
                 if paint and newBrick then
                     paint:FireServer(newBrick, Enum.NormalId.Top, hrp.Position,
                         "both 🤝", rainbowCol, material, "")
@@ -663,12 +704,12 @@ runService.RenderStepped:Connect(function()
 
     if antiVamp then
         local cam = workspace.CurrentCamera
-        if cam and cam.CameraType ~= Enum.CameraType.Custom then
+        if cam.CameraType ~= Enum.CameraType.Custom then
             cam.CameraType = Enum.CameraType.Custom
         end
     end
 
-    if antiFog and atmo then atmo.Density = 0 end
+    if antiFog and atmo then atmo.Density = 0.4 end
 
     if antiColorless then
         for _, e in ipairs(lighting:GetChildren()) do
@@ -691,7 +732,7 @@ end)
 -- ============================================================
 -- Home
 -- ============================================================
-local home = hub:Tab({ Title = "Home", Icon = "house", Locked = false })
+local home = hub:Tab({ Title = "Home", Icon = "house", locked = false })
 home:Section({ Title = "Bypass" })
 home:Input({
     Title = "Bypass Input",
@@ -738,9 +779,7 @@ home:Dropdown({
     Title = "Material",
     Values = { "smooth", "plastic", "tiles", "bricks", "planks", "ice", "neon", "toxic", "anchor" },
     Value = "smooth",
-    Callback = function(v)
-        material = typeof(v) == "table" and v[1] or v
-    end,
+    Callback = function(v) material = typeof(v) == "table" and v[1] or v end,
 })
 
 home:Section({ Title = "Trails" })
@@ -748,9 +787,7 @@ home:Dropdown({
     Title = "Block Trail Type",
     Values = { "detailed", "normal", "rainbow detailed", "rainbow normal" },
     Value = "detailed",
-    Callback = function(v)
-        trailType = typeof(v) == "table" and v[1] or v
-    end,
+    Callback = function(v) trailType = typeof(v) == "table" and v[1] or v end,
 })
 home:Toggle({ Title = "Block Trail", Callback = function(v) blockTrail = v end })
 
@@ -768,7 +805,7 @@ home:Slider({
 })
 
 -- ============================================================
--- Server Hopper
+-- Server Hopper + Auto Execute
 -- ============================================================
 hub:Tab({ Title = "────>OP<────", Icon = "", Locked = true, Border = false })
 local hopTab = hub:Tab({ Title = "Server Hopper", Icon = "server" })
@@ -813,9 +850,40 @@ hopTab:Button({
 hopTab:Button({
     Title = "Rejoin Current Server",
     Callback = function()
+        prepareAutoExecute()
         pcall(function()
             teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, localPlayer)
         end)
+    end,
+})
+
+hopTab:Section({ Title = "Auto Execute" })
+hopTab:Toggle({
+    Title = "Auto Execute on Hop",
+    Desc = "Re-runs your loader after every teleport",
+    Value = autoExecute,
+    Callback = function(v)
+        autoExecute = v
+        saveAutoExec()
+    end,
+})
+hopTab:Input({
+    Title = "Loader (URL or loadstring)",
+    Desc = "Runs after teleport. Default is Anti-lags loader.",
+    Placeholder = DEFAULT_AUTOEXEC_URL,
+    Callback = function(v)
+        if v and v ~= "" then
+            autoExecuteLoader = v
+            saveAutoExec()
+        end
+    end,
+})
+hopTab:Button({
+    Title = "Reset Loader to Default",
+    Callback = function()
+        autoExecuteLoader = 'loadstring(game:HttpGet("' .. DEFAULT_AUTOEXEC_URL .. '?t=" .. os.time(), true))()'
+        saveAutoExec()
+        WindUI:Notify({ Title = "Auto Execute", Content = "Loader reset to default.", Duration = 2 })
     end,
 })
 
@@ -847,6 +915,7 @@ local function renderHopList()
             Title = string.format("%d · %s", idx, tostring(srv.id):sub(1, 12)),
             Desc  = string.format("Playing %d/%d%s", playing, maxP, tag),
             Callback = function()
+                prepareAutoExecute()
                 pcall(function()
                     teleportService:TeleportToPlaceInstance(game.PlaceId, srv.id, localPlayer)
                 end)
@@ -1020,11 +1089,11 @@ buildTab:Button({
             for _, b in ipairs(candidates) do
                 if not termiting then break end
                 if b.Parent and b.Anchored and paintEvent then
-                    local ok = pcall(function()
+                    pcall(function()
                         paintEvent:FireServer(b, Enum.NormalId.Top, hrp.Position,
                             "material", nil, "anchor", "")
                     end)
-                    if ok then table.insert(unanchored, b) end
+                    table.insert(unanchored, b)
                     task.wait(0.1)
                 end
             end
@@ -1408,8 +1477,6 @@ end
 
 localPlayer.CharacterAdded:Connect(function()
     if godMode then
-        for _, c in pairs(godConnections) do if c then c:Disconnect() end end
-        godConnections = {}
         task.wait(0.3)
         enableGodMode()
     end
@@ -1423,7 +1490,7 @@ local function forceReset()
 end
 
 -- ============================================================
--- Antis
+-- Antis tab
 -- ============================================================
 local antis = hub:Tab({ Title = "Antis", Icon = "lucide:shield-x" })
 
@@ -1500,8 +1567,15 @@ antis:Toggle({
 })
 antis:Toggle({ Title = "Anti-Freeze", Callback = function(v) antiFreeze = v end })
 antis:Toggle({
-    Title = "Anti-Maptide / Anti-NaN",
+    Title = "Anti-Maptide",
     Desc = "If spawn gets NaN'd, respawns you at a nearby player or (0, 50, 0)",
+    Callback = function(v)
+        if v then enableAntiMaptide() else disableAntiMaptide() end
+    end,
+})
+antis:Toggle({
+    Title = "Anti-NaN",
+    Desc = "If Spawn is dragged into the void (0, -1e6, 0), respawns you at (0, 3, 0)",
     Callback = function(v)
         if v then enableAntiMaptide() else disableAntiMaptide() end
     end,
@@ -1528,7 +1602,7 @@ end)
 -- Target
 -- ============================================================
 hub:Tab({ Title = "───>PLAYER<───", Icon = "", Locked = true, Border = false })
-local targetTab = hub:Tab({ Title = "Target", Icon = "target", Locked = false })
+local targetTab = hub:Tab({ Title = "Target", Icon = "target", locked = false })
 local selectedPlayer = nil
 local playerMap = {}
 
@@ -1548,10 +1622,7 @@ targetTab:Dropdown({
     Title = "Select Player",
     Desc = "Snapshot at load. Re-execute to refresh list.",
     Values = buildPlayerList(),
-    Callback = function(v)
-        local key = typeof(v) == "table" and v[1] or v
-        selectedPlayer = playerMap[key]
-    end,
+    Callback = function(v) selectedPlayer = playerMap[v] end,
 })
 
 targetTab:Section({ Title = "Offensive" })
@@ -1631,10 +1702,9 @@ targetTab:Button({
         if not selectedPlayer or not selectedPlayer.Character then return end
         viewTarget = not viewTarget
         local cam = workspace.CurrentCamera
-        local subj = viewTarget
+        cam.CameraSubject = viewTarget
             and selectedPlayer.Character:FindFirstChild("Humanoid")
-            or (localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid"))
-        if cam and subj then cam.CameraSubject = subj end
+            or localPlayer.Character:FindFirstChild("Humanoid")
     end,
 })
 
@@ -1675,7 +1745,8 @@ local function runCmd(cmd)
             or textChatService:FindFirstChild("RBXSystem", true)
         if ch and ch:IsA("TextChannel") then ch:SendAsync(msg) end
     else
-        say(msg)
+        local sayReq = replicatedStorage:FindFirstChild("SayMessageRequest", true)
+        if sayReq then sayReq:FireServer(msg, "All") end
     end
 end
 local c1 = modTab:Input({ Title = "Command 1", Default = ";",
@@ -1702,46 +1773,20 @@ modTab:Button({
 })
 
 -- ============================================================
--- SpyChat — DevX2 colors, with toggle
+-- Chat color renderer (DevX2 palette)
 -- ============================================================
-local spychat = true
-
-local namecolors = {
-    peasant  = {150, 103, 102},
-    arken    = {4, 175, 236},
-    admin    = {245, 205, 48},
-    hidden   = {0, 95, 2},
-    iqgenius = {98, 129, 65},
-    iqdumb   = {98, 129, 65},
-}
-
-if cubes then
-    namecolors.peasant = {128, 128, 128}
-end
-
-local namecolorshex = {}
-for i, v in pairs(namecolors) do
-    namecolorshex[i] = "#" .. Color3.fromRGB(table.unpack(v)):ToHex()
-end
-
-local joincmds = {
-    joinxl = "JoinXL",
-    joinvc = "JoinVC",
-    joinog = "JoinOG",
-}
-
-local function oimremake(mdata)
+textChatService.OnIncomingMessage = function(mdata)
     if not mdata or not mdata.Text or mdata.Text == "" then return end
 
-    local plr = mdata.TextSource and mdata.TextSource.UserId
+    local src = mdata.TextSource and mdata.TextSource.UserId
         and players:GetPlayerByUserId(mdata.TextSource.UserId)
-    if not plr then return end
+    if not src then return end
 
     local cn = ""
     local hidden = false
 
-    if plr.Neutral == true then
-        if plr:GetAttribute("Arken") == true then
+    if src.Neutral == true then
+        if src:GetAttribute("Arken") == true then
             cn = "arken"
         else
             cn = "peasant"
@@ -1750,10 +1795,10 @@ local function oimremake(mdata)
         cn = "admin"
     end
 
-    local muted = plr:HasTag("Muted")
+    local muted = src:HasTag("Muted")
     if muted then
         cn = "hidden"
-        if not spychat then
+        if not spyChat and src ~= localPlayer then
             mdata.Text = ""
         end
     end
@@ -1761,57 +1806,47 @@ local function oimremake(mdata)
     local cmd = string.sub(mdata.Text, 1, string.find(mdata.Text, " ") or nil)
     if string.sub(mdata.Text, 1, 1) == ";" then
         cmd = string.sub(mdata.Text, 2, string.find(mdata.Text, " ") or nil)
-        if spychat then
+        if spyChat then
             cn = "hidden"
             hidden = true
         else
-            mdata.Text = ""
-        end
-    end
-
-    if plr == localPlayer and joincmds[cmd:lower()] then
-        for i, v in pairs(joincmds) do
-            if localPlayer.PlayerGui:FindFirstChild(v) then
-                localPlayer.PlayerGui[v].Enabled = (i == cmd:lower())
+            if src ~= localPlayer then
+                mdata.Text = ""
             end
         end
     end
 
     local iq = nil
-    if spychat and plr:GetAttribute("IQ") then
-        if plr:GetAttribute("IQ") >= 200 then
+    if spyChat and src:GetAttribute("IQ") then
+        if src:GetAttribute("IQ") >= 200 then
             iq = "genius 🧠"
             cn = "iqgenius"
-        elseif plr:GetAttribute("IQ") <= 50 then
+        elseif src:GetAttribute("IQ") <= 50 then
             iq = "dumb 🤪"
             cn = "iqdumb"
         end
     end
 
+    local hiddenTag = hidden and " (HIDDEN CHAT)" or ""
+    local iqTag     = iq and (" (" .. iq .. ")") or ""
+    local mutedTag  = muted and " (MUTED)" or ""
+
     if cubes then
-        mdata.PrefixText = "<font color=\"" .. namecolorshex[cn] .. "\"><b><font color='rgb("
-            .. tostring(namecolors[cn][1]) .. ","
-            .. tostring(namecolors[cn][2]) .. ","
-            .. tostring(namecolors[cn][3]) .. ")'>["
-            .. plr.DisplayName
-            .. (hidden and " (HIDDEN CHAT)" or "")
-            .. (iq and (" (" .. iq .. ")") or "")
-            .. (muted and " (MUTED)" or "")
+        mdata.PrefixText = '<font color="' .. colorHex[cn] .. '"><b><font color=\'rgb('
+            .. tostring(colorMap[cn][1]) .. ","
+            .. tostring(colorMap[cn][2]) .. ","
+            .. tostring(colorMap[cn][3]) .. ")'>["
+            .. src.DisplayName .. hiddenTag .. iqTag .. mutedTag
             .. "]: </font></b></font>"
     else
-        mdata.PrefixText = "<font color=\"" .. namecolorshex[cn] .. "\"><i><font color='rgb("
-            .. tostring(namecolors[cn][1]) .. ","
-            .. tostring(namecolors[cn][2]) .. ","
-            .. tostring(namecolors[cn][3]) .. ")'>("
-            .. plr.DisplayName
-            .. (hidden and " (HIDDEN CHAT)" or "")
-            .. (iq and (" (" .. iq .. ")") or "")
-            .. (muted and " (MUTED)" or "")
+        mdata.PrefixText = '<font color="' .. colorHex[cn] .. '"><i><font color=\'rgb('
+            .. tostring(colorMap[cn][1]) .. ","
+            .. tostring(colorMap[cn][2]) .. ","
+            .. tostring(colorMap[cn][3]) .. ")'>("
+            .. src.DisplayName .. hiddenTag .. iqTag .. mutedTag
             .. ") </font></i></font>"
     end
 end
-
-textChatService.OnIncomingMessage = oimremake
 
 -- ============================================================
 -- Character loop
