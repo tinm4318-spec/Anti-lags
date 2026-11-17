@@ -1537,16 +1537,16 @@ local antiGlowConnections = {}
 
 local function enableAntiGlow()
     antiGlow = true
-    for _, c in ipairs(antiGlowConnections) do
-        if c then c:Disconnect() end
+    for _, conn in pairs(antiGlowConnections) do
+        if conn then conn:Disconnect() end
     end
     antiGlowConnections = {}
 
-    table.insert(antiGlowConnections, runService.Heartbeat:Connect(function()
+    table.insert(antiGlowConnections, runService.RenderStepped:Connect(function()
         if not antiGlow then return end
-        local char = localPlayer.Character
-        if not char then return end
-        for _, part in ipairs(char:GetDescendants()) do
+        local character = localPlayer.Character
+        if not character then return end
+        for _, part in pairs(character:GetDescendants()) do
             if part:IsA("BasePart") then
                 if part.Material == Enum.Material.Neon then
                     part.Material = Enum.Material.Plastic
@@ -1561,8 +1561,8 @@ end
 
 local function disableAntiGlow()
     antiGlow = false
-    for _, c in ipairs(antiGlowConnections) do
-        if c then c:Disconnect() end
+    for _, conn in pairs(antiGlowConnections) do
+        if conn then conn:Disconnect() end
     end
     antiGlowConnections = {}
 end
