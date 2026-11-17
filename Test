@@ -1895,126 +1895,6 @@ end
 local antis = hub:Tab({ Title = "Antis", Icon = "lucide:shield-x" })
 
 -- ============================================================
--- Anti-Fling / Anti-Void 
--- ============================================================
-local AntiProt = {
-    flingConn = nil,
-    flingOrig = setmetatable({}, { __mode = "k" }),
-    voidOn = false,
-    voidGen = 0,
-    voidStepConn = nil,
-    voidCharConn = nil,
-    voidExtra = {},
-    voidOrigHeight = workspace.FallenPartsDestroyHeight or -500,
-    voidSafeCF = nil,
-    voidLastCF = nil,
-}
-
-local VOID_OFFSET, VOID_LIFT, VOID_FPSDIV = 5, 25, 5
-
-local function apNoCollide()
-    for _, p in ipairs(players:GetPlayers()) do
-        local c = p ~= localPlayer and p.Character
-        if c then
-            for _, d in ipairs(c:GetDescendants()) do
-                if d:IsA("BasePart") and d.CanCollide then
-                    AntiProt.flingOrig[d] = true
-                    d.CanCollide = false
-                end
-            end
-        end
-    end
-end
-
-function AntiProt.flingEnable()
-    if AntiProt.flingConn then return end
-    apNoCollide()
-    AntiProt.flingConn = runService.Stepped:Connect(apNoCollide)
-end
-
-function AntiProt.flingDisable()
-    if AntiProt.flingConn then
-        AntiProt.flingConn:Disconnect()
-        AntiProt.flingConn = nil
-    end
-    for part in pairs(AntiProt.flingOrig) do
-        if part.Parent then part.CanCollide = true end
-    end
-    table.clear(AntiProt.flingOrig)
-end
-
-local function apVoidTrack(char, gen)
-    task.spawn(function()
-        local hum = char:WaitForChild("Humanoid", 10)
-        if not hum then return end
-        local state = hum:GetState()
-        table.insert(AntiProt.voidExtra, hum.StateChanged:Connect(function(_, new)
-            state = new
-        end))
-        while AntiProt.voidOn and AntiProt.voidGen == gen and hum.Parent do
-            task.wait()
-            local cf = AntiProt.voidLastCF
-            if cf and cf.Position.Y > AntiProt.voidOrigHeight + 50
-                and (state == Enum.HumanoidStateType.Running or state == Enum.HumanoidStateType.Landed) then
-                AntiProt.voidSafeCF = cf
-            end
-        end
-    end)
-end
-
-local function apVoidFix(char, part)
-    if AntiProt.voidSafeCF then
-        char:PivotTo(AntiProt.voidSafeCF)
-    else
-        local p = char:GetPivot().Position
-        char:PivotTo(CFrame.new(p.X, AntiProt.voidOrigHeight + VOID_LIFT + char:GetExtentsSize().Y, p.Z))
-    end
-    for _, v in ipairs(char:GetChildren()) do
-        if v:IsA("BasePart") then
-            v.AssemblyLinearVelocity = Vector3.zero
-            v.AssemblyAngularVelocity = Vector3.zero
-        end
-    end
-end
-
-local function apVoidStep()
-    local char = localPlayer.Character
-    local part = char and char:FindFirstChild("HumanoidRootPart")
-    if not part then return end
-    AntiProt.voidLastCF = part.CFrame
-    local limit = AntiProt.voidOrigHeight + VOID_OFFSET
-    local y = part.Position.Y
-    if y < limit or part.AssemblyLinearVelocity.Y / VOID_FPSDIV + y < limit then
-        apVoidFix(char, part)
-    end
-end
-
-function AntiProt.voidEnable()
-    if AntiProt.voidOn then return end
-    AntiProt.voidOn = true
-    AntiProt.voidGen = AntiProt.voidGen + 1
-    local gen = AntiProt.voidGen
-    pcall(function() workspace.FallenPartsDestroyHeight = -50000 end)
-    if localPlayer.Character then apVoidTrack(localPlayer.Character, gen) end
-    AntiProt.voidCharConn = localPlayer.CharacterAdded:Connect(function(c)
-        AntiProt.voidSafeCF = nil
-        apVoidTrack(c, gen)
-    end)
-    AntiProt.voidStepConn = runService.Stepped:Connect(apVoidStep)
-end
-
-function AntiProt.voidDisable()
-    AntiProt.voidOn = false
-    pcall(function() workspace.FallenPartsDestroyHeight = AntiProt.voidOrigHeight end)
-    if AntiProt.voidStepConn then AntiProt.voidStepConn:Disconnect() AntiProt.voidStepConn = nil end
-    if AntiProt.voidCharConn then AntiProt.voidCharConn:Disconnect() AntiProt.voidCharConn = nil end
-    for _, c in ipairs(AntiProt.voidExtra) do c:Disconnect() end
-    AntiProt.voidExtra = {}
-    AntiProt.voidSafeCF = nil
-    AntiProt.voidLastCF = nil
-end
-
--- ============================================================
 -- Antis UI
 -- ============================================================
 antis:Section({ Title = "Vampire" })
@@ -2054,16 +1934,76 @@ antis:Toggle({
 })
 antis:Toggle({ Title = "Anti-Morph",  Callback = function(v) antiMorph = v end })
 antis:Toggle({ Title = "Anti-Glitch", Callback = function(v) antiGlitch = v end })
+local antiFlingOn = false
+local antiFlingConn = nil
+
 antis:Toggle({
     Title = "Anti-Fling",
     Callback = function(v)
-        if v then AntiProt.flingEnable() else AntiProt.flingDisable() end
+        antiFlingOn = v
+        if v then
+            if not antiFlingConn then
+                antiFlingConn = runService.Stepped:Connect(function()
+                    if not antiFlingOn then return end
+                    local char = localPlayer.Character
+                    if not char then return end
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    if not hrp then return end
+                    if hrp.AssemblyLinearVelocity.Magnitude > 100 then
+                        hrp.AssemblyLinearVelocity = Vector3.zero
+                        hrp.AssemblyAngularVelocity = Vector3.zero
+                    end
+                end)
+            end
+        else
+            if antiFlingConn then
+                antiFlingConn:Disconnect()
+                antiFlingConn = nil
+            end
+        end
     end,
 })
+
+local antiVoidOn = false
+local antiVoidConn = nil
+local antiVoidSafeCF = nil
+local antiVoidOrigHeight = workspace.FallenPartsDestroyHeight
+
 antis:Toggle({
     Title = "Anti-Void",
     Callback = function(v)
-        if v then AntiProt.voidEnable() else AntiProt.voidDisable() end
+        antiVoidOn = v
+        if v then
+            antiVoidOrigHeight = workspace.FallenPartsDestroyHeight
+            if not antiVoidConn then
+                antiVoidConn = runService.Heartbeat:Connect(function()
+                    if not antiVoidOn then return end
+                    local char = localPlayer.Character
+                    if not char then return end
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    if not hrp then return end
+                    if hrp.Position.Y < -50 then
+                        if antiVoidSafeCF then
+                            hrp.CFrame = antiVoidSafeCF
+                        else
+                            hrp.CFrame = CFrame.new(0, 50, 0)
+                        end
+                        hrp.AssemblyLinearVelocity = Vector3.zero
+                    else
+                        antiVoidSafeCF = hrp.CFrame
+                    end
+                end)
+            end
+        else
+            if antiVoidConn then
+                antiVoidConn:Disconnect()
+                antiVoidConn = nil
+            end
+            pcall(function()
+                workspace.FallenPartsDestroyHeight = antiVoidOrigHeight
+            end)
+            antiVoidSafeCF = nil
+        end
     end,
 })
 
