@@ -1551,8 +1551,8 @@ local function enableAntiGlow()
                 if part.Material == Enum.Material.Neon then
                     part.Material = Enum.Material.Plastic
                 end
-                if part.Color == Color3.fromRGB(192, 192, 192) then
-                    part.Color = Color3.fromRGB(163, 162, 165)
+                if part.Color == Color3.fromRGB(255, 255, 255) then
+                    part.Color = Color3.fromRGB(192, 192, 192)
                 end
             end
         end
