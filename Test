@@ -919,12 +919,25 @@ home:Slider({
 
 home:Section({ Title = "Boombox Logger" })
 
-local boomboxLoggerEnabled = false
-local boomboxClickConn = nil
-local boomboxConfirm = false
+local BOOMBOX_NAMES = {
+    ["SuperFlyGoldBoombox"] = true,
+    ["BoomboxGearThree"] = true,
+    ["DualGoldenSuperFlyBoombox"] = true,
+    ["DubstepBoombox"] = true,
+    ["BeatUpBoombox"] = true,
+}
 
-local function getSoundId(sound)
-    return sound.SoundId:match("%d+")
+local function findBoomboxFromPart(part)
+    if not part then return nil end
+    local p = part
+    for _ = 1, 4 do
+        if not p then return nil end
+        if BOOMBOX_NAMES[p.Name] and p:IsA("Tool") then
+            return p
+        end
+        p = p.Parent
+    end
+    return nil
 end
 
 local function onClickBoombox(input)
@@ -936,45 +949,26 @@ local function onClickBoombox(input)
     local target = mouse.Target
     if not target then return end
 
+    local boombox = findBoomboxFromPart(target)
+    if not boombox then return end
 
-    local sound = target:FindFirstChildWhichIsA("Sound", true)
-    if not sound and target.Parent then
-        sound = target.Parent:FindFirstChildWhichIsA("Sound", true)
-    end
-    if not sound then return end
+    local handle = boombox:FindFirstChild("Handle")
+    if not handle then return end
+
+    local sound = handle:FindFirstChild("Sound")
+    if not sound or not sound:IsA("Sound") then return end
     if not sound.IsPlaying then return end
 
-    local soundID = getSoundId(sound)
-    if not soundID then return end
+    local soundId = sound.SoundId:match("%d+")
+    if not soundId then return end
 
-    if setclipboard then
-        setclipboard(soundID)
-    end
+    if setclipboard then setclipboard(soundId) end
     WindUI:Notify({
-        Title = "Song Copied",
-        Content = "ID: " .. soundID,
+        Title = "Boombox Song Copied",
+        Content = "ID: " .. soundId,
         Duration = 2,
     })
 end
-
-home:Toggle({
-    Title = "Click to Log Boombox Song",
-    Desc = "Click a boombox to copy its song ID",
-    Value = false,
-    Callback = function(v)
-        boomboxLoggerEnabled = v
-        if v then
-            if not boomboxClickConn then
-                boomboxClickConn = userInputService.InputBegan:Connect(onClickBoombox)
-            end
-        else
-            if boomboxClickConn then
-                boomboxClickConn:Disconnect()
-                boomboxClickConn = nil
-            end
-        end
-    end,
-})
 -- ============================================================
 -- Server Hopper + Auto Execute
 -- ============================================================
