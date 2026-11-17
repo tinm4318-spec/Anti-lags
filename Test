@@ -1548,8 +1548,8 @@ local function enableAntiGlow()
         if not character then return end
         for _, part in pairs(character:GetDescendants()) do
             if part:IsA("BasePart") then
-                if part.Material == Enum.Material.Neon then
-                    part.Material = Enum.Material.Plastic
+                if part.Material == Enum.Material.Toxic then
+                    part.Material = Enum.Material.Neon
                 end
                 if part.Color == Color3.fromRGB(0, 0, 0) then
                     part.Color = Color3.fromRGB(163, 162, 165)
@@ -1566,7 +1566,6 @@ local function disableAntiGlow()
     end
     antiGlowConnections = {}
 end
-
 -- ============================================================
 -- GodMode
 -- ============================================================
@@ -1669,7 +1668,6 @@ antis:Toggle({ Title = "Anti-Blind",     Callback = function(v) antiBlind = v en
 antis:Toggle({ Title = "Anti-Myopic",    Callback = function(v) antiMyopic = v end })
 antis:Toggle({
     Title = "Anti-Glow",
-    Desc = "Reverts neon material and pitch-black parts back to grey",
     Callback = function(v)
         if v then enableAntiGlow() else disableAntiGlow() end
     end,
@@ -1678,7 +1676,6 @@ antis:Toggle({
 antis:Section({ Title = "Player" })
 antis:Toggle({
     Title = "GodMode",
-    Desc = "Infinite health (client-side). Server can still kill you.",
     Callback = function(v)
         if v then enableGodMode() else disableGodMode() end
     end,
