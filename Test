@@ -339,6 +339,9 @@ end
 if localPlayer.Character then bindCharacter(localPlayer.Character) end
 localPlayer.CharacterAdded:Connect(bindCharacter)
 
+-- ============================================================
+-- Inventory Checker
+-- ============================================================
 local invDisplayEnabled = false
 local invDisplayTasks = {}
 local invDisplayPlayerAdded = nil
@@ -347,14 +350,21 @@ local function getPlayerInventory(player)
     local inventory = {}
     if player.Character then
         for _, item in ipairs(player.Character:GetChildren()) do
-            if item:IsA("Tool") then table.insert(inventory, item.Name) end
+            if item:IsA("Tool") then
+                table.insert(inventory, item.Name)
+            end
         end
     end
     local backpack = player:FindFirstChild("Backpack")
     if backpack then
         for _, item in ipairs(backpack:GetChildren()) do
-            if item:IsA("Tool") then table.insert(inventory, item.Name) end
+            if item:IsA("Tool") then
+                table.insert(inventory, item.Name)
+            end
         end
+    end
+    if #inventory == 0 then
+        table.insert(inventory, "No Items")
     end
     return inventory
 end
@@ -380,57 +390,19 @@ local function createInvGui(player)
 
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "InventoryDisplay"
-    billboard.Size = UDim2.fromOffset(220, 56)
-    billboard.StudsOffset = Vector3.new(0, 3.5, 0)
+    billboard.Size = UDim2.new(5, 0, 2, 0)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
     billboard.AlwaysOnTop = true
-    billboard.LightInfluence = 0
     billboard.Parent = head
 
-    local card = Instance.new("Frame", billboard)
-    card.Name = "Card"
-    card.Size = UDim2.fromScale(1, 1)
-    card.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-    card.BackgroundTransparency = 0.15
-    card.BorderSizePixel = 0
-    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
-
-    local stroke = Instance.new("UIStroke", card)
-    stroke.Color = Color3.fromRGB(55, 55, 60)
-    stroke.Thickness = 1
-
-    local accent = Instance.new("Frame", card)
-    accent.Size = UDim2.new(0, 3, 1, -12)
-    accent.Position = UDim2.fromOffset(0, 6)
-    accent.BackgroundColor3 = Color3.fromRGB(90, 220, 160)
-    accent.BorderSizePixel = 0
-    Instance.new("UICorner", accent).CornerRadius = UDim.new(1, 0)
-
-    local nameLbl = Instance.new("TextLabel", card)
-    nameLbl.Name = "NameLabel"
-    nameLbl.Size = UDim2.new(1, -20, 0, 16)
-    nameLbl.Position = UDim2.fromOffset(14, 6)
-    nameLbl.BackgroundTransparency = 1
-    nameLbl.Font = Enum.Font.GothamBold
-    nameLbl.TextSize = 12
-    nameLbl.TextColor3 = Color3.fromRGB(240, 240, 240)
-    nameLbl.TextXAlignment = Enum.TextXAlignment.Left
-    nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
-    nameLbl.Text = player.DisplayName
-
-    local itemsLbl = Instance.new("TextLabel", card)
-    itemsLbl.Name = "ItemsLabel"
-    itemsLbl.Size = UDim2.new(1, -20, 0, 22)
-    itemsLbl.Position = UDim2.fromOffset(14, 24)
-    itemsLbl.BackgroundTransparency = 1
-    itemsLbl.Font = Enum.Font.GothamMedium
-    itemsLbl.TextSize = 10
-    itemsLbl.TextColor3 = Color3.fromRGB(150, 150, 155)
-    itemsLbl.TextXAlignment = Enum.TextXAlignment.Left
-    itemsLbl.TextWrapped = true
-    itemsLbl.TextTruncate = Enum.TextTruncate.AtEnd
-    itemsLbl.Text = "no items"
-
-    return billboard
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextScaled = true
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.TextStrokeTransparency = 0
+    textLabel.Font = Enum.Font.SourceSansBold
+    textLabel.Parent = billboard
 end
 
 local function updateInvGui(player)
@@ -443,38 +415,12 @@ local function updateInvGui(player)
 
     local billboard = head:FindFirstChild("InventoryDisplay")
     if not billboard then
-        billboard = createInvGui(player)
-        if not billboard then return end
+        createInvGui(player)
+        billboard = head:FindFirstChild("InventoryDisplay")
     end
-
-    local card = billboard:FindFirstChild("Card")
-    if not card then return end
-
-    local nameLbl = card:FindFirstChild("NameLabel")
-    local itemsLbl = card:FindFirstChild("ItemsLabel")
-    local accent = card:FindFirstChildOfClass("Frame")
-    if not nameLbl or not itemsLbl then return end
-
-    nameLbl.Text = player.DisplayName
-
-    local inv = getPlayerInventory(player)
-    if #inv == 0 then
-        itemsLbl.Text = "no items"
-        itemsLbl.TextColor3 = Color3.fromRGB(120, 120, 125)
-        if accent then accent.BackgroundColor3 = Color3.fromRGB(80, 80, 85) end
-    else
-        itemsLbl.Text = table.concat(inv, " · ")
-        local col = Color3.fromRGB(150, 150, 155)
-        local ac  = Color3.fromRGB(90, 220, 160)
-        if #inv >= 5 then
-            col = Color3.fromRGB(230, 190, 80)
-            ac  = Color3.fromRGB(230, 190, 80)
-        elseif #inv >= 8 then
-            col = Color3.fromRGB(230, 90, 90)
-            ac  = Color3.fromRGB(230, 90, 90)
-        end
-        itemsLbl.TextColor3 = col
-        if accent then accent.BackgroundColor3 = ac end
+    local textLabel = billboard and billboard:FindFirstChildOfClass("TextLabel")
+    if textLabel then
+        textLabel.Text = table.concat(getPlayerInventory(player), ", ")
     end
 end
 
@@ -523,7 +469,6 @@ local function disableInvDisplay()
         invDisplayPlayerAdded = nil
     end
 end
-
 -- ============================================================
 -- Loading screen
 -- ============================================================
