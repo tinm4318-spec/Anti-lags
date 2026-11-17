@@ -1889,6 +1889,14 @@ local function forceReset()
     shared.GongHub_GodPaused = false
 end
 
+-- ============================================================
+-- Antis tab
+-- ============================================================
+local antis = hub:Tab({ Title = "Antis", Icon = "lucide:shield-x" })
+
+-- ============================================================
+-- Anti-Fling / Anti-Void 
+-- ============================================================
 local AntiProt = {
     flingConn = nil,
     flingOrig = setmetatable({}, { __mode = "k" }),
@@ -1897,7 +1905,7 @@ local AntiProt = {
     voidStepConn = nil,
     voidCharConn = nil,
     voidExtra = {},
-    voidOrigHeight = workspace.FallenPartsDestroyHeight,
+    voidOrigHeight = workspace.FallenPartsDestroyHeight or -500,
     voidSafeCF = nil,
     voidLastCF = nil,
 }
@@ -2005,11 +2013,10 @@ function AntiProt.voidDisable()
     AntiProt.voidSafeCF = nil
     AntiProt.voidLastCF = nil
 end
--- ============================================================
--- Antis tab
--- ============================================================
-local antis = hub:Tab({ Title = "Antis", Icon = "lucide:shield-x" })
 
+-- ============================================================
+-- Antis UI
+-- ============================================================
 antis:Section({ Title = "Vampire" })
 antis:Toggle({
     Title = "Anti-Vamp",
