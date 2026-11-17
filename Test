@@ -917,6 +917,64 @@ home:Slider({
     Callback = function(v) deleteRange = v end,
 })
 
+home:Section({ Title = "Boombox Logger" })
+
+local boomboxLoggerEnabled = false
+local boomboxClickConn = nil
+local boomboxConfirm = false
+
+local function getSoundId(sound)
+    return sound.SoundId:match("%d+")
+end
+
+local function onClickBoombox(input)
+    if not boomboxLoggerEnabled then return end
+    if input.UserInputType ~= Enum.UserInputType.MouseButton1
+        and input.UserInputType ~= Enum.UserInputType.Touch then return end
+
+    local mouse = localPlayer:GetMouse()
+    local target = mouse.Target
+    if not target then return end
+
+
+    local sound = target:FindFirstChildWhichIsA("Sound", true)
+    if not sound and target.Parent then
+        sound = target.Parent:FindFirstChildWhichIsA("Sound", true)
+    end
+    if not sound then return end
+    if not sound.IsPlaying then return end
+
+    local soundID = getSoundId(sound)
+    if not soundID then return end
+
+    if setclipboard then
+        setclipboard(soundID)
+    end
+    WindUI:Notify({
+        Title = "Song Copied",
+        Content = "ID: " .. soundID,
+        Duration = 2,
+    })
+end
+
+home:Toggle({
+    Title = "Click to Log Boombox Song",
+    Desc = "Click a boombox to copy its song ID",
+    Value = false,
+    Callback = function(v)
+        boomboxLoggerEnabled = v
+        if v then
+            if not boomboxClickConn then
+                boomboxClickConn = userInputService.InputBegan:Connect(onClickBoombox)
+            end
+        else
+            if boomboxClickConn then
+                boomboxClickConn:Disconnect()
+                boomboxClickConn = nil
+            end
+        end
+    end,
+})
 -- ============================================================
 -- Server Hopper + Auto Execute
 -- ============================================================
