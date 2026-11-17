@@ -973,14 +973,15 @@ home:Button({
     Title = "JoinOG",
     Callback = function()
         if isOG() then
-            hopToPlace(TCO_PLACES.main)
+            WindUI:Notify({ Title = "Already in OG", Content = "You are already in the OG server.", Duration = 2 })
+            return
         else
             prepareAutoExecute()
             system:FireServer("og")
         end
     end,
 })
-})
+
 home:Button({
     Title = "Load Infinite Yield",
     Callback = function()
