@@ -88,13 +88,34 @@ local humanoidRef = nil
 -- ============================================================
 -- Auto Execute state
 -- ============================================================
+
 local autoExecute       = false
 local autoExecuteLoader = 'loadstring(game:HttpGet("' .. DEFAULT_AUTOEXEC_URL .. '?t=" .. os.time(), true))()'
+local autoExecutePending = false
+local autoExecuteLastJob = ""
+local autoExecutePlace   = 0
+
+local AUTOEXEC_MARK_FILE = "gonghub_autoexec_mark.txt"
+local AUTOEXEC_JOB_FILE  = "gonghub_autoexec_job.txt"
+local AUTOEXEC_PLACE_FILE = "gonghub_autoexec_place.txt"
 
 pcall(function()
     if isfile and readfile and isfile("gonghub_autoexec.json") then
         local data = httpService:JSONDecode(readfile("gonghub_autoexec.json"))
         if data.toggle ~= nil then autoExecute = data.toggle end
+        if data.pending ~= nil then autoExecutePending = data.pending end
+    end
+    if isfile and readfile then
+        if isfile(AUTOEXEC_MARK_FILE) then
+            local m = readfile(AUTOEXEC_MARK_FILE)
+            if m == "pending" then autoExecutePending = true end
+        end
+        if isfile(AUTOEXEC_JOB_FILE) then
+            autoExecuteLastJob = readfile(AUTOEXEC_JOB_FILE) or ""
+        end
+        if isfile(AUTOEXEC_PLACE_FILE) then
+            autoExecutePlace = tonumber(readfile(AUTOEXEC_PLACE_FILE)) or 0
+        end
     end
 end)
 
@@ -104,28 +125,58 @@ local function saveAutoExec()
             writefile("gonghub_autoexec.json", httpService:JSONEncode({
                 toggle = autoExecute,
                 loader = autoExecuteLoader,
+                pending = autoExecutePending,
             }))
         end
     end)
 end
 
+local function markPending()
+    autoExecutePending = true
+    pcall(function()
+        if writefile then
+            writefile(AUTOEXEC_MARK_FILE, "pending")
+            writefile(AUTOEXEC_JOB_FILE, game.JobId)
+            writefile(AUTOEXEC_PLACE_FILE, tostring(game.PlaceId))
+        end
+    end)
+    saveAutoExec()
+end
+
+local function clearPending()
+    autoExecutePending = false
+    autoExecuteLastJob = ""
+    autoExecutePlace = 0
+    pcall(function()
+        if writefile then
+            writefile(AUTOEXEC_MARK_FILE, "done")
+            writefile(AUTOEXEC_JOB_FILE, "")
+            writefile(AUTOEXEC_PLACE_FILE, "0")
+        end
+    end)
+    saveAutoExec()
+end
+
 local function prepareAutoExecute()
     if not autoExecute then return end
     if autoExecuteLoader == "" then return end
+
+    autoExecuteLastJob = game.JobId
+    autoExecutePlace = game.PlaceId
+    markPending()
+
     local queueFn = (syn and syn.queue_on_teleport)
         or queue_on_teleport
         or (fluxus and fluxus.queue_on_teleport)
         or (krnl and krnl.queue_on_teleport)
         or (http and http.queue_on_teleport)
-    if not queueFn then
-        warn("[GongHub] queue_on_teleport not supported by this executor")
-        return
-    end
-    pcall(function()
-        queueFn(autoExecuteLoader)
-    end)
-end
 
+    if queueFn then
+        pcall(function()
+            queueFn(autoExecuteLoader)
+        end)
+    end
+end
 -- ============================================================
 -- Helpers
 -- ============================================================
@@ -870,9 +921,27 @@ home:Toggle({
 })
 
 home:Section({ Title = "Utility" })
-home:Button({ Title = "JoinXL", Callback = function() system:FireServer("xl") end })
-home:Button({ Title = "JoinVC", Callback = function() system:FireServer("vc") end })
-home:Button({ Title = "JoinOG", Callback = function() system:FireServer("og") end })
+home:Button({
+    Title = "JoinXL",
+    Callback = function()
+        prepareAutoExecute()
+        system:FireServer("xl")
+    end,
+})
+home:Button({
+    Title = "JoinVC",
+    Callback = function()
+        prepareAutoExecute()
+        system:FireServer("vc")
+    end,
+})
+home:Button({
+    Title = "JoinOG",
+    Callback = function()
+        prepareAutoExecute()
+        system:FireServer("og")
+    end,
+})
 home:Button({
     Title = "Load Infinite Yield",
     Callback = function()
@@ -2220,6 +2289,25 @@ pcall(function()
     if wind then wind:Destroy() end
 end)
 print("[GongHub] loading destroyed")
+
+task.spawn(function()
+    task.wait(1.5)
+
+    local jobChanged = (autoExecuteLastJob ~= "" and game.JobId ~= autoExecuteLastJob)
+    local placeChanged = (autoExecutePlace and autoExecutePlace ~= game.PlaceId)
+    local marked = autoExecutePending
+
+    if not (jobChanged or placeChanged or marked) then return end
+
+    clearPending()
+
+    if not autoExecute then return end
+    if autoExecuteLoader == "" then return end
+
+    pcall(function()
+        loadstring(autoExecuteLoader)()
+    end)
+end)
 
 -- ============================================================
 -- Premium tab (guarded)
