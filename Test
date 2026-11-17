@@ -667,7 +667,7 @@ about:Paragraph({
 })
 about:Paragraph({
     Title = "Credits",
-    Desc = "Owner: st1k/stik\nHelper: MadeInHeaven\nCleanup: GongHub build",
+    Desc = "Owner: gong/gongy\nHelper: MadeInHeaven\nCleanup: GongHub ",
 })
 
 hub:Tab({ Title = "────────────", Icon = "", Locked = true, Border = false })
@@ -918,6 +918,28 @@ home:Slider({
 })
 
 home:Section({ Title = "Boombox Logger" })
+
+local boomboxLoggerEnabled = false
+local boomboxClickConn = nil
+
+home:Toggle({
+    Title = "Click to Log Boombox Song",
+    Desc = "Click a boombox to copy its song ID",
+    Value = false,
+    Callback = function(v)
+        boomboxLoggerEnabled = v
+        if v then
+            if not boomboxClickConn then
+                boomboxClickConn = userInputService.InputBegan:Connect(onClickBoombox)
+            end
+        else
+            if boomboxClickConn then
+                boomboxClickConn:Disconnect()
+                boomboxClickConn = nil
+            end
+        end
+    end,
+})
 
 local BOOMBOX_NAMES = {
     ["SuperFlyGoldBoombox"] = true,
