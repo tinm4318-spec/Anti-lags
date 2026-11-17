@@ -924,6 +924,18 @@ local boomboxClickDetectors = {}
 local boomboxSelectionBox = nil
 local boomboxCurrentId = ""
 
+local boomboxCurrentId = ""
+local BOOMBOX_SAVE_FILE = "gonghub_last_boombox.txt"
+
+pcall(function()
+    if isfile and readfile and isfile(BOOMBOX_SAVE_FILE) then
+        local saved = readfile(BOOMBOX_SAVE_FILE)
+        if saved and saved ~= "" then
+            boomboxCurrentId = saved
+        end
+    end
+end)
+
 local BOOMBOX_NAMES = {
     ["SuperFlyGoldBoombox"] = true,
     ["BoomboxGearThree"] = true,
@@ -976,6 +988,9 @@ local function onBoomboxClicked(handle)
     end
     boomboxCurrentId = id
     if setclipboard then setclipboard(id) end
+    pcall(function()
+        if writefile then writefile(BOOMBOX_SAVE_FILE, id) end
+    end)
     flashBoombox(handle)
     WindUI:Notify({ Title = "Boombox Song Copied", Content = "ID: " .. id, Duration = 2 })
 end
@@ -1083,6 +1098,16 @@ home:Toggle({
 home:Button({
     Title = "Copy Last Boombox ID",
     Callback = function()
+        if boomboxCurrentId == "" then
+            pcall(function()
+                if isfile and readfile and isfile(BOOMBOX_SAVE_FILE) then
+                    local saved = readfile(BOOMBOX_SAVE_FILE)
+                    if saved and saved ~= "" then
+                        boomboxCurrentId = saved
+                    end
+                end
+            end)
+        end
         if boomboxCurrentId ~= "" then
             if setclipboard then setclipboard(boomboxCurrentId) end
             WindUI:Notify({ Title = "Copied", Content = "ID: " .. boomboxCurrentId, Duration = 2 })
@@ -1550,7 +1575,7 @@ auraTab:Slider({
 })
 
 -- ============================================================
--- Anti-Maptide + Anti-NaN (merged)
+-- Anti-Maptide + Anti-NaN 
 -- ============================================================
 local maptideConn = nil
 local maptideLoop = nil
@@ -2039,7 +2064,7 @@ modTab:Button({
 })
 
 -- ============================================================
--- Chat color renderer (DevX2 palette)
+-- Chat color renderer 
 -- ============================================================
 textChatService.OnIncomingMessage = function(mdata)
     if not mdata or not mdata.Text or mdata.Text == "" then return end
