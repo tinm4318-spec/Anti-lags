@@ -929,26 +929,57 @@ home:Toggle({
 })
 
 home:Section({ Title = "Utility" })
+local TCO_PLACES = {
+    main = 11137575513,
+    xl   = 12943245078,
+    vc   = 12943247001,
+    og   = 108097274488844,
+}
+
+local function isOG()
+    return game.PlaceId == TCO_PLACES.og
+end
+
+local function hopToPlace(targetPlaceId)
+    prepareAutoExecute()
+    pcall(function()
+        teleportService:Teleport(targetPlaceId, localPlayer)
+    end)
+end
+
 home:Button({
     Title = "JoinXL",
     Callback = function()
-        prepareAutoExecute()
-        system:FireServer("xl")
+        if isOG() then
+            hopToPlace(TCO_PLACES.xl)
+        else
+            prepareAutoExecute()
+            system:FireServer("xl")
+        end
     end,
 })
 home:Button({
     Title = "JoinVC",
     Callback = function()
-        prepareAutoExecute()
-        system:FireServer("vc")
+        if isOG() then
+            hopToPlace(TCO_PLACES.vc)
+        else
+            prepareAutoExecute()
+            system:FireServer("vc")
+        end
     end,
 })
 home:Button({
     Title = "JoinOG",
     Callback = function()
-        prepareAutoExecute()
-        system:FireServer("og")
+        if isOG() then
+            hopToPlace(TCO_PLACES.main)
+        else
+            prepareAutoExecute()
+            system:FireServer("og")
+        end
     end,
+})
 })
 home:Button({
     Title = "Load Infinite Yield",
