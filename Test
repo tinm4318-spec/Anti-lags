@@ -166,8 +166,6 @@ local function prepareAutoExecute()
     if not autoExecute then return end
     if autoExecuteLoader == "" then return end
 
-    markPending()
-
     local queueFn = (syn and syn.queue_on_teleport)
         or queue_on_teleport
         or (fluxus and fluxus.queue_on_teleport)
@@ -178,7 +176,13 @@ local function prepareAutoExecute()
         pcall(function()
             queueFn(autoExecuteLoader)
         end)
+        
+        clearPending()
+        return
     end
+
+  
+    markPending()
 end
 
 -- ============================================================
@@ -2297,21 +2301,26 @@ print("[GongHub] loading destroyed")
 task.spawn(function()
     task.wait(1.5)
 
+    if not autoExecutePending then return end
+    if not autoExecute then
+        clearPending()
+        return
+    end
+    if autoExecuteLoader == "" then
+        clearPending()
+        return
+    end
+
     local jobChanged   = (autoExecuteLastJob ~= "" and game.JobId ~= autoExecuteLastJob)
     local placeChanged = (autoExecutePlace ~= 0 and autoExecutePlace ~= game.PlaceId)
     local recent       = (autoExecuteTimestamp > 0 and (os.time() - autoExecuteTimestamp) < 300)
 
     if not (jobChanged or placeChanged or recent) then
-        if autoExecutePending then
-            clearPending()
-        end
+        clearPending()
         return
     end
 
     clearPending()
-
-    if not autoExecute then return end
-    if autoExecuteLoader == "" then return end
 
     pcall(function()
         loadstring(autoExecuteLoader)()
