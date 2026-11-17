@@ -88,22 +88,22 @@ local humanoidRef = nil
 -- ============================================================
 -- Auto Execute state
 -- ============================================================
-
 local autoExecute       = false
 local autoExecuteLoader = 'loadstring(game:HttpGet("' .. DEFAULT_AUTOEXEC_URL .. '?t=" .. os.time(), true))()'
 local autoExecutePending = false
 local autoExecuteLastJob = ""
 local autoExecutePlace   = 0
+local autoExecuteTimestamp = 0
 
-local AUTOEXEC_MARK_FILE = "gonghub_autoexec_mark.txt"
-local AUTOEXEC_JOB_FILE  = "gonghub_autoexec_job.txt"
+local AUTOEXEC_MARK_FILE  = "gonghub_autoexec_mark.txt"
+local AUTOEXEC_JOB_FILE   = "gonghub_autoexec_job.txt"
 local AUTOEXEC_PLACE_FILE = "gonghub_autoexec_place.txt"
+local AUTOEXEC_TIME_FILE  = "gonghub_autoexec_time.txt"
 
 pcall(function()
     if isfile and readfile and isfile("gonghub_autoexec.json") then
         local data = httpService:JSONDecode(readfile("gonghub_autoexec.json"))
         if data.toggle ~= nil then autoExecute = data.toggle end
-        if data.pending ~= nil then autoExecutePending = data.pending end
     end
     if isfile and readfile then
         if isfile(AUTOEXEC_MARK_FILE) then
@@ -116,6 +116,9 @@ pcall(function()
         if isfile(AUTOEXEC_PLACE_FILE) then
             autoExecutePlace = tonumber(readfile(AUTOEXEC_PLACE_FILE)) or 0
         end
+        if isfile(AUTOEXEC_TIME_FILE) then
+            autoExecuteTimestamp = tonumber(readfile(AUTOEXEC_TIME_FILE)) or 0
+        end
     end
 end)
 
@@ -125,7 +128,6 @@ local function saveAutoExec()
             writefile("gonghub_autoexec.json", httpService:JSONEncode({
                 toggle = autoExecute,
                 loader = autoExecuteLoader,
-                pending = autoExecutePending,
             }))
         end
     end)
@@ -133,11 +135,13 @@ end
 
 local function markPending()
     autoExecutePending = true
+    autoExecuteTimestamp = os.time()
     pcall(function()
         if writefile then
             writefile(AUTOEXEC_MARK_FILE, "pending")
             writefile(AUTOEXEC_JOB_FILE, game.JobId)
             writefile(AUTOEXEC_PLACE_FILE, tostring(game.PlaceId))
+            writefile(AUTOEXEC_TIME_FILE, tostring(autoExecuteTimestamp))
         end
     end)
     saveAutoExec()
@@ -147,22 +151,21 @@ local function clearPending()
     autoExecutePending = false
     autoExecuteLastJob = ""
     autoExecutePlace = 0
+    autoExecuteTimestamp = 0
     pcall(function()
         if writefile then
             writefile(AUTOEXEC_MARK_FILE, "done")
             writefile(AUTOEXEC_JOB_FILE, "")
             writefile(AUTOEXEC_PLACE_FILE, "0")
+            writefile(AUTOEXEC_TIME_FILE, "0")
         end
     end)
-    saveAutoExec()
 end
 
 local function prepareAutoExecute()
     if not autoExecute then return end
     if autoExecuteLoader == "" then return end
 
-    autoExecuteLastJob = game.JobId
-    autoExecutePlace = game.PlaceId
     markPending()
 
     local queueFn = (syn and syn.queue_on_teleport)
@@ -177,6 +180,7 @@ local function prepareAutoExecute()
         end)
     end
 end
+
 -- ============================================================
 -- Helpers
 -- ============================================================
@@ -2293,11 +2297,16 @@ print("[GongHub] loading destroyed")
 task.spawn(function()
     task.wait(1.5)
 
-    local jobChanged = (autoExecuteLastJob ~= "" and game.JobId ~= autoExecuteLastJob)
-    local placeChanged = (autoExecutePlace and autoExecutePlace ~= game.PlaceId)
-    local marked = autoExecutePending
+    local jobChanged   = (autoExecuteLastJob ~= "" and game.JobId ~= autoExecuteLastJob)
+    local placeChanged = (autoExecutePlace ~= 0 and autoExecutePlace ~= game.PlaceId)
+    local recent       = (autoExecuteTimestamp > 0 and (os.time() - autoExecuteTimestamp) < 300)
 
-    if not (jobChanged or placeChanged or marked) then return end
+    if not (jobChanged or placeChanged or recent) then
+        if autoExecutePending then
+            clearPending()
+        end
+        return
+    end
 
     clearPending()
 
