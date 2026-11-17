@@ -920,26 +920,9 @@ home:Slider({
 home:Section({ Title = "Boombox Logger" })
 
 local boomboxLoggerEnabled = false
-local boomboxClickConn = nil
-
-home:Toggle({
-    Title = "Click to Log Boombox Song",
-    Desc = "Click a boombox to copy its song ID",
-    Value = false,
-    Callback = function(v)
-        boomboxLoggerEnabled = v
-        if v then
-            if not boomboxClickConn then
-                boomboxClickConn = userInputService.InputBegan:Connect(onClickBoombox)
-            end
-        else
-            if boomboxClickConn then
-                boomboxClickConn:Disconnect()
-                boomboxClickConn = nil
-            end
-        end
-    end,
-})
+local boomboxClickDetectors = {}
+local boomboxSelectionBox = nil
+local boomboxCurrentId = ""
 
 local BOOMBOX_NAMES = {
     ["SuperFlyGoldBoombox"] = true,
@@ -954,43 +937,161 @@ local function findBoomboxFromPart(part)
     local p = part
     for _ = 1, 4 do
         if not p then return nil end
-        if BOOMBOX_NAMES[p.Name] and p:IsA("Tool") then
-            return p
-        end
+        if BOOMBOX_NAMES[p.Name] and p:IsA("Tool") then return p end
         p = p.Parent
     end
     return nil
 end
 
-local function onClickBoombox(input)
-    if not boomboxLoggerEnabled then return end
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1
-        and input.UserInputType ~= Enum.UserInputType.Touch then return end
+local function getBoomboxId(handle)
+    if not handle then return nil end
+    local sound = handle:FindFirstChild("Sound")
+    if not sound or not sound:IsA("Sound") then return nil end
+    if sound.SoundId == "" then return nil end
+    return sound.SoundId:match("%d+")
+end
 
+local function flashBoombox(handle)
+    if not handle then return end
+    local flash = Instance.new("SelectionBox")
+    flash.Color3 = Color3.new(0, 0, 0)
+    flash.LineThickness = 0.05
+    flash.Transparency = 0
+    flash.Adornee = handle
+    flash.Parent = handle
+    task.spawn(function()
+        for i = 0, 1, 0.1 do
+            flash.Transparency = i
+            task.wait(0.05)
+        end
+        flash:Destroy()
+    end)
+end
+
+local function onBoomboxClicked(handle)
+    local id = getBoomboxId(handle)
+    if not id then
+        WindUI:Notify({ Title = "Boombox", Content = "No sound playing.", Duration = 2 })
+        return
+    end
+    boomboxCurrentId = id
+    if setclipboard then setclipboard(id) end
+    flashBoombox(handle)
+    WindUI:Notify({ Title = "Boombox Song Copied", Content = "ID: " .. id, Duration = 2 })
+end
+
+local function setupClickDetector(handle)
+    if boomboxClickDetectors[handle] then return end
+    local cd = Instance.new("ClickDetector")
+    cd.MaxActivationDistance = 32
+    cd.Parent = handle
+    local conn = cd.MouseClick:Connect(function()
+        if boomboxLoggerEnabled then
+            onBoomboxClicked(handle)
+        end
+    end)
+    boomboxClickDetectors[handle] = { detector = cd, connection = conn }
+end
+
+local function scanBoomboxes()
+    for _, item in ipairs(workspace:GetDescendants()) do
+        if item:IsA("Tool") and BOOMBOX_NAMES[item.Name] then
+            local handle = item:FindFirstChild("Handle")
+            if handle and not boomboxClickDetectors[handle] then
+                setupClickDetector(handle)
+            end
+        end
+    end
+end
+
+local function clearClickDetectors()
+    for handle, data in pairs(boomboxClickDetectors) do
+        if data.connection then data.connection:Disconnect() end
+        if data.detector and data.detector.Parent then data.detector:Destroy() end
+    end
+    boomboxClickDetectors = {}
+end
+
+local function setupOutline()
+    if boomboxSelectionBox then return end
+    boomboxSelectionBox = Instance.new("SelectionBox")
+    boomboxSelectionBox.Color3 = Color3.fromRGB(0, 170, 255)
+    boomboxSelectionBox.LineThickness = 0.1
+    boomboxSelectionBox.SurfaceTransparency = 1
+    boomboxSelectionBox.Transparency = 0
+    boomboxSelectionBox.Parent = coreGui
+end
+
+local function clearOutline()
+    if boomboxSelectionBox then
+        boomboxSelectionBox.Adornee = nil
+        boomboxSelectionBox:Destroy()
+        boomboxSelectionBox = nil
+    end
+end
+
+local function onMouseMove()
+    if not boomboxLoggerEnabled or not boomboxSelectionBox then return end
     local mouse = localPlayer:GetMouse()
     local target = mouse.Target
-    if not target then return end
-
     local boombox = findBoomboxFromPart(target)
-    if not boombox then return end
-
-    local handle = boombox:FindFirstChild("Handle")
-    if not handle then return end
-
-    local sound = handle:FindFirstChild("Sound")
-    if not sound or not sound:IsA("Sound") then return end
-    if not sound.IsPlaying then return end
-
-    local soundId = sound.SoundId:match("%d+")
-    if not soundId then return end
-
-    if setclipboard then setclipboard(soundId) end
-    WindUI:Notify({
-        Title = "Boombox Song Copied",
-        Content = "ID: " .. soundId,
-        Duration = 2,
-    })
+    if boombox then
+        boomboxSelectionBox.Adornee = boombox.Handle
+    else
+        boomboxSelectionBox.Adornee = nil
+    end
 end
+
+local boomboxScanConn = nil
+local boomboxMoveConn = nil
+local boomboxWorkspaceConn = nil
+
+home:Toggle({
+    Title = "Click to Log Boombox Song",
+    Desc = "Click a boombox to copy its song ID",
+    Value = false,
+    Callback = function(v)
+        boomboxLoggerEnabled = v
+        if v then
+            setupOutline()
+            scanBoomboxes()
+            if not boomboxWorkspaceConn then
+                boomboxWorkspaceConn = workspace.DescendantAdded:Connect(function(d)
+                    if d.Name == "Handle" and d.Parent and BOOMBOX_NAMES[d.Parent.Name] then
+                        setupClickDetector(d)
+                    end
+                end)
+            end
+            if not boomboxMoveConn then
+                boomboxMoveConn = runService.RenderStepped:Connect(onMouseMove)
+            end
+        else
+            clearClickDetectors()
+            clearOutline()
+            if boomboxWorkspaceConn then
+                boomboxWorkspaceConn:Disconnect()
+                boomboxWorkspaceConn = nil
+            end
+            if boomboxMoveConn then
+                boomboxMoveConn:Disconnect()
+                boomboxMoveConn = nil
+            end
+        end
+    end,
+})
+
+home:Button({
+    Title = "Copy Last Boombox ID",
+    Callback = function()
+        if boomboxCurrentId ~= "" then
+            if setclipboard then setclipboard(boomboxCurrentId) end
+            WindUI:Notify({ Title = "Copied", Content = "ID: " .. boomboxCurrentId, Duration = 2 })
+        else
+            WindUI:Notify({ Title = "Boombox", Content = "Nothing logged yet.", Duration = 2 })
+        end
+    end,
+})
+
 -- ============================================================
 -- Server Hopper + Auto Execute
 -- ============================================================
