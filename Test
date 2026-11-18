@@ -2275,16 +2275,7 @@ modTab:Button({
 
 
 
-local cubeCheckerOn = false
-local cubeClickConn = nil
-local cubeHighlights = {}
 
-local function clearCubeHighlights()
-    for _, h in ipairs(cubeHighlights) do
-        if h and h.Parent then h:Destroy() end
-    end
-    cubeHighlights = {}
-end
 
 pcall(function()
     local function getCubeFolder()
