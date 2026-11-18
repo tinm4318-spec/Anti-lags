@@ -2114,11 +2114,6 @@ antis:Toggle({
     end
 })
 
--- Restore saved setting on next execution
-if loadAntiTp() then
-    startAntiTp()
-end
-
 antis:Toggle({
     Title = "Anti-Void",
     Callback = function(v)
