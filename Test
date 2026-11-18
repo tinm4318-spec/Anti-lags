@@ -2273,9 +2273,7 @@ modTab:Button({
     end,
 })
 
-local cubeCheckerOn = false
-local cubeClickConn = nil
-local cubeHighlight = nil
+
 
 pcall(function()
     local function getCubeFolder()
