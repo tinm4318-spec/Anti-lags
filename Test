@@ -2002,24 +2002,23 @@ antis:Toggle({
     end,
 })
 
+
 local originalDestroyHeight = workspaceService.FallenPartsDestroyHeight
 local dhoffset = 5
 local dhto = 25
 local fpsdiv = 5
-
 local connectsextra = {}
 local charcframe = nil
 local tpcframe = nil
-
-local voidStopped = true
+local voidStopped = false
 local voidSteppedConn = nil
 local voidCharConn = nil
 
 local function dochar(character)
-    task.spawn(function()
-        local hum = character:WaitForChild("Humanoid", 10)
-        if not hum or voidStopped then return end
+    coroutine.wrap(function()
+        repeat task.wait() until character:FindFirstChildWhichIsA("Humanoid")
 
+        local hum = character:FindFirstChildWhichIsA("Humanoid")
         local state = hum:GetState()
 
         table.insert(connectsextra, hum.StateChanged:Connect(function(old, new)
@@ -2028,11 +2027,11 @@ local function dochar(character)
 
         local oldstate = nil
 
-        while hum.Parent and not voidStopped do
+        while hum ~= nil and hum.Parent ~= nil and not voidStopped do
             task.wait()
 
-            if (state ~= oldstate and
-                state ~= Enum.HumanoidStateType.Jumping and
+            if state ~= oldstate and
+                (state ~= Enum.HumanoidStateType.Jumping and
                 state ~= Enum.HumanoidStateType.Freefall)
                 or state == Enum.HumanoidStateType.Running
                 or state == Enum.HumanoidStateType.Landed then
@@ -2042,10 +2041,10 @@ local function dochar(character)
 
             oldstate = state
         end
-    end)
+    end)()
 end
 
-local function fixchar(character, part)
+local function fixchar(character, part, destroyheightnew)
     if character then
         local piv = character:GetPivot()
 
@@ -2057,58 +2056,25 @@ local function fixchar(character, part)
     end
 
     if part then
-        part.AssemblyLinearVelocity = Vector3.zero
+        part.Velocity = Vector3.new(0, 0, 0)
 
         if character then
             for _, v in pairs(character:GetChildren()) do
                 if v:IsA("BasePart") then
-                    v.AssemblyLinearVelocity = Vector3.zero
+                    v.Velocity = Vector3.new(0, 0, 0)
                 end
             end
         end
     end
 end
 
-local function stopAntiVoid()
-    voidStopped = true
-
-    if voidSteppedConn then
-        voidSteppedConn:Disconnect()
-        voidSteppedConn = nil
-    end
-
-    if voidCharConn then
-        voidCharConn:Disconnect()
-        voidCharConn = nil
-    end
-
-    for _, connection in pairs(connectsextra) do
-        connection:Disconnect()
-    end
-
-    table.clear(connectsextra)
-
-    pcall(function()
-        workspaceService.FallenPartsDestroyHeight = originalDestroyHeight
-    end)
-
-    charcframe = nil
-    tpcframe = nil
-end
-
 local function startAntiVoid()
-    stopAntiVoid()
-
     voidStopped = false
 
     originalDestroyHeight = workspaceService.FallenPartsDestroyHeight
-
-    pcall(function()
-        workspaceService.FallenPartsDestroyHeight = -50000
-    end)
+    workspaceService.FallenPartsDestroyHeight = -50000
 
     local destroyheightnew = originalDestroyHeight + dhoffset
-
     local character = localPlayer.Character
 
     if character then
@@ -2122,40 +2088,61 @@ local function startAntiVoid()
     voidSteppedConn = runService.Stepped:Connect(function()
         local chr = localPlayer.Character
 
-        if chr and chr:FindFirstChildWhichIsA("BasePart") then
+        if chr ~= nil and chr:FindFirstChildWhichIsA("BasePart") then
             local part = chr:FindFirstChild("HumanoidRootPart")
                 or chr:FindFirstChildWhichIsA("BasePart")
 
-            local root = chr:FindFirstChild("HumanoidRootPart")
-            local cfr = root and root.CFrame or chr:GetPivot()
+            local cfr = (chr:FindFirstChild("HumanoidRootPart")
+                and chr.HumanoidRootPart.CFrame)
+                or chr:GetPivot()
 
             charcframe = cfr
 
             if cfr.Position.Y < destroyheightnew then
-                fixchar(chr, part)
+                fixchar(chr, part, destroyheightnew)
             end
 
-            local partvel = part.AssemblyLinearVelocity
+            local partvel = part.Velocity
 
             if (partvel.Y / fpsdiv) + part.Position.Y < destroyheightnew then
-                fixchar(chr, part)
+                fixchar(chr, part, destroyheightnew)
             end
         end
     end)
 end
 
+local function stopAntiVoid()
+    voidStopped = true
+
+    workspaceService.FallenPartsDestroyHeight = originalDestroyHeight
+
+    if voidSteppedConn then
+        voidSteppedConn:Disconnect()
+        voidSteppedConn = nil
+    end
+
+    if voidCharConn then
+        voidCharConn:Disconnect()
+        voidCharConn = nil
+    end
+
+    for _, v in pairs(connectsextra) do
+        v:Disconnect()
+    end
+
+    connectsextra = {}
+end
+
 antis:Toggle({
     Title = "Anti-Void",
-    Callback = function(value)
-        if value then
+    Callback = function(v)
+        if v then
             startAntiVoid()
         else
             stopAntiVoid()
         end
-    end,
+    end
 })
-
-
 
 antis:Toggle({
     Title = "Anti-AFK",
