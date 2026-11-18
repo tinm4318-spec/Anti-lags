@@ -2273,67 +2273,7 @@ modTab:Button({
     end,
 })
 
-local cubeCheckerOn = false
-local cubeClickConn = nil
-local cubeHighlight = nil
 
-local function getCubeFolder()
-    return workspace:FindFirstChild("Cubes") or workspace:FindFirstChild("Bricks")
-end
-
-local function getOwnerName(part)
-    local folder = getCubeFolder()
-    if not folder or not part then return nil, nil end
-    local p = part
-    for _ = 1, 4 do
-        if not p then return nil, nil end
-        if p.Parent == folder then
-            return p.Name, p
-        end
-        p = p.Parent
-    end
-    return nil, nil
-end
-
-local function onClickCube(input)
-    if not cubeCheckerOn then return end
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1
-        and input.UserInputType ~= Enum.UserInputType.Touch then return end
-
-    local mouse = localPlayer:GetMouse()
-    local target = mouse.Target
-    if not target then return end
-
-    local ownerName, folderObj = getOwnerName(target)
-    if not ownerName then
-        return
-    end
-
-    local plr = players:FindFirstChild(ownerName)
-    local display = plr and plr.DisplayName or ownerName
-
-    if not cubeHighlight then
-        cubeHighlight = Instance.new("SelectionBox")
-        cubeHighlight.Color3 = Color3.fromRGB(0, 170, 255)
-        cubeHighlight.LineThickness = 0.1
-        cubeHighlight.SurfaceTransparency = 1
-        cubeHighlight.Transparency = 0
-        cubeHighlight.Parent = coreGui
-    end
-
-    cubeHighlight.Adornee = folderObj
-    task.delay(2, function()
-        if cubeHighlight then
-            cubeHighlight.Adornee = nil
-        end
-    end)
-
-    WindUI:Notify({
-        Title = "Cube Owner",
-        Content = display,
-        Duration = 3,
-    })
-end
 
 modTab:Toggle({
     Title = "Cubes Checker",
