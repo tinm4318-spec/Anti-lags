@@ -2003,6 +2003,158 @@ antis:Toggle({
 })
 
 
+local antiVoidEnabled = false
+local antiVoidStepConn = nil
+local antiVoidCharacterConn = nil
+local antiVoidHumanoidConn = nil
+
+local antiVoidOriginalHeight = workspaceService.FallenPartsDestroyHeight
+local antiVoidDestroyHeight = antiVoidOriginalHeight
+local antiVoidFpsDiv = 2.5
+local antiVoidOffset = 5
+local antiVoidTeleportOffset = 25
+
+local antiVoidCharacter = localPlayer.Character
+local antiVoidCharCFrame = nil
+local antiVoidStopped = true
+
+local function antiVoidDisconnect()
+    if antiVoidStepConn then
+        antiVoidStepConn:Disconnect()
+        antiVoidStepConn = nil
+    end
+
+    if antiVoidCharacterConn then
+        antiVoidCharacterConn:Disconnect()
+        antiVoidCharacterConn = nil
+    end
+
+    if antiVoidHumanoidConn then
+        antiVoidHumanoidConn:Disconnect()
+        antiVoidHumanoidConn = nil
+    end
+end
+
+local function antiVoidFixCharacter(part)
+    local character = antiVoidCharacter
+
+    if character and antiVoidEnabled then
+        local pivot = character:GetPivot()
+
+        character:PivotTo(CFrame.new(
+            pivot.Position.X,
+            antiVoidDestroyHeight + antiVoidTeleportOffset
+                + character:GetExtentsSize().Y,
+            pivot.Position.Z
+        ))
+    end
+
+    if part then
+        part.AssemblyLinearVelocity = Vector3.zero
+
+        if character then
+            for _, v in ipairs(character:GetChildren()) do
+                if v:IsA("BasePart") then
+                    v.AssemblyLinearVelocity = Vector3.zero
+                end
+            end
+        end
+    end
+end
+
+local function antiVoidMonitorCharacter(character)
+    antiVoidCharacter = character
+
+    if antiVoidHumanoidConn then
+        antiVoidHumanoidConn:Disconnect()
+        antiVoidHumanoidConn = nil
+    end
+
+    local humanoid = character:WaitForChild("Humanoid", 10)
+    if not humanoid or not antiVoidEnabled then return end
+
+    local state = humanoid:GetState()
+
+    antiVoidHumanoidConn = humanoid.StateChanged:Connect(
+        function(_, newState)
+            state = newState
+        end
+    )
+end
+
+local function antiVoidStart()
+    antiVoidOriginalHeight = workspaceService.FallenPartsDestroyHeight
+    antiVoidDestroyHeight = antiVoidOriginalHeight
+
+    workspaceService.FallenPartsDestroyHeight = -50000
+
+    antiVoidEnabled = true
+    antiVoidStopped = false
+
+    if localPlayer.Character then
+        antiVoidMonitorCharacter(localPlayer.Character)
+    end
+
+    antiVoidCharacterConn = localPlayer.CharacterAdded:Connect(
+        antiVoidMonitorCharacter
+    )
+
+    antiVoidStepConn = runService.Stepped:Connect(function()
+        if not antiVoidEnabled or antiVoidStopped then return end
+
+        local character = antiVoidCharacter
+        if not character or not character.Parent then return end
+
+        local part = character:FindFirstChild("HumanoidRootPart")
+            or character:FindFirstChildWhichIsA("BasePart")
+
+        if not part then return end
+
+        local cframe = character:FindFirstChild("HumanoidRootPart")
+            and character.HumanoidRootPart.CFrame
+            or character:GetPivot()
+
+        antiVoidCharCFrame = cframe
+
+        local threshold = antiVoidDestroyHeight + antiVoidOffset
+
+        if cframe.Position.Y < threshold then
+            antiVoidFixCharacter(part)
+            return
+        end
+
+        local velocity = part.AssemblyLinearVelocity
+
+        if (velocity.Y / antiVoidFpsDiv) + part.Position.Y < threshold then
+            antiVoidFixCharacter(part)
+        end
+    end)
+end
+
+local function antiVoidStop()
+    antiVoidEnabled = false
+    antiVoidStopped = true
+
+    antiVoidDisconnect()
+
+    pcall(function()
+        workspaceService.FallenPartsDestroyHeight = antiVoidOriginalHeight
+    end)
+
+    antiVoidCharacter = nil
+    antiVoidCharCFrame = nil
+end
+
+antis:Toggle({
+    Title = "Anti-Void",
+    Callback = function(v)
+        if v then
+            antiVoidStart()
+        else
+            antiVoidStop()
+        end
+    end,
+})
 
 
 antis:Toggle({
