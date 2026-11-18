@@ -2002,6 +2002,16 @@ antis:Toggle({
     end,
 })
 
+antis:Toggle({
+    Title = "Anti-Void",
+    Callback = function(v)
+        if v then
+            antiVoidStart()
+        else
+            antiVoidStop()
+        end
+    end,
+}) 
 
 local antiVoidEnabled = false
 local antiVoidStepConn = nil
@@ -2145,16 +2155,6 @@ local function antiVoidStop()
     antiVoidCharCFrame = nil
 end
 
-antis:Toggle({
-    Title = "Anti-Void",
-    Callback = function(v)
-        if v then
-            antiVoidStart()
-        else
-            antiVoidStop()
-        end
-    end,
-})
 
 
 antis:Toggle({
