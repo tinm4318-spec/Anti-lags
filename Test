@@ -2026,16 +2026,6 @@ antis:Toggle({
     end
 })
 
-antis:Toggle({
-    Title = "Anti-Void",
-    Callback = function(v)
-        if v then
-            startAntiVoid()
-        else
-            stopAntiVoid()
-        end
-    end
-})
 
 antis:Toggle({
     Title = "Anti-AFK",
