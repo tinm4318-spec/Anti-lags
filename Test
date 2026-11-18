@@ -1972,166 +1972,60 @@ antis:Toggle({
 })
 antis:Toggle({ Title = "Anti-Morph",  Callback = function(v) antiMorph = v end })
 antis:Toggle({ Title = "Anti-Glitch", Callback = function(v) antiGlitch = v end })
-local antiFlingOn = false
-local antiFlingConn = nil
+
+local antiFlingConnection = nil
 
 antis:Toggle({
     Title = "Anti-Fling",
     Callback = function(v)
-        antiFlingOn = v
         if v then
-            if not antiFlingConn then
-                antiFlingConn = runService.Stepped:Connect(function()
-                    if not antiFlingOn then return end
-                    local char = localPlayer.Character
-                    if not char then return end
-                    local hrp = char:FindFirstChild("HumanoidRootPart")
-                    if not hrp then return end
-                    if hrp.AssemblyLinearVelocity.Magnitude > 100 then
-                        hrp.AssemblyLinearVelocity = Vector3.zero
-                        hrp.AssemblyAngularVelocity = Vector3.zero
+            -- Set all current players to no collide
+            for _, player in pairs(players:GetPlayers()) do
+                if player ~= localPlayer and player.Character then
+                    for _, part in pairs(player.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
                     end
-                end)
+                end
             end
+
+            -- Use Stepped instead of Heartbeat
+            if antiFlingConnection then
+                antiFlingConnection:Disconnect()
+            end
+
+            antiFlingConnection = runService.Stepped:Connect(function()
+                for _, player in pairs(players:GetPlayers()) do
+                    if player ~= localPlayer and player.Character then
+                        for _, part in pairs(player.Character:GetDescendants()) do
+                            if part:IsA("BasePart") then
+                                part.CanCollide = false
+                            end
+                        end
+                    end
+                end
+            end)
         else
-            if antiFlingConn then
-                antiFlingConn:Disconnect()
-                antiFlingConn = nil
-            end
-        end
-    end,
-})
-
-
-local originalDestroyHeight = workspaceService.FallenPartsDestroyHeight
-local dhoffset = 5
-local dhto = 25
-local fpsdiv = 5
-local connectsextra = {}
-local charcframe = nil
-local tpcframe = nil
-local voidStopped = false
-local voidSteppedConn = nil
-local voidCharConn = nil
-
-local function dochar(character)
-    coroutine.wrap(function()
-        repeat task.wait() until character:FindFirstChildWhichIsA("Humanoid")
-
-        local hum = character:FindFirstChildWhichIsA("Humanoid")
-        local state = hum:GetState()
-
-        table.insert(connectsextra, hum.StateChanged:Connect(function(old, new)
-            state = new
-        end))
-
-        local oldstate = nil
-
-        while hum ~= nil and hum.Parent ~= nil and not voidStopped do
-            task.wait()
-
-            if state ~= oldstate and
-                (state ~= Enum.HumanoidStateType.Jumping and
-                state ~= Enum.HumanoidStateType.Freefall)
-                or state == Enum.HumanoidStateType.Running
-                or state == Enum.HumanoidStateType.Landed then
-
-                tpcframe = charcframe
+            if antiFlingConnection then
+                antiFlingConnection:Disconnect()
+                antiFlingConnection = nil
             end
 
-            oldstate = state
-        end
-    end)()
-end
-
-local function fixchar(character, part, destroyheightnew)
-    if character then
-        local piv = character:GetPivot()
-
-        character:PivotTo(CFrame.new(
-            piv.Position.X,
-            originalDestroyHeight + dhto + character:GetExtentsSize().Y,
-            piv.Position.Z
-        ))
-    end
-
-    if part then
-        part.Velocity = Vector3.new(0, 0, 0)
-
-        if character then
-            for _, v in pairs(character:GetChildren()) do
-                if v:IsA("BasePart") then
-                    v.Velocity = Vector3.new(0, 0, 0)
+            -- Re-enable collision for all players
+            for _, player in pairs(players:GetPlayers()) do
+                if player ~= localPlayer and player.Character then
+                    for _, part in pairs(player.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = true
+                        end
+                    end
                 end
             end
         end
     end
-end
+})
 
-local function startAntiVoid()
-    voidStopped = false
-
-    originalDestroyHeight = workspaceService.FallenPartsDestroyHeight
-    workspaceService.FallenPartsDestroyHeight = -50000
-
-    local destroyheightnew = originalDestroyHeight + dhoffset
-    local character = localPlayer.Character
-
-    if character then
-        dochar(character)
-    end
-
-    voidCharConn = localPlayer.CharacterAdded:Connect(function(newCharacter)
-        dochar(newCharacter)
-    end)
-
-    voidSteppedConn = runService.Stepped:Connect(function()
-        local chr = localPlayer.Character
-
-        if chr ~= nil and chr:FindFirstChildWhichIsA("BasePart") then
-            local part = chr:FindFirstChild("HumanoidRootPart")
-                or chr:FindFirstChildWhichIsA("BasePart")
-
-            local cfr = (chr:FindFirstChild("HumanoidRootPart")
-                and chr.HumanoidRootPart.CFrame)
-                or chr:GetPivot()
-
-            charcframe = cfr
-
-            if cfr.Position.Y < destroyheightnew then
-                fixchar(chr, part, destroyheightnew)
-            end
-
-            local partvel = part.Velocity
-
-            if (partvel.Y / fpsdiv) + part.Position.Y < destroyheightnew then
-                fixchar(chr, part, destroyheightnew)
-            end
-        end
-    end)
-end
-
-local function stopAntiVoid()
-    voidStopped = true
-
-    workspaceService.FallenPartsDestroyHeight = originalDestroyHeight
-
-    if voidSteppedConn then
-        voidSteppedConn:Disconnect()
-        voidSteppedConn = nil
-    end
-
-    if voidCharConn then
-        voidCharConn:Disconnect()
-        voidCharConn = nil
-    end
-
-    for _, v in pairs(connectsextra) do
-        v:Disconnect()
-    end
-
-    connectsextra = {}
-end
 
 antis:Toggle({
     Title = "Anti-Void",
