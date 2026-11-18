@@ -2274,7 +2274,6 @@ modTab:Button({
 })
 
 
-
 local cubeCheckerOn = false
 local cubeClickConn = nil
 local cubeHighlights = {}
@@ -2287,22 +2286,6 @@ local function clearCubeHighlights()
 end
 
 pcall(function()
-    local function getCubeFolder()
-        return workspace:FindFirstChild("Cubes") or workspace:FindFirstChild("Bricks")
-    end
-
-    local function getOwnerFolder(part)
-        local folder = getCubeFolder()
-        if not folder or not part then return nil end
-        local p = part
-        for _ = 1, 5 do
-            if not p then return nil end
-            if p.Parent == folder then return p end
-            p = p.Parent
-        end
-        return nil
-    end
-
     local function onClickCube(input)
         if not cubeCheckerOn then return end
         if input.UserInputType ~= Enum.UserInputType.MouseButton1
@@ -2312,8 +2295,17 @@ pcall(function()
         local target = mouse.Target
         if not target then return end
 
-        local folderObj = getOwnerFolder(target)
-        if not folderObj then return end
+        local bricks = workspace:FindFirstChild("Bricks")
+        if not bricks then return end
+        if not target:IsDescendantOf(bricks) then return end
+
+        local folderObj = target.Parent
+        local hops = 0
+        while folderObj and folderObj.Parent ~= bricks and hops < 5 do
+            folderObj = folderObj.Parent
+            hops = hops + 1
+        end
+        if not folderObj or folderObj.Parent ~= bricks then return end
 
         clearCubeHighlights()
 
@@ -2325,15 +2317,17 @@ pcall(function()
         for _, obj in ipairs(folderObj:GetDescendants()) do
             if obj:IsA("BasePart") then
                 count = count + 1
-                local hl = Instance.new("Highlight")
-                hl.FillColor = Color3.fromRGB(0, 170, 255)
-                hl.FillTransparency = 0.85
-                hl.OutlineColor = Color3.fromRGB(0, 200, 255)
-                hl.OutlineTransparency = 0
-                hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                hl.Adornee = obj
-                hl.Parent = obj
-                table.insert(cubeHighlights, hl)
+                if count <= 300 then
+                    local hl = Instance.new("Highlight")
+                    hl.FillColor = Color3.fromRGB(0, 170, 255)
+                    hl.FillTransparency = 0.85
+                    hl.OutlineColor = Color3.fromRGB(0, 200, 255)
+                    hl.OutlineTransparency = 0
+                    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    hl.Adornee = obj
+                    hl.Parent = obj
+                    table.insert(cubeHighlights, hl)
+                end
             end
         end
 
