@@ -29,8 +29,9 @@ local DEFAULT_AUTOEXEC_URL = "https://raw.githubusercontent.com/tinm4318-spec/An
 -- ============================================================
 -- State
 -- ============================================================
-local DevIds     = { 4260088397, 9693065023 }
-local PremiumIds = { 4260088397, 9693065023 }
+local DevIds     = { 10972869437 , 11819448837 , 11814042874 }
+local PremiumIds = { 10972869437, 11819448837 , 11814042874 }
+
 local tagColor   = Color3.fromRGB(34, 197, 94)
 
 local material     = "smooth"
