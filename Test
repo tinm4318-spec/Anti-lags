@@ -2275,28 +2275,6 @@ modTab:Button({
 
 
 
-modTab:Toggle({
-    Title = "Cubes Checker",
-    Callback = function(v)
-        cubeCheckerOn = v
-        if v then
-            if not cubeClickConn then
-                cubeClickConn = userInputService.InputBegan:Connect(onClickCube)
-            end
-        else
-            if cubeClickConn then
-                cubeClickConn:Disconnect()
-                cubeClickConn = nil
-            end
-            if cubeHighlight then
-                cubeHighlight.Adornee = nil
-                cubeHighlight:Destroy()
-                cubeHighlight = nil
-            end
-        end
-    end,
-})
-
 print("mod reached EZZ")
 -- ============================================================
 -- Chat color renderer 
