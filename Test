@@ -25,6 +25,7 @@ local _req = request or (syn and syn.request) or (http and http.request)
     or (fluxus and fluxus.request) or http_request
 
 local DEFAULT_AUTOEXEC_URL = "https://raw.githubusercontent.com/tinm4318-spec/Anti-lags/refs/heads/main/Test"
+
 local TOGGLES_FILE = "gonghub_toggles.json"
 local SavedToggles = {}
 
