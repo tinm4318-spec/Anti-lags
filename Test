@@ -58,6 +58,7 @@ local antiFreeze, antiGlitch, antiFog, antiMorph
 local antiColorless, antiDumb = false, false
 local antiMaptide, antiGlow   = false, false
 local godMode = false
+local antiTeleport = false
 
 local autoGrabDropped   = false
 local autoDropOnDeath   = false
