@@ -2002,6 +2002,49 @@ antis:Toggle({
     end,
 })
 
+local antiVoidOn = false
+local antiVoidConn = nil
+local antiVoidSafeCF = nil
+local antiVoidOrigHeight = workspace.FallenPartsDestroyHeight
+
+antis:Toggle({
+    Title = "Anti-Void",
+    Callback = function(v)
+        antiVoidOn = v
+        if v then
+            antiVoidOrigHeight = workspace.FallenPartsDestroyHeight
+            if not antiVoidConn then
+                antiVoidConn = runService.Heartbeat:Connect(function()
+                    if not antiVoidOn then return end
+                    local char = localPlayer.Character
+                    if not char then return end
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    if not hrp then return end
+                    if hrp.Position.Y < -50 then
+                        if antiVoidSafeCF then
+                            hrp.CFrame = antiVoidSafeCF
+                        else
+                            hrp.CFrame = CFrame.new(0, 50, 0)
+                        end
+                        hrp.AssemblyLinearVelocity = Vector3.zero
+                    else
+                        antiVoidSafeCF = hrp.CFrame
+                    end
+                end)
+            end
+        else
+            if antiVoidConn then
+                antiVoidConn:Disconnect()
+                antiVoidConn = nil
+            end
+            pcall(function()
+                workspace.FallenPartsDestroyHeight = antiVoidOrigHeight
+            end)
+            antiVoidSafeCF = nil
+        end
+    end,
+})
+
 
 antis:Toggle({
     Title = "Anti-AFK",
