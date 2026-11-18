@@ -2026,45 +2026,6 @@ antis:Toggle({
     end
 })
 
-local antiTpOn = false
-local antiTpConn = nil
-local antiTpLastSafe = nil
-local ANTI_TP_BUFFER = 3
-
-antis:Toggle({
-    Title = "Anti-Teleport",
-    Callback = function(v)
-        antiTpOn = v
-        if v then
-            local char = localPlayer.Character
-            local root = char and char:FindFirstChild("HumanoidRootPart")
-            if root then antiTpLastSafe = root.CFrame end
-            if not antiTpConn then
-                antiTpConn = runService.PostSimulation:Connect(function()
-                    if not antiTpOn then return end
-                    local c = localPlayer.Character
-                    local r = c and c:FindFirstChild("HumanoidRootPart")
-                    if not r then return end
-                    if not antiTpLastSafe then
-                        antiTpLastSafe = r.CFrame
-                        return
-                    end
-                    local d = (r.Position - antiTpLastSafe.Position).Magnitude
-                    if d > ANTI_TP_BUFFER then
-                        r.CFrame = antiTpLastSafe
-                        r.AssemblyLinearVelocity = Vector3.zero
-                    else
-                        antiTpLastSafe = r.CFrame
-                    end
-                end)
-            end
-        else
-            if antiTpConn then antiTpConn:Disconnect() antiTpConn = nil end
-            antiTpLastSafe = nil
-        end
-    end,
-})
-
 antis:Toggle({
     Title = "Anti-Void",
     Callback = function(v)
