@@ -2026,6 +2026,97 @@ antis:Toggle({
     end
 })
 
+local antiTpActive = false
+local lastSafeCFrame = nil
+local maxWalkSpeedBuffer = 3
+local antiTpConnection = nil
+
+local antiTpFile = "GongHub_AntiTp.txt"
+
+local function saveAntiTp(value)
+    if writefile then
+        pcall(function()
+            writefile(antiTpFile, value and "true" or "false")
+        end)
+    end
+end
+
+local function loadAntiTp()
+    if isfile and readfile then
+        local success, result = pcall(function()
+            if isfile(antiTpFile) then
+                return readfile(antiTpFile)
+            end
+        end)
+
+        if success and result == "true" then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function startAntiTp()
+    if antiTpConnection then
+        antiTpConnection:Disconnect()
+        antiTpConnection = nil
+    end
+
+    antiTpActive = true
+    lastSafeCFrame = nil
+
+    antiTpConnection = runService.PostSimulation:Connect(function()
+        if not antiTpActive then return end
+
+        local character = localPlayer.Character
+        local root = character and character:FindFirstChild("HumanoidRootPart")
+
+        if root then
+            if not lastSafeCFrame then
+                lastSafeCFrame = root.CFrame
+                return
+            end
+
+            local distanceMoved = (root.Position - lastSafeCFrame.Position).Magnitude
+
+            if distanceMoved > maxWalkSpeedBuffer then
+                root.CFrame = lastSafeCFrame
+                root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            else
+                lastSafeCFrame = root.CFrame
+            end
+        end
+    end)
+end
+
+local function stopAntiTp()
+    antiTpActive = false
+    lastSafeCFrame = nil
+
+    if antiTpConnection then
+        antiTpConnection:Disconnect()
+        antiTpConnection = nil
+    end
+end
+
+antis:Toggle({
+    Title = "Anti-Teleport",
+    Callback = function(v)
+        saveAntiTp(v)
+
+        if v then
+            startAntiTp()
+        else
+            stopAntiTp()
+        end
+    end
+})
+
+-- Restore saved setting on next execution
+if loadAntiTp() then
+    startAntiTp()
+end
 
 antis:Toggle({
     Title = "Anti-Void",
