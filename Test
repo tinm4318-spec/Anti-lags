@@ -1971,10 +1971,6 @@ antis:Toggle({
 })
 antis:Toggle({ Title = "Anti-Morph",  Callback = function(v) antiMorph = v end })
 antis:Toggle({ Title = "Anti-Glitch", Callback = function(v) antiGlitch = v end })
-
-local antiFlingOn = false
-local antiFlingConn = nil
-
 antis:Toggle({
     Title = "Anti-Fling",
     Callback = function(v)
