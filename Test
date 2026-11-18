@@ -19,6 +19,8 @@ local localPlayer = players.LocalPlayer
 local playerGui   = localPlayer:WaitForChild("PlayerGui")
 local system      = replicatedStorage:WaitForChild("System")
 
+print("services reached")
+
 local _req = request or (syn and syn.request) or (http and http.request)
     or (fluxus and fluxus.request) or http_request
 
@@ -84,6 +86,8 @@ for k, v in pairs(colorMap) do
 end
 
 local humanoidRef = nil
+
+print("state reached")
 
 -- ============================================================
 -- Auto Execute state
@@ -176,14 +180,14 @@ local function prepareAutoExecute()
         pcall(function()
             queueFn(autoExecuteLoader)
         end)
-        
         clearPending()
         return
     end
 
-  
     markPending()
 end
+
+print("autoexecute state reached")
 
 -- ============================================================
 -- Helpers
@@ -398,6 +402,8 @@ end
 if localPlayer.Character then bindCharacter(localPlayer.Character) end
 localPlayer.CharacterAdded:Connect(bindCharacter)
 
+print("helpers reached")
+
 -- ============================================================
 -- Inventory Checker
 -- ============================================================
@@ -528,6 +534,9 @@ local function disableInvDisplay()
         invDisplayPlayerAdded = nil
     end
 end
+
+print("inventory checker reached")
+
 -- ============================================================
 -- Loading screen
 -- ============================================================
@@ -668,6 +677,8 @@ task.spawn(function()
     end
 end)
 
+print("loading screen reached")
+
 -- ============================================================
 -- WindUI load (guarded)
 -- ============================================================
@@ -685,6 +696,8 @@ if not okLoad or not WindUI then
     pcall(function() loadingGui:Destroy() end)
     return
 end
+
+print("windui loaded")
 
 WindUI:SetFont("rbxassetid://16658246179")
 WindUI:AddTheme({
@@ -716,6 +729,8 @@ local hub = WindUI:CreateWindow({
 hub:Tag({ Title = "v1.0", Color = Color3.fromHex("#22CC5E") })
 WindUI:Notify({ Title = "GongHub", Content = "Loaded. Press K to toggle.", Duration = 5 })
 
+print("window reached")
+
 -- ============================================================
 -- About
 -- ============================================================
@@ -730,6 +745,8 @@ about:Paragraph({
 })
 
 hub:Tab({ Title = "────────────", Icon = "", Locked = true, Border = false })
+
+print("about reached")
 
 -- ============================================================
 -- Render loop
@@ -915,6 +932,8 @@ runService.RenderStepped:Connect(function()
     end
 end)
 
+print("render loop reached")
+
 -- ============================================================
 -- Home
 -- ============================================================
@@ -1031,7 +1050,6 @@ local boomboxClickDetectors = {}
 local boomboxSelectionBox = nil
 local boomboxCurrentId = ""
 
-local boomboxCurrentId = ""
 local BOOMBOX_SAVE_FILE = "gonghub_last_boombox.txt"
 
 pcall(function()
@@ -1224,6 +1242,8 @@ home:Button({
     end,
 })
 
+print("home reached")
+
 -- ============================================================
 -- Server Hopper + Auto Execute
 -- ============================================================
@@ -1370,6 +1390,8 @@ function fetchHop()
         hop.updating = false
     end)
 end
+
+print("server hopper reached")
 
 -- ============================================================
 -- Build
@@ -1521,6 +1543,8 @@ buildTab:Button({
     end,
 })
 
+print("build reached")
+
 -- ============================================================
 -- Stash
 -- ============================================================
@@ -1650,6 +1674,8 @@ stashTab:Button({
     end,
 })
 
+print("stash reached")
+
 -- ============================================================
 -- Auras
 -- ============================================================
@@ -1680,6 +1706,8 @@ auraTab:Slider({
     Value = { Min = 5, Max = 500, Default = 20 },
     Callback = function(v) paintRange = v end,
 })
+
+print("auras reached")
 
 -- ============================================================
 -- Anti-Maptide + Anti-NaN 
@@ -1779,6 +1807,8 @@ local function disableAntiMaptide()
     end
 end
 
+print("anti-maptide reached")
+
 -- ============================================================
 -- Anti-Glow
 -- ============================================================
@@ -1815,6 +1845,9 @@ local function disableAntiGlow()
     end
     antiGlowConnections = {}
 end
+
+print("anti-glow reached")
+
 -- ============================================================
 -- GodMode
 -- ============================================================
@@ -1889,6 +1922,8 @@ local function forceReset()
     shared.GongHub_GodPaused = false
 end
 
+print("godmode reached")
+
 -- ============================================================
 -- Antis tab
 -- ============================================================
@@ -1925,7 +1960,8 @@ antis:Toggle({
     end,
 })
 
-print("antis reached"),
+print("antis visuals reached")
+
 antis:Section({ Title = "Player" })
 antis:Toggle({
     Title = "GodMode",
@@ -1935,6 +1971,7 @@ antis:Toggle({
 })
 antis:Toggle({ Title = "Anti-Morph",  Callback = function(v) antiMorph = v end })
 antis:Toggle({ Title = "Anti-Glitch", Callback = function(v) antiGlitch = v end })
+
 local antiFlingOn = false
 local antiFlingConn = nil
 
@@ -1964,6 +2001,8 @@ antis:Toggle({
         end
     end,
 })
+
+print("anti-fling reached")
 
 local antiVoidOn = false
 local antiVoidConn = nil
@@ -2007,6 +2046,8 @@ antis:Toggle({
         end
     end,
 })
+
+print("anti-void reached")
 
 local focusConn1, focusConn2
 local function forceFocus()
@@ -2071,6 +2112,8 @@ localPlayer.CharacterAdded:Connect(function(char)
         end
     end)
 end)
+
+print("antis reached")
 
 -- ============================================================
 -- Target
@@ -2183,6 +2226,8 @@ targetTab:Button({
     end,
 })
 
+print("target reached")
+
 -- ============================================================
 -- Mod & Mgmt
 -- ============================================================
@@ -2246,6 +2291,8 @@ modTab:Button({
         c1:Set(";") c2:Set(";") c3:Set(";") c4:Set(";") c5:Set(";")
     end,
 })
+
+print("mod reached")
 
 -- ============================================================
 -- Chat color renderer 
@@ -2323,6 +2370,8 @@ textChatService.OnIncomingMessage = function(mdata)
     end
 end
 
+print("chat renderer reached")
+
 -- ============================================================
 -- Character loop
 -- ============================================================
@@ -2355,6 +2404,8 @@ task.spawn(function()
     end
 end)
 
+print("character loop reached")
+
 -- ============================================================
 -- Hopper background fetch
 -- ============================================================
@@ -2376,6 +2427,8 @@ task.spawn(function()
         end
     end
 end)
+
+print("hopper bg reached")
 
 -- ============================================================
 -- Kill loading FIRST
@@ -2454,6 +2507,8 @@ if premiumPremTab then
     end)
 end
 
+print("premium reached")
+
 -- ============================================================
 -- Dev tab (guarded, no remote blacklist)
 -- ============================================================
@@ -2473,3 +2528,6 @@ if devDevTab then
         })
     end)
 end
+
+print("dev reached")
+print("[GongHub] fully loaded")
