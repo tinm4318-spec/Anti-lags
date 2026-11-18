@@ -190,6 +190,46 @@ end
 
 print("autoexecute state reached")
 
+local TOGGLES_FILE = "gonghub_toggles.json"
+local SavedToggles = {}
+
+pcall(function()
+    if isfile and readfile and isfile(TOGGLES_FILE) then
+        local raw = readfile(TOGGLES_FILE)
+        if raw and raw ~= "" then
+            local d = httpService:JSONDecode(raw)
+            if typeof(d) == "table" then SavedToggles = d end
+        end
+    end
+end)
+
+local function saveToggles()
+    pcall(function()
+        if writefile then
+            writefile(TOGGLES_FILE, httpService:JSONEncode(SavedToggles))
+        end
+    end)
+end
+
+local function wrapTab(tab)
+    if not tab or not tab.Toggle then return tab end
+    local origToggle = tab.Toggle
+    tab.Toggle = function(self, cfg)
+        local title = cfg.Title or "?"
+        if SavedToggles[title] ~= nil then
+            cfg.Value = SavedToggles[title]
+        end
+        local origCb = cfg.Callback
+        cfg.Callback = function(v)
+            SavedToggles[title] = v
+            saveToggles()
+            if origCb then origCb(v) end
+        end
+        return origToggle(self, cfg)
+    end
+    return tab
+end
+
 -- ============================================================
 -- Helpers
 -- ============================================================
@@ -938,7 +978,7 @@ print("render loop reached")
 -- ============================================================
 -- Home
 -- ============================================================
-local home = hub:Tab({ Title = "Home", Icon = "house", locked = false })
+local home       = wrapTab(hub:Tab({ Title = "Home", Icon = "house", locked = false }))
 home:Section({ Title = "Inventory Display" })
 home:Toggle({
     Title = "Enable",
@@ -1249,7 +1289,7 @@ print("home reached")
 -- Server Hopper + Auto Execute
 -- ============================================================
 hub:Tab({ Title = "────>OP<────", Icon = "", Locked = true, Border = false })
-local hopTab = hub:Tab({ Title = "Server Hopper", Icon = "server" })
+local hopTab     = wrapTab(hub:Tab({ Title = "Server Hopper", Icon = "server" }))
 
 local hop = {
     asc = false,
@@ -1397,7 +1437,7 @@ print("server hopper reached")
 -- ============================================================
 -- Build
 -- ============================================================
-local buildTab = hub:Tab({ Title = "Build", Icon = "lucide:hammer" })
+local buildTab   = wrapTab(hub:Tab({ Title = "Build", Icon = "lucide:hammer" })) 
 local cubeSize     = 3
 local building     = false
 local termiting    = false
@@ -1549,7 +1589,7 @@ print("build reached")
 -- ============================================================
 -- Stash
 -- ============================================================
-local stashTab = hub:Tab({ Title = "Stash", Icon = "archive" })
+local stashTab   = wrapTab(hub:Tab({ Title = "Stash", Icon = "archive" }))
 local stashIndex = 1
 
 stashTab:Section({ Title = "Note" })
@@ -1681,8 +1721,7 @@ print("stash reached")
 -- Auras
 -- ============================================================
 hub:Tab({ Title = "────>GRIEF<────", Icon = "", Locked = true, Border = false })
-local auraTab = hub:Tab({ Title = "Auras", Icon = "lucide:zap" })
-
+local auraTab    = wrapTab(hub:Tab({ Title = "Auras", Icon = "lucide:zap" }))
 auraTab:Section({ Title = "Auras" })
 auraTab:Toggle({ Title = "Build Aura",   Callback = function(v) buildAura = v end })
 auraTab:Toggle({ Title = "Sign Aura",    Callback = function(v) signAura = v end })
@@ -1928,7 +1967,7 @@ print("godmode reached")
 -- ============================================================
 -- Antis tab
 -- ============================================================
-local antis = hub:Tab({ Title = "Antis", Icon = "lucide:shield-x" })
+local antis      = wrapTab(hub:Tab({ Title = "Antis", Icon = "lucide:shield-x" }))
 
 -- ============================================================
 -- Antis UI
@@ -2089,7 +2128,7 @@ print("antis reached")
 -- Target
 -- ============================================================
 hub:Tab({ Title = "───>PLAYER<───", Icon = "", Locked = true, Border = false })
-local targetTab = hub:Tab({ Title = "Target", Icon = "target", locked = false })
+local targetTab  = wrapTab(hub:Tab({ Title = "Target", Icon = "target", locked = false }))
 local selectedPlayer = nil
 local playerMap = {}
 
@@ -2201,7 +2240,7 @@ print("target reached")
 -- ============================================================
 -- Mod & Mgmt
 -- ============================================================
-local modTab = hub:Tab({ Title = "Mod & Mgmt", Icon = "lucide:shield" })
+local modTab     = wrapTab(hub:Tab({ Title = "Mod & Mgmt", Icon = "lucide:shield" }))
 modTab:Section({ Title = "Chat" })
 modTab:Toggle({
     Title = "Spy Chat",
