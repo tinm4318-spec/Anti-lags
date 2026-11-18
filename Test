@@ -2005,14 +2005,14 @@ antis:Toggle({
 local antiVoidOn = false
 local antiVoidConn = nil
 local antiVoidSafeCF = nil
-local antiVoidOrigHeight = workspace.FallenPartsDestroyHeight
+local antiVoidOrigHeight = workspaceService.FallenPartsDestroyHeight
 
 antis:Toggle({
     Title = "Anti-Void",
     Callback = function(v)
         antiVoidOn = v
         if v then
-            antiVoidOrigHeight = workspace.FallenPartsDestroyHeight
+            antiVoidOrigHeight = workspaceService.FallenPartsDestroyHeight
             if not antiVoidConn then
                 antiVoidConn = runService.Heartbeat:Connect(function()
                     if not antiVoidOn then return end
@@ -2038,12 +2038,13 @@ antis:Toggle({
                 antiVoidConn = nil
             end
             pcall(function()
-                workspace.FallenPartsDestroyHeight = antiVoidOrigHeight
+                workspaceService.FallenPartsDestroyHeight = antiVoidOrigHeight
             end)
             antiVoidSafeCF = nil
         end
     end,
 })
+
 
 
 antis:Toggle({
