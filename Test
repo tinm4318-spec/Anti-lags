@@ -2034,6 +2034,7 @@ local ANTI_TP_BUFFER = 3
 antis:Toggle({
     Title = "Anti-Teleport",
     Callback = function(v)
+    print("cb fired", v)
     antiTpOn = v
 end
 
