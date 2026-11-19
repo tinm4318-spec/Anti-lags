@@ -2031,7 +2031,12 @@ local antiTpConn = nil
 local antiTpLastSafe = nil
 local ANTI_TP_BUFFER = 3
 
-
+antis:Toggle({
+    Title = "Anti-Teleport",
+    Callback = function(v)
+        -- empty for now
+    end,
+})
 
 antis:Toggle({
     Title = "Anti-Void",
