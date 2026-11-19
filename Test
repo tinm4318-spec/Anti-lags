@@ -2035,8 +2035,10 @@ antis:Toggle({
     Title = "Anti-Teleport",
     Callback = function(v)
     print("cb fired", v)
-    
+
 end
+    end,
+})
 
 antis:Toggle({
     Title = "Anti-Void",
