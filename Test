@@ -2034,13 +2034,19 @@ local ANTI_TP_BUFFER = 3
 antis:Toggle({
     Title = "Anti-Teleport",
     Callback = function(v)
-    antiTpOn = v
-    if v then
-        local char = localPlayer.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        if root then antiTpLastSafe = root.CFrame end
-    end
-end
+        antiTpOn = v
+        if v then
+            local char = localPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root then antiTpLastSafe = root.CFrame end
+        end
+
+        if not antiTpConn then
+            antiTpConn = runService.Heartbeat:Connect(function()
+                if not antiTpOn then return end
+            end)
+        end
+    end,
 })
 
 antis:Toggle({
