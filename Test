@@ -2040,7 +2040,7 @@ antis:Toggle({
             local root = char and char:FindFirstChild("HumanoidRootPart")
             if root then antiTpLastSafe = root.CFrame end
             if not antiTpConn then
-                antiTpConn = runService.PostSimulation:Connect(function()
+                antiTpConn = runService.Heartbeat:Connect(function()
                     if not antiTpOn then return end
                     local c = localPlayer.Character
                     local r = c and c:FindFirstChild("HumanoidRootPart")
