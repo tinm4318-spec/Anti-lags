@@ -2035,11 +2035,7 @@ antis:Toggle({
     Title = "Anti-Teleport",
     Callback = function(v)
         antiTpOn = v
-        if v then
-            local char = localPlayer.Character
-            local root = char and char:FindFirstChild("HumanoidRootPart")
-            if root then antiTpLastSafe = root.CFrame end
-        end
+    end,
 })
 
 antis:Toggle({
