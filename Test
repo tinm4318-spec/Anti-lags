@@ -2035,14 +2035,17 @@ local antiTpLastSafe = nil
 local ANTI_TP_BUFFER = 3
 
 antis:Toggle({
-    Title = "Test A",
+    Title = "Test B",
     Callback = function(v)
         antiTpOn = v
         if v then
             if not antiTpConn then
                 antiTpConn = game:GetService("RunService").Heartbeat:Connect(function()
                     if not antiTpOn then return end
-                    print("A tick")
+                    local c = localPlayer.Character
+                    local r = c and c:FindFirstChild("HumanoidRootPart")
+                    if not r then return end
+                    print("B tick", r.Position)
                 end)
             end
         else
