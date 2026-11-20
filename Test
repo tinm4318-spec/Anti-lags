@@ -2029,33 +2029,33 @@ antis:Toggle({
     end
 })
 
-local antiTpOn = false
-local antiTpConn = nil
-local antiTpLastSafe = nil
+local myTpOn = false
+local myTpConn = nil
+local myLastSafeCF = nil
 local ANTI_TP_BUFFER = 3
 
 antis:Toggle({
-    Title = "Test C2",
+    Title = "Test C3",
     Callback = function(v)
-        antiTpOn = v
+        myTpOn = v
         if v then
-            if not antiTpConn then
-                antiTpConn = game:GetService("RunService").Heartbeat:Connect(function()
-                    if not antiTpOn then return end
+            if not myTpConn then
+                myTpConn = game:GetService("RunService").Heartbeat:Connect(function()
+                    if not myTpOn then return end
                     local c = localPlayer.Character
                     local r = c and c:FindFirstChild("HumanoidRootPart")
                     if r then
-                        if not antiTpLastSafe then
-                            antiTpLastSafe = r.CFrame
+                        if not myLastSafeCF then
+                            myLastSafeCF = r.CFrame
                         else
-                            print("C2 tick")
+                            print("C3 tick")
                         end
                     end
                 end)
             end
         else
-            if antiTpConn then antiTpConn:Disconnect() antiTpConn = nil end
-            antiTpLastSafe = nil
+            if myTpConn then myTpConn:Disconnect() myTpConn = nil end
+            myLastSafeCF = nil
         end
     end,
 })
