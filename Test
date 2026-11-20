@@ -2035,7 +2035,7 @@ local antiTpLastSafe = nil
 local ANTI_TP_BUFFER = 3
 
 antis:Toggle({
-    Title = "Test C",
+    Title = "Test C2",
     Callback = function(v)
         antiTpOn = v
         if v then
@@ -2044,16 +2044,18 @@ antis:Toggle({
                     if not antiTpOn then return end
                     local c = localPlayer.Character
                     local r = c and c:FindFirstChild("HumanoidRootPart")
-                    if not r then return end
-                    if not antiTpLastSafe then
-                        antiTpLastSafe = r.CFrame
-                        return
+                    if r then
+                        if not antiTpLastSafe then
+                            antiTpLastSafe = r.CFrame
+                        else
+                            print("C2 tick")
+                        end
                     end
-                    print("C tick")
                 end)
             end
         else
             if antiTpConn then antiTpConn:Disconnect() antiTpConn = nil end
+            antiTpLastSafe = nil
         end
     end,
 })
