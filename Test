@@ -2043,6 +2043,8 @@ antis:Toggle({
             local root = char and char:FindFirstChild("HumanoidRootPart")
             if root then antiTpLastSafe = root.CFrame end
             if not antiTpConn then
+                antiTpConn = runService.Heartbeat:Connect(function()
+                end)
             end
         end
     end,
