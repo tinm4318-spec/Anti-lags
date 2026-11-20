@@ -2043,13 +2043,18 @@ antis:Toggle({
             local root = char and char:FindFirstChild("HumanoidRootPart")
             if root then antiTpLastSafe = root.CFrame end
             if not antiTpConn then
-                antiTpConn = runService.Heartbeat:Connect(function()
+                local ok, result = pcall(function()
+                    return game:GetService("RunService").Heartbeat:Connect(function() end)
                 end)
+                if ok then
+                    antiTpConn = result
+                else
+                    warn("[GongHub] Anti-Teleport connect failed: " .. tostring(result))
+                end
             end
         end
     end,
 })
-
 
 antis:Toggle({
     Title = "Anti-Void",
