@@ -2029,19 +2029,31 @@ antis:Toggle({
     end
 })
 
-
 local antiTpOn = false
+local antiTpConn = nil
 
 antis:Toggle({
-    Title = "Test1",
+    Title = "Test Heartbeat",
     Callback = function(v)
-        print("Test1 callback fired, v =", v)
+        print("TH callback fired, v =", v)
         antiTpOn = v
-        print("Test1 assignment done")
+        if v then
+            if not antiTpConn then
+                local ok, result = pcall(function()
+                    return game:GetService("RunService").Heartbeat:Connect(function() end)
+                end)
+                if ok then
+                    antiTpConn = result
+                    print("TH connected OK")
+                else
+                    print("TH connect failed:", tostring(result))
+                end
+            end
+        else
+            if antiTpConn then antiTpConn:Disconnect() antiTpConn = nil end
+        end
     end,
 })
-
-print("Test1 created OK")
 
 antis:Toggle({
     Title = "Anti-Void",
