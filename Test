@@ -2034,7 +2034,8 @@ local antiTpConn = nil
 local antiTpLastSafe = nil
 local ANTI_TP_BUFFER = 3
 
-antis:Toggle({
+print("antis type:", type(antis))
+print("antis.Toggle type:", type(antis and antis.Toggle))
     Title = "Anti-Teleport",
     Callback = function(v)
         antiTpOn = v
