@@ -2042,6 +2042,8 @@ antis:Toggle({
             local char = localPlayer.Character
             local root = char and char:FindFirstChild("HumanoidRootPart")
             if root then antiTpLastSafe = root.CFrame end
+            if not antiTpConn then
+            end
         end
     end,
 })
