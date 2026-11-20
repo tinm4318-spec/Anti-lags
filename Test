@@ -2034,27 +2034,39 @@ local antiTpConn = nil
 local antiTpLastSafe = nil
 local ANTI_TP_BUFFER = 3
 
-antis:Toggle({
-    Title = "Anti-Teleport",
-    Callback = function(v)
-        antiTpOn = v
-        if v then
-            local char = localPlayer.Character
-            local root = char and char:FindFirstChild("HumanoidRootPart")
-            if root then antiTpLastSafe = root.CFrame end
-            if not antiTpConn then
-                local ok, result = pcall(function()
-                    return game:GetService("RunService").Heartbeat:Connect(function() end)
-                end)
-                if ok then
-                    antiTpConn = result
-                else
-                    warn("[GongHub] Anti-Teleport connect failed: " .. tostring(result))
+print("=== AT 诊断 ===")
+print("antis:", tostring(antis))
+print("antis.Toggle:", type(antis and antis.Toggle))
+print("runService:", tostring(runService))
+print("localPlayer:", tostring(localPlayer))
+print("antiTpConn:", tostring(antiTpConn))
+print("antiTpOn:", tostring(antiTpOn))
+print("antiTpLastSafe:", tostring(antiTpLastSafe))
+print("ANTI_TP_BUFFER:", tostring(ANTI_TP_BUFFER))
+print("RunService.Heartbeat:", tostring(game:GetService("RunService").Heartbeat))
+print("Heartbeat.Connect:", type(game:GetService("RunService").Heartbeat.Connect))
+print("=== 诊断结束 ===")
+
+local ok, err = pcall(function()
+    antis:Toggle({
+        Title = "Anti-Teleport",
+        Callback = function(v)
+            antiTpOn = v
+            if v then
+                local char = localPlayer.Character
+                local root = char and char:FindFirstChild("HumanoidRootPart")
+                if root then antiTpLastSafe = root.CFrame end
+                if not antiTpConn then
+                    antiTpConn = game:GetService("RunService").Heartbeat:Connect(function() end)
                 end
             end
-        end
-    end,
-})
+        end,
+    })
+end)
+
+if not ok then
+    warn("[AT] 崩在：" .. tostring(err))
+end
 
 antis:Toggle({
     Title = "Anti-Void",
