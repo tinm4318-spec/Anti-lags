@@ -2029,26 +2029,19 @@ antis:Toggle({
     end
 })
 
+
 local antiTpOn = false
-local antiTpConn = nil
-local antiTpLastSafe = nil
-local ANTI_TP_BUFFER = 3
 
 antis:Toggle({
-    Title = "Anti-Teleport",
+    Title = "Test1",
     Callback = function(v)
+        print("Test1 callback fired, v =", v)
         antiTpOn = v
-        if v then
-            local char = localPlayer.Character
-            local root = char and char:FindFirstChild("HumanoidRootPart")
-            if root then antiTpLastSafe = root.CFrame end
-            if not antiTpConn then
-                antiTpConn = runService.Heartbeat:Connect(function()
-                end)
-            end
-        end
+        print("Test1 assignment done")
     end,
 })
+
+print("Test1 created OK")
 
 antis:Toggle({
     Title = "Anti-Void",
