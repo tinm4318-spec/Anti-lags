@@ -2035,7 +2035,7 @@ local antiTpLastSafe = nil
 local ANTI_TP_BUFFER = 3
 
 antis:Toggle({
-    Title = "Test B",
+    Title = "Test C",
     Callback = function(v)
         antiTpOn = v
         if v then
@@ -2045,7 +2045,11 @@ antis:Toggle({
                     local c = localPlayer.Character
                     local r = c and c:FindFirstChild("HumanoidRootPart")
                     if not r then return end
-                    print("B tick", r.Position)
+                    if not antiTpLastSafe then
+                        antiTpLastSafe = r.CFrame
+                        return
+                    end
+                    print("C tick")
                 end)
             end
         else
