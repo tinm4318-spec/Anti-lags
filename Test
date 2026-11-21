@@ -2147,7 +2147,7 @@ print("antis reached")
 -- Target
 -- ============================================================
 hub:Tab({ Title = "───>PLAYER<───", Icon = "", Locked = true, Border = false })
-local targetTab = hub:Tab({ Title = "Target", Icon = "target", locked = false })
+local targetTab = hub:Tab({ Title = "Target", Icon = "target", Locked = false })
 local selectedPlayer = nil
 local playerMap = {}
 
@@ -2163,33 +2163,27 @@ local function buildPlayerList()
     return names
 end
 
-local targetDropdown
-
-local function refreshTargetList()
-    local names = buildPlayerList()
-    if targetDropdown and targetDropdown.SetValues then
-        targetDropdown:SetValues(names)
-    elseif targetDropdown and targetDropdown.Refresh then
-        targetDropdown:Refresh()
-    end
-end
-
-targetDropdown = targetTab:Dropdown({
+targetTab:Dropdown({
     Title = "Select Player",
     Desc = "Pick a daft from the server",
     Values = buildPlayerList(),
-    Callback = function(v) selectedPlayer = playerMap[v] end,
+    Callback = function(v)
+        selectedPlayer = playerMap[v]
+        if WindUI and WindUI.Notify and selectedPlayer then
+            WindUI:Notify({ Title = "Target", Content = "Selected: " .. selectedPlayer.DisplayName, Duration = 2 })
+        end
+    end,
 })
 
 targetTab:Button({
     Title = "Refresh Player List",
     Callback = function()
-        refreshTargetList()
+        buildPlayerList()
         if WindUI and WindUI.Notify then
-            WindUI:Notify({ Title = "Target", Content = "Player list refreshed.", Duration = 2 })
+            WindUI:Notify({ Title = "Target", Content = "Player map refreshed. Re-open dropdown to see updates.", Duration = 3 })
         end
     end,
-}) 
+})
 
 targetTab:Section({ Title = "Offensive" })
 targetTab:Button({
