@@ -1578,6 +1578,20 @@ stashTab:Button({
     end,
 })
 stashTab:Button({
+    Title = "Create Platform",
+    Callback = function()
+        local char = localPlayer.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then
+            WindUI:Notify({ Title = "Stash", Content = "No character.", Duration = 2 })
+            return
+        end
+        local pos = char.HumanoidRootPart.Position
+        buildStash(pos)
+        char.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 6, 0))
+        WindUI:Notify({ Title = "Stash", Content = "Platform created.", Duration = 2 })
+    end,
+})
+stashTab:Button({
     Title = "Make Stash",
     Callback = function()
         local char = localPlayer.Character
