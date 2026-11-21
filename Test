@@ -2029,22 +2029,34 @@ antis:Toggle({
     end
 })
 
-
-local testCF = nil
+local c5On = false
+local c5CF = nil
 
 antis:Toggle({
-    Title = "Test C4",
+    Title = "C5 Probe",
     Callback = function(v)
-        print("C4 fired, v =", v)
+        print("C5 fired:", v)
+        c5On = v
         if v then
             local char = localPlayer.Character
             local root = char and char:FindFirstChild("HumanoidRootPart")
-            if root then
-                testCF = root.CFrame
-                print("C4 assigned:", tostring(testCF))
-            else
-                print("C4 no root")
-            end
+            if root then c5CF = root.CFrame end
+            task.spawn(function()
+                while c5On do
+                    local c = localPlayer.Character
+                    local r = c and c:FindFirstChild("HumanoidRootPart")
+                    if r and c5CF then
+                        local d = (r.Position - c5CF.Position).Magnitude
+                        if d > 3 then
+                            r.CFrame = c5CF
+                            r.AssemblyLinearVelocity = Vector3.zero
+                        else
+                            c5CF = r.CFrame
+                        end
+                    end
+                    task.wait(0.05)
+                end
+            end)
         end
     end,
 })
