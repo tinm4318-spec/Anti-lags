@@ -2148,34 +2148,6 @@ local function buildPlayerList()
     end
     return names
 end
-
-local targetDropdown
-
-local function refreshTargetList()
-    local names = buildPlayerList()
-    if targetDropdown and targetDropdown.SetValues then
-        targetDropdown:SetValues(names)
-    elseif targetDropdown and targetDropdown.Refresh then
-        targetDropdown:Refresh()
-    end
-end
-
-targetDropdown = targetTab:Dropdown({
-    Title = "Select Player",
-    Desc = "Pick a target from the server",
-    Values = buildPlayerList(),
-    Callback = function(v) selectedPlayer = playerMap[v] end,
-})
-
-targetTab:Button({
-    Title = "Refresh Player List",
-    Callback = function()
-        refreshTargetList()
-        if WindUI and WindUI.Notify then
-            WindUI:Notify({ Title = "Target", Content = "Player list refreshed.", Duration = 2 })
-        end
-    end,
-})
 })
 
 targetTab:Section({ Title = "Offensive" })
