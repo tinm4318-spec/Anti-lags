@@ -2500,49 +2500,7 @@ pcall(function()
 end)
 print("[GongHub] loading destroyed")
 
-local TOGGLES_FILE = "gonghub_toggles.json"
-local SavedToggles = {}
-
-pcall(function()
-    if isfile and readfile and isfile(TOGGLES_FILE) then
-        local raw = readfile(TOGGLES_FILE)
-        if raw and raw ~= "" then
-            local d = httpService:JSONDecode(raw)
-            if typeof(d) == "table" then SavedToggles = d end
-        end
-    end
-end)
-
-local function saveToggles()
-    pcall(function()
-        if writefile then
-            writefile(TOGGLES_FILE, httpService:JSONEncode(SavedToggles))
-        end
-    end)
-end
-
 local function wrapTab(tab)
-    if not tab then return tab end
-    if type(tab.Toggle) ~= "function" then return tab end
-    local origToggle = tab.Toggle
-    tab.Toggle = function(self, cfg)
-        if not cfg or type(cfg) ~= "table" then
-            return origToggle(self, cfg)
-        end
-        local title = cfg.Title or "?"
-        if SavedToggles[title] ~= nil then
-            cfg.Value = SavedToggles[title]
-        end
-        local origCb = cfg.Callback
-        cfg.Callback = function(v)
-            SavedToggles[title] = v
-            saveToggles()
-            if type(origCb) == "function" then
-                pcall(origCb, v)
-            end
-        end
-        return origToggle(self, cfg)
-    end
     return tab
 end
 
