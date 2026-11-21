@@ -2500,9 +2500,6 @@ pcall(function()
 end)
 print("[GongHub] loading destroyed")
 
-local function wrapTab(tab)
-    return tab
-end
 
 task.spawn(function()
     task.wait(1.5)
