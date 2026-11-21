@@ -2148,7 +2148,7 @@ local function buildPlayerList()
     end
     return names
 end
-})
+
 
 targetTab:Section({ Title = "Offensive" })
 targetTab:Button({
