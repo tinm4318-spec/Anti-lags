@@ -2029,11 +2029,25 @@ antis:Toggle({
     end
 })
 
-local antiTpOn = false
-local antiTpConn = nil
-local antiTpLastSafe = nil
-local ANTI_TP_BUFFER = 3
 
+local testCF = nil
+
+antis:Toggle({
+    Title = "Test C4",
+    Callback = function(v)
+        print("C4 fired, v =", v)
+        if v then
+            local char = localPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root then
+                testCF = root.CFrame
+                print("C4 assigned:", tostring(testCF))
+            else
+                print("C4 no root")
+            end
+        end
+    end,
+})
 
 antis:Toggle({
     Title = "Anti-Void",
