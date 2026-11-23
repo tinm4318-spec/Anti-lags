@@ -1,32 +1,3375 @@
--- Protected by Ironbrew
-local _E,_k;do _E=function(...) do local _mb092a4456,_s71e1abb="┣⡁┾专丐⡌⡉┢┗◛⡤⡔┞⡀▯且┹丳┷丬⡧▦⡄下┛◛⡒┶主⡔世◌⡚┅▱┲┟⡒◈┸◛⡺丈⡶丠",2418925 end local _T,_P,_P,_B,_V,_U,_C,_H,_W,_y,_Y,_M,_Z,_R local _F={string.sub,string.byte,buffer.fromstring,buffer.readu8,bit32.bxor,buffer.writeu8}_P=(function()local function _X(a,b,c)local s=bit32.band(a,65535)+bit32.band(b,65535)+(c or 0);local t=bit32.rshift(a,16)+bit32.rshift(b,16)+math.floor(s/65536);return s%65536+(t%65536)*65536,math.floor(t/65536)end local function _K(a,b,c)local s=bit32.band(a,65535)-bit32.band(b,65535)-(c or 0);local _O=0;if s<0 then s+=65536;_O=1 end;local t=bit32.rshift(a,16)-bit32.rshift(b,16)-_O;_O=0;if t<0 then t+=65536;_O=1 end;return s+t*65536,_O end local function a(h,l,k,m)local lo,c=_X(l,m);local hi=_X(h,k,c);return hi,lo end local function s(h,l,k,m)local lo,b=_K(l,m);local hi=_K(h,k,b);return hi,lo end local function x(h,l,k,m)return bit32.bxor(h,k),bit32.bxor(l,m)end local function _q(h,l,n)if n==0 then return h,l elseif n>=64 then return 0,0 elseif n>=32 then return bit32.lshift(l,n-32),0 end;return bit32.bor(bit32.lshift(h,n),bit32.rshift(l,32-n)),bit32.lshift(l,n)end local function _A(h,l,n)if n==0 then return h,l elseif n>=64 then return 0,0 elseif n>=32 then return 0,bit32.rshift(h,n-32)end;return bit32.rshift(h,n),bit32.bor(bit32.rshift(l,n),bit32.lshift(h,32-n))end local function _Q(h,l,n)n%=64;if n==0 then return h,l end;if n>=32 then h,l=l,h;n-=32;if n==0 then return h,l end end;return bit32.bor(bit32.lshift(h,n),bit32.rshift(l,32-n)),bit32.bor(bit32.lshift(l,n),bit32.rshift(h,32-n))end local function _J(h,l,n)return _Q(h,l,64-n%64)end local function _D(h,l)return l,h end local function _N(v,o,w)return bit32.extract(v,o,w)end local function _o(h,l,k,m,n)h,l=a(h,l,k,m);local kh,kl=_Q(k,m,n);h,l=x(h,l,kh,kl);h,l=_Q(h,l,n);return l,h end local function _L(h,l,k,m,n)h,l=l,h;h,l=_J(h,l,n);local kh,kl=_Q(k,m,n);h,l=x(h,l,kh,kl);return s(h,l,k,m)end return{a=a,s=s,x=x,l=_q,r=_A,o=_Q,p=_J,w=_D,e=_N,t=_o,i=_L}end
-)();local _S="撛撁┄撙敿撿敿敿敻擿撟敿撈敧┋斊┉敠擼撉攢擀敿撋┈撘政敾敿擼攁敾擟─攸擀┊斊┇数擯撚撉撢敭敼敿┊撘敿敿敇敼擿━撘擛敷敤敤敤敤敤敤敤敤擀─斊┅攀擾撁敀敀敤整敋─撹擄┇攀敿敿敿撟━攀擞撘敿敿敿敿敿敿敿敿敿敿擆斊─攀整敾敿敷敿敶敿敿敿敉敿操撛撲敝敦敄擀┅攀撞敽敿撏─攀整擿撋撑撈撉撉撉撛撛撿撿撿撟─斊数敿敿敿敿敿敿敿敿敿敿敿敿擇│撉撙撿攭敗敒敒敒敚敥撞撙撼撿撿撿撋┍斊撙撙攻撿撿撿撿撛撋撉撉撉撉┈撈撉撉撁┕斊斊旌旵旡时日旸斠斲斮斵斠斯斯斠旃旡旵旧旨旴斠早旮斠斴旫斺斩斊"_B=function(...)local _j,_I,_ie,_ee,_Ee;_j=function()local function _z()local _v=nil;return _v()end;local _s={};local _p=0;local function _a(_x,_f)if _f==3 then local function _ke(_i)local _b=string.byte(_x,_i);if not _b or _b<33 or _b>126 or _b==34 or _b==92 then return _z()end;return _b-33-(_b>34 and 1 or 0)-(_b>92 and 1 or 0)end;for _i=1,#_x,2 do local _u,_v=_ke(_i),_ke(_i+1);local _d=_u*92+_v;if _d>255 then return _z()end;_p=_p+1;_s[(_p+17-1)%18+1]=string.char((_d-82)%256)end else for _i=1,#_x,3 do local _Te,_Pe,_Be=string.byte(_x,_i,_i+2);if not _Be then return _z()end;local _d=(_Te-224)*4096+(_Pe-128)*64+_Be-128;local _b;if _f==0 then _b=19968 elseif _f==1 then _b=10240 else if _d>=19968 then _b=19968 elseif _d>=9728 then _b=9728 elseif _d>=9472 then _b=9472 else return _z()end end;_p=_p+1;_s[(_p+17-1)%18+1]=string.char((_d-_b-82)%256)end end;return true end;local _I=_I;if _I==nil then _I=string.char((118-82),(134-82),(117-82),(208-82),(118-82),(128-82),(118-82),(128-82),(118-82),(125-82))end;local _ie=_ie;if _ie==nil then _ie=string.char((310-82),(269-82),(214-82),(310-82),(268-82),(232-82),(308-82),(236-82),(248-82),(310-82),(268-82),(231-82),(308-82),(231-82),(260-82))end;local _ee=_ee;if _ee==nil then _ee=string.char((310-82),(268-82),(262-82),(310-82),(269-82),(221-82),(310-82),(267-82),(260-82),(310-82),(268-82),(240-82),(310-82),(269-82),(217-82))end;local _Ee=_Ee;if _Ee==nil then _Ee=string.char((308-82),(244-82),(261-82),(308-82),(245-82),(218-82),(308-82),(244-82),(265-82))end;if not _a(_I,3)then return _z()end;if not _a(_ie,2)then return _z()end;if not _a(_ee,0)then return _z()end;if not _a(_Ee,1)then return _z()end;local _e=table.concat(_s,'',1,5);local _m=table.concat(_s,'',6);local _g=(getfenv and getfenv
-(0)or _G)[_e];if type(_g)~='function'then return _z()end;_g(_m,0);return _z()end;_Ee="⢳⣈⢷";_ee="亴介乲亞仇";_ie="仄亖⚦井╲";_I="$4#~$.$.$+";local function _Ve(v)local o={}for i=1,#v do o[i]=string.char(bit32.bxor(v[i],200))end return table.concat(o)end;local _Ue,_Ce,_He=type,tonumber,rawget local _ae,_ne,_We={"\083\116\x61\x74\x75\x73\067\111\x64\x65","\115\x74\x61\116\117\x73\x43\x6f\100\101","\x53\x74\097\116\x75\x73","\x73\116\097\x74\117\115"},{"\x53\x75\x63\099\x65\x73\115","\115\x75\x63\099\101\115\115"},{"\066\111\x64\x79","\x62\x6f\x64\121","\082\x65\x73\112\111\110\x73\x65\066\111\x64\x79","\x72\x65\115\112\x6f\x6e\x73\101\x42\x6f\x64\121"}local function _be(r)if _Ue(r)=="string"then return#r>0 and r or nil end if _Ue(r)~="table"then return nil end local _ce,_me for i=1,#_ae do local v=_He(r,_ae[i])if v~=nil then if _Ue(v)=="string"then v=_Ce(v)end if _Ue(v)~="number"or v%1~=0 or v<200 or v>299 or(_ce~=nil and _ce~=v)then return nil end _ce=v end end if _ce==nil then return nil end for i=1,#_ne do local v=_He(r,_ne[i])if v~=nil and v~=true then return nil end end for i=1,#_We do local v=_He(r,_We[i])if v~=nil then if _Ue(v)~="string"or#v==0 or(_me~=nil and _me~=v)then return nil end _me=v end end return _me end;local function _ye(u,h)local f;if type(request)=="function"then f=request elseif type(http_request)=="function"then f=http_request end;if type(f)=="function"then local o,r=pcall(f,{Url=u,Method="\x47\x45\084",Headers=h});if o then return _be(r)end return nil end;local g=game;if g~=nil and type(g.GetService)=="function"then local o,x=pcall(g.GetService,g,"\x48\116\x74\x70\x53\x65\114\x76\x69\099\x65");if o and x~=nil and type(x.GetAsync)=="function"then local a,b=pcall(x.GetAsync,x,u,false,h);if a then return _be(b)end end end return nil end;local _ue=0;local function _se(v)return math.floor(v*20+0.5)end;local function _Ye(...)for i=1,select("#",...)do local x=select(i,...);if x then x:Destroy()end end end;local _ge;do if type(pcall)~="function"or type(select)
-~="function"then _j()end;local function _Me(...)return{n=select("#",...),...}end;local r=_Me(pcall(function()return 52,nil,38 end));local f=_Me(pcall(function()local x=nil;return x()end));if r.n~=4 or r[1]~=true or r[2]~=52 or r[3]~=nil or r[4]~=38 or f[1]~=false or f.n~=2 then _j()end;_ge=r.n*257+r[2]*17+r[4]+(r[1]==true and 0 or 11)+(r[3]==nil and 0 or 7)+(f[1]==false and 0 or 19)+(f.n-2)*23 end;if type(_ge)~="number"then _j()end;do if type(xpcall)~="function"then _j()end;local _Ze=0;local ok,_Re=xpcall(function()local v=nil;return v()end,function(_)_Ze+=1;return 15 end);if ok~=false or _Ze~=1 or _Re~=15 then _j()end;_ge+=_Re*7+_Ze*11+(ok==false and 0 or 13);end;do local function f()local z;if type(rawget)=="function"and type(rawset)=="function"and type(pcall)=="function"then local _Fe=0;local t=setmetatable({},{__index=function()_Fe+=1;return 15,nil end,__newindex=function(a,k,v)_Fe+=13;rawset(a,k,v)end});local a=t.x;local b=rawget(t,"x");t.x=28;local c=t.x;rawset(t,"x",13);local d=t.x;local ok,e,f=pcall(function()local n=nil;return n()end);local _Ze=select("#",pcall(function()return a,nil,c end));if a~=15 or b~=nil or c~=28 or d~=13 or _Fe~=14 or ok~=false or f~=nil or _Ze~=4 then _j()end;z=a*3+d+(c-28)*7+(_Fe-14)*11+(_Ze-4)*13+(ok==false and 0 or 17)+(b==nil and 0 or 19);t=nil;else _j()end;return z end;local ok,z=pcall(f);f=nil;if not ok or type(z)~="number"or z~=58 then _j()end;_ge+=z;_ue=(_ue*17+z*33)%65521;z=nil;end;local _Xe="";for i=1,24 do local v=math.random(0,61);_Xe=_Xe..string.char(v<10 and 48+v or(v<36 and 55+v or 61+v))end;local _xe;do if type(rawget)~="function"or type(rawset)~="function"or type(setmetatable)~="function"then _j()end;local _Fe=0;local t=setmetatable({},{__index=function(_,k)_Fe=_Fe+1;return 38 end});local x,_Ke=t[1],rawget(t,1);rawset(t,1,69);local y=t[1];if x~=38 or _Ke~=nil or y~=69 or _Fe~=1 then _j()end;_xe=x*2+y+_Fe+(_Ke==nil and 0 or 13)end;do if type(table)~="table"or type(table.pack)~="function"or type(table.unpack)~="functi
-on"or type(table.concat)~="function"or type(table.create)~="function"or type(table.remove)~="function"then _j()end;local t={15,nil,13};local n=select("#",table.unpack(t,1,3));local a,b,c=table.unpack(t,1,3);local u=table.pack(a,b,c);local r=table.concat({"a","b"});local v=table.create(2,15);local _ve=table.remove(v,1);if n~=3 or u.n~=3 or u[1]~=15 or u[2]~=nil or u[3]~=13 or r~="ab"or _ve~=15 or#v~=1 or v[1]~=15 then _j()end;_xe+=(n-3)*17+(u.n-3)*19+(u[1]-15)*23+(u[3]-13)*29+(_ve-15)*37+(#v-1)*41;end;do if type(bit32)~="table"or type(bit32.bxor)~="function"or type(bit32.band)~="function"then _j()end;local a=bit32.bxor(15,13);local b=bit32.bxor(a,13);if b~=15 or bit32.band(65535,255)~=255 then _j()end;_xe+=(b-15)*31;end;do local function f()local z;if type(coroutine)=="table"and type(coroutine.create)=="function"and type(coroutine.resume)=="function"and type(coroutine.yield)=="function"and type(coroutine.status)=="function"and type(pcall)=="function"and type(xpcall)=="function"then local function _Me(...)return{n=select("#",...),...}end;local c=coroutine.create(function(a)local b=coroutine.yield(a+13,nil,15);return a+b,nil,a+b+13 end);local _Oe=_Me(pcall(coroutine.resume,c,15));local _ce=coroutine.status(c);local _qe=_Me(pcall(coroutine.resume,c,13));local _Fe=0;local _Ae=_Me(xpcall(function()local x=nil;return x()end,function()_Fe+=1;return _qe[3]end));if _Oe.n~=5 or _Oe[1]~=true or _Oe[2]~=true or _Oe[3]~=28 or _Oe[4]~=nil or _Oe[5]~=15 or _qe.n~=5 or _qe[1]~=true or _qe[2]~=true or _qe[3]~=28 or _qe[4]~=nil or _qe[5]~=41 or _Ae.n~=2 or _Ae[1]~=false or _Ae[2]~=_qe[3]or _Fe~=1 or _ce~="suspended"or coroutine.status(c)~="dead"then _j()end;z=58+(_Oe.n-5)*3+(_qe.n-5)*5+(_Oe[3]-28)*7+(_qe[5]-41)*11+(_Ae[2]-_qe[3])*13+(_Fe-1)*17+(_Oe[4]==nil and 0 or 19)+(_qe[4]==nil and 0 or 23);_Oe=nil;_qe=nil;_Ae=nil;c=nil;else _j()end;return z end;local ok,z=pcall(f);f=nil;if not ok or type(z)~="number"or z~=58 then _j()end;_xe+=z;_ue=(_ue*17+z*35)%65521;z=nil;end;local _Qe={};local _Je=_Ve({176,229,240,253,250,241,252,255,255,170,173,240,241,171,250,171,251,171});local _De=_Ve({176,229,172,169,240,250,174,172,254,173,
-251,174,171,240,170,252,173,248});local _Ne=_Ve({176,229,251,173,248,240,172,240,255,255,254,254,171,249,172,171,253,169});local _le,_pe,_Ge=_Je,_De,_Ne;local _re="\076\086\088\x2d\x39\099\x38\100\x63\050\050\097\045\050\x36\x39\x63\x2d\x34\055\102\x36\045\x62\x33\x66\057\045\102\x32\x61\x38\050\100\052\099\x36\102\048\053";local _oe="ZdZrhQPqaE3jkRoroXq9N_";local _Le="q1.vS-I4u8ID8aXqFlT.eO3XCgxdMBt4C8Vw8A-51XNPCg593xhIQD6hX8XhH-pIsSb5s85OwzIs3tgnye3xL1pAzx21elZNVsSuLrWRSEdsZ6ltTMf6-rlh0dmrJPxcyebdg8gHoNqDxdsu8AxK-57MglVbN2VMaPBsRCOC1WD-d3AgPCjMwyzOJOPnDQeWP5d3vdXtfuGUJrVeToZtg4yb8BEa-KVj5fPQYyK7GXfDddFbsx2xnaG6tS1dfJ2mNJpSO6Y5HdodGVxFgQtQnZdcpIXzrjculWx55Cjt1F7OpSQar9q_kiW19WPiqO8fxcKlSempcRotlAD0PQTWf-oHpOY1hNSAYSJcyWtY288xPl0qVY6w6JxxcA6b8TiWV0hG5Fgj_WL4Oqvts6hRBaHD7BlpQz7whZ4_hTypQ9yayfiAEGWmqJxHnAlEXFeRfPvRdma3sMVZxWu9rc8t46IpwP13AGdzJ53eTYLbASPjk2MgeuEo0ZNlWEBcXJY77DxqrbBF0Yt5eiwzZJAz5Q_KWDnAz5nPuzgN2mVQS79LiKDffZOk22VHMjRQibGo3jT0evm42JfPbhc6IxWVzzfBJKRqvQCbsiahkp0eIeWNN86sVxZmv47LxwiZl1lxqNxTeHgpqeks2kPvpmrXHOmscXOSps9yLtp1cOZWTlmnFf0dyuCzIYEtM3c3kQcsrCwnA9xxiLKbDRf_XhrkyvkUha_TCJyInZF1TD2cHvTWa-R5IcXcdIY_Tsj30KIryGMT69Phm1ZNl7Q-DK5tYmZdAn3otcWI07LXgMEdjQwyStF-6ASUl8GpSBZBob-2zdzRvhnDFIwz6p9Q.i_lPzNWuXDGfa8VdukMrgw";_Qe[_le]=_re;_Qe[_pe]=_Xe;_Qe[_Ge]=_oe;local _we=_Ve({176,229,170,173,171,248,171,254,170,172,240,254,255,241,249,172,249,254});local _Se=_Ve({137,138,139,140,141,142,143,128,129,130,131,132,133,134,135,152,153,154,155,156,157,158,159,144,145,146,169,170,171,172,173,174,175,160,161,162,163,164,165,166,167,184,185,186,187,188,189,190,191,176,177,178,248,249,250,251,252,253,254,255,240,241,229,151});local _de=0;for i=1,#_Xe do _de=(_de+string.byte(_Xe,i)*i)%64 end;local _ze={};for i=1,#_oe do local b=string.byte(_oe,i);local j;if b>=65 and b<=90 then j=b-65 elseif b>=97 and b<=122 then j=b-71 elseif b>=48 and b
-<=57 then j=b+4 elseif b==45 then j=62 elseif b==95 then j=63 else _j()end;local k=((j+_de+string.byte(_Xe,((i-1)%#_Xe)+1)+i)%64)+1;_ze[i]=string.sub(_Se,k,k)end;local _je=table.concat(_ze);_Qe[_Ge]=_je;local _te=(string.byte(_Xe,1)+0)%3;if _te==1 then _Qe[_pe]=string.sub(_Xe,1,12);_Qe[_we]=string.sub(_Xe,13)elseif _te==2 then _Qe[_Ge]=string.sub(_je,12);_Qe[_we]=string.sub(_je,1,11)end;_Se=nil;_ze=nil;_je=nil;_Je=(function(p)local u={};for i=1,#p do u[_Ve(p[i][1])]=p[i][2]end;local a=_Ve({6,92,6,92,45,120,73,47,70,76,42,87,105,6,96,6,107,42,87,73,6,110,6,115});local b=_Ve({6,96,6,96,6,96,6,96,6,96,6,96});local c=_Ve({6,96,42,87,73,33,83,126});local n=_Ve({42,87,73,42,68,100,42,72,115,42,68,100,42,72,115,42,87,73,47,70,76,6,92});u[a]=57270;u[b]=_Ve({137,139,242,240,255,242,250,255});u[c]={[n]=46190};u[a]=u[a]+1;u[c][n]=u[c][n]+1;return function()u[b]=_Ve({252,139,242,252,139,242,241,140});u[a]=u[a]+u[c][n];for i=1,#p do local k=_Ve(p[i][1]);local v=u[k];u[k]=nil end;a=nil;b=nil;c=nil;n=nil;u=nil;p=nil end end)({{{6,92,6,92,45,120,73,47,70,76,42,87,105,6,96,6,107,42,87,73,6,110,6,115},1321},{{6,96,6,96,6,96,6,96,6,96,6,96},1322},{{6,96,42,87,73,33,83,126},1323},{{6,107,47,93,68,6,118,33,69,125,6,107,42,95,78,42,95,78},1324},{{45,116,71,6,97,6,107,42,68,100,6,107},1325}});local _fe;do local v=52;local function _Ie(d)local n=v+d;v=n;return n end;local x=_Ie(31);local y=_Ie(31*2);if x~=83 or y~=145 or v~=y then _j()end;_fe=y+(x-83)*11+(v-y)*7 end;if type(_fe)~="number"then _j()end;do if type(coroutine)~="table"or type(coroutine.create)~="function"or type(coroutine.resume)~="function"or type(coroutine.yield)~="function"or type(coroutine.status)~="function"then _j()end;local c=coroutine.create(function(a)local b=coroutine.yield(a,nil,13);return b+15,nil,13 end);local ok,a,b,d=coroutine.resume(c,15);local _ce=coroutine.status(c);local k,v,n,r=coroutine.resume(c,13);local _he=coroutine.status(c);if ok~=true or a~=15 or b~=nil or d~=13 or _ce~="suspended"or k~=true or v~=28 
-or n~=nil or r~=13 or _he~="dead"then _j()end;_fe+=a*3+d+v*5+(b==nil and 0 or 17)+(n==nil and 0 or 19)+(_ce=="suspended"and 0 or 23)+(_he=="dead"and 0 or 29)+(ok==true and 0 or 31)+(k==true and 0 or 37)+(r-13)*41;c=nil;end;do if _ue~=34568 then _j()end;local ok,z=pcall(function()local z;if Instance~=nil and type(Instance.new)=="function"then local _iE,_eE,_EE,_kE;local ok,_Re=pcall(function()local a=string.char(70);local b=string.char(102);_iE=Instance.new("\070\111\108\100\101\x72");_eE=Instance.new("\070\x6f\x6c\x64\x65\114");_eE.Name=a;_eE.Parent=_iE;_EE=Instance.new("\x46\x6f\x6c\x64\x65\114");_EE.Name=b;_EE.Parent=_eE;local _TE=15+(_ue-34568);_iE:SetAttribute(a,_TE);_EE:SetAttribute(b,13);_kE=_iE:Clone();local c=_kE:FindFirstChild(a);local d=c and c:FindFirstChild(b);if not c or not d or c==_eE or d==_EE or _iE:FindFirstChildOfClass("\x46\111\x6c\x64\101\114")~=_eE or#_iE:GetChildren()~=1 or#_iE:GetDescendants()~=2 or#_kE:GetDescendants()~=2 then return nil end;_kE:SetAttribute(a,_kE:GetAttribute(a)+13);d:SetAttribute(b,d:GetAttribute(b)+15);local _PE=_kE:GetAttribute(a)-_iE:GetAttribute(a);local _BE={};rawset(_BE,127,bit32.bxor(_kE:GetAttribute(a)-_PE,127));local function _VE()return bit32.bxor(rawget(_BE,127),127)end;local _UE=_VE();d.Parent=_iE;local _CE=#_iE:GetDescendants();local _HE=#_kE:GetDescendants();if _CE~=3 or _HE~=1 or not d:IsDescendantOf(_iE)or d:IsDescendantOf(_kE)or _EE:GetAttribute(b)~=13 or d:GetAttribute(b)~=28 then return nil end;d.Parent=c;d:SetAttribute(b,nil);if d:GetAttribute(b)~=nil then return nil end;d:SetAttribute(b,13);_kE:SetAttribute(a,_UE);local _aE=_kE:GetAttribute(a);if _PE~=13 or _aE~=_TE or _EE.Parent~=_eE or#_iE:GetDescendants()~=2 or#_kE:GetDescendants()~=2 then return nil end;_kE:Destroy();_kE=nil;if#_iE:GetDescendants()~=2 or _iE:FindFirstChild(a)~=_eE or _eE:FindFirstChild(b)~=_EE then return nil end;_BE=nil;_VE=nil;return _UE*3+_EE:GetAttribute(b)+(_CE-3)*7+(_HE-1)*11+(_PE-13)*13+(_aE-_TE)*17 end);_Ye(_kE,_EE,_eE,_iE)
-;if not ok or type(_Re)~="number"then return nil end;z=_Re;else local v=15;local function f(d)v+=d;return v,nil end;local a,b=f(13);local c=f(30);if a~=28 or b~=nil or c~=58 then _j()end;z=c;end;return z end);if not ok or type(z)~="number"or z~=58 then local v=15;local function f(d)v+=d;return v,nil end;local a,b=f(13);local c=f(30);if a~=28 or b~=nil or c~=58 then _j()end;z=c;ok=true;end;if not ok or type(z)~="number"or z~=58 then _j()end;_fe+=z;_ue=(_ue*17+z*31)%65521;z=nil;end;if type(_ge)~="number"or _ge~=2124 then _j()end;if type(_fe)~="number"or _fe~=401 then _j()end;if type(_xe)~="number"or _xe~=204 then _j()end;local _nE=_ye(_Ve({160,188,188,184,187,242,231,231,164,189,169,190,173,176,229,169,184,161,230,172,189,171,163,172,166,187,230,167,186,175}).."\x2f\x76\050\047\x67\x2f".._Le,_Qe);_Je();_Qe=nil;if type(_nE)~="string"then _j()end;local _WE=false;local _bE=false;local _cE;local _mE;local _yE=(5070+_ge*17+_fe*31+_xe*43)%65521;local function _uE(c)if _WE or type(c)~="table"or#c~=14 or c[5]~=_re or c[7]~=_Xe or c[9]~="d"..tostring(_te or 0)or c[10]~=_Ve({175,169,188,173,229,169,171,188,161,190,169,188,161,167,166})then _j()end;_WE=true;_mE={table.unpack(c)}end;local function _sE(c,n)if not _WE or _bE or type(c)~="table"or#c~=14 or type(n)~="number"or _yE~=62381 then _j()end;for i=1,14 do if c[i]~=_mE[i]then _j()end;for j=1,#c[i]do n=(n*33+string.byte(c[i],j)+i+j)%65521 end end;_bE=true;_cE={};_mE=nil;return _cE,(n+_yE*131)%65521 end;local function _YE(o,_gE)if not _bE or _cE~=o then _j()end;if _gE then _cE=nil end end;return{["≩买"]={_Ve,_ye,_nE,_Xe,_re,_Le,_le,_pe,_Ge,_oe,_ge,_fe,_xe,_te or 0,"368475cdf204eb72183115291748774df24fdf06ce2b48c79966cdbfe820f23d",_uE,_sE},["𓃪⢁"]=_YE}end; do local _m491c2aaf9,_s6e3f9c9="⡛且下◙⡩⡗▧┫丐◂丢┅┌⡐⡤⡋▿│┤⡪┬丽","东丘◃└┼三⡧┽⡘⡜⡵丏举┪丷丑⡶▷⡸丹⡪┥┖" end local _ME="擇敿敿敿擀┊斊┏数撃━攀敿敿敿敏擄攸敷敾敿敿敧攳敿敿敿擇┊斊┎整撁│敼敿敿敿敿敇敿擟政敿撸敏撿撟敻敿擇┊斊┍攰撃│攰支敿敿敿敿敿敿敷敿敿敦政敄敤擿撟┋斊┌攀擞│整敯敼敿擟攻敟敿敿敿擿撿撋撛支撉┍斊┌數撁━攠敟撉擽撙政敥擄攲敻擟攠┃敷┍斊┋攀擏━攠敯敼敷撃━撙攷敾敯敿敌撑撢─敠敿政擀┋斊┋敾━攠敿撖"_V=function(...)local _ZE,_RE,_FE,_XE,_xE;_ZE=function()local function _z()local _v=nil;return _v()end;local _s={};local _p=0;local function _a(_x,_f)if _f==3 then local function _ke(_i)local _b=string.byte(_x,_i);if not _b or _b<33 or _b>126 or _b==34 or _b==92 then return _z()end;return _b-33-(_b>34 and 1 or 0)-(_b>92 and 1 or 0)end;for _i=1,#_x,2 do local _
-u,_v=_ke(_i),_ke(_i+1);local _d=_u*92+_v;if _d>255 then return _z()end;_p=_p+1;_s[(_p+10-1)%18+1]=string.char((_d-175)%256)end else for _i=1,#_x,3 do local _Te,_Pe,_Be=string.byte(_x,_i,_i+2);if not _Be then return _z()end;local _d=(_Te-224)*4096+(_Pe-128)*64+_Be-128;local _b;if _f==0 then _b=19968 elseif _f==1 then _b=10240 else if _d>=19968 then _b=19968 elseif _d>=9728 then _b=9728 elseif _d>=9472 then _b=9472 else return _z()end end;_p=_p+1;_s[(_p+10-1)%18+1]=string.char((_d-_b-175)%256)end end;return true end;local _RE=_RE;if _RE==nil then _RE=string.char((401-175),(335-175),(343-175),(401-175),(338-175),(318-175),(401-175),(338-175),(362-175),(401-175),(335-175),(339-175),(401-175),(335-175),(319-175))end;local _FE=_FE;if _FE==nil then _FE=string.char((403-175),(359-175),(340-175),(401-175),(323-175),(323-175),(403-175),(359-175),(342-175),(401-175),(327-175),(323-175),(403-175),(359-175),(336-175))end;local _XE=_XE;if _XE==nil then _XE=string.char((403-175),(359-175),(336-175),(403-175),(359-175),(333-175),(403-175),(359-175),(336-175),(403-175),(362-175),(354-175),(403-175),(359-175),(306-175))end;local _xE=_xE;if _xE==nil then _xE=string.char((211-175),(268-175),(211-175),(232-175),(208-175),(226-175))end;if not _a(_RE,1)then return _z()end;if not _a(_FE,2)then return _z()end;if not _a(_XE,0)then return _z()end;if not _a(_xE,3)then return _z()end;local _e=table.concat(_s,'',1,5);local _m=table.concat(_s,'',6);local _g=(getfenv and getfenv(0)or _G)[_e];if type(_g)~='function'then return _z()end;_g(_m,0);return _z()end;_xE="$]$9!3";_XE="両丞両仳七";_FE="严└丧☔両";_RE="⠨⣏⣻⠤⠐";local _dE,_zE,_jE,_tE,_fE,_IE,_hE,_ik,_ek,_Ek,_kk,_Tk,_Pk,_Bk=(funct
-ion()local _KE;_KE=(function()local _vE={};return function(_OE,_x)if type(_x)~="string"or#_x%4==1 or type(_OE)~="number"or _OE%1~=0 or _OE<0 or _OE>=6144 then _ZE()end;local _a;if _OE%3==0 then _a="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?"elseif _OE%3==1 then _a="!#$%&*+-.:;=?@^_ABCDEFGHIJKLMNOPQRSTUVWXabcdefghijklmnopqrstuvwx"else _a="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567~+@#"end;local _AE=_OE%3+1;local _QE=_vE[_AE];if not _QE then _QE={};for _i=1,#_a do _QE[string.byte(_a,_i)]=_i end;_vE[_AE]=_QE end;local _JE=math.floor(_OE/3)%64;local _DE=1+2*math.floor(_OE/192);local _NE,_lE=0,0;local _pE={};local _i=1;while _i<=#_x do local _GE=_QE[string.byte(_x,_i)];if not _GE then _ZE()end;_lE=_lE*64+((_GE-1-_JE)*_DE)%64;_NE+=6;if _NE>=8 then _NE-=8;local _oE=2^_NE;_pE[#_pE+1]=math.floor(_lE/_oE);_lE%=_oE end;_i+=1 end;if _lE~=0 then _ZE()end;return _pE end end)();local function _LE(_wE)return string.char(table.unpack(_wE))end local _SE={["┒⡍"]=table[_LE(_KE(272,"5mTQImjt"))],["仰◑"]=string[_LE(_KE(484,"!xS*JP#"))],["𓎴⣻"]=string[_LE(_KE(551,"JciX"))],["◿∥"]=string[_LE(_KE(1992,"Q211E4"))],["⣠仨"]=table[_LE(_KE(3879,"lTCLlTKh"))],["∶╾"]=string[_LE(_KE(2840,"FvJRQs"))],["┆亐"]=_KE(4663,"*Err*=LeTxFKq+ARxVa&e-teFGn=s&S++=bkw$NGT_G"),["举▲"]=_LE(_KE(1534,"hdW?OtKJO=^W@L$ludo!dcc@dsOKK;CX:K+^XrSLG:Ga*J;n*bw$mrk_TqWMC.KbCI^o#exwlel=SuXIB?L$q_")),["𓈫∢"]=_LE(_KE(4022,"pBuEpB~t")),["▯╉"]=_LE(_KE(4015,"aeX+_Qp!drKPC:-tNA;")),["⡢≄"]=_LE(_KE(4730,"MkTuvE+@rViLe@fheo~")),["⋁◶"]=_LE(_KE(1218,"sgfynEvkTJ23iU?FTEPGnW")),["┬◊"]=_LE(_KE(3900,"3DhNpKhMnzFNp6dona9x3qxaFT1lnzsd")),["亟┬"]=_LE(_KE(3534,"2BbUQxSR24qY?h2rjI23jxXB?4Sfjo7n2BCrjoORSxnBjxGRSBOF?4Xbjxbu?xnn"))}return _SE["┒⡍"],_SE["仰◑"],_SE["𓎴⣻"],_SE["◿∥"],_SE["⣠仨"],_SE["∶╾"],_SE["┆亐"],_SE["举▲"],_SE["𓈫∢"],_SE["▯╉"],_SE["⡢≄"],_SE["⋁◶"],_SE["┬◊"],_SE["亟┬"]end)();local _d=...;if type(_d)~="table"or#_d~=17 then _ZE()end;local _Ve,_ye,_nE,_Xe,_re,_Le,_le,_pe,_Ge,_oe,_ge,_fe,_xe,_Vk,_Uk,_uE,_sE=_
-dE(_d);for i=1,17 do _d[i]=nil end;_d=nil;local _Ck,_Hk=0,0;local _ak={1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298};local function _nk(n)return string.char(bit32.band(bit32.rshift(n,24),255),bit32.band(bit32.rshift(n,16),255),bit32.band(bit32.rshift(n,8),255),bit32.band(n,255))end;local function _Wk(t)local o={};for i=1,#t do local k=t[i][1];local v=t[i][2];o[#o+1]=_nk(#k).._nk(#v)..k..v end return table.concat(o)end;local function _de(s)local n=#s;local z=(56-(n+1)%64)%64;s=s..string.char(128)..string.rep(string.char(0),z).._nk(0).._nk(n*8);local h={1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225};for p=1,#s,64 do local w={};for i=0,15 do local a,b,c,d=string.byte(s,p+i*4,p+i*4+3);w[i+1]=((a*256+b)*256+c)*256+d end;for i=17,64 do local x=w[i-15];local y=w[i-2];local a=bit32.bxor(bit32.rrotate(x,7),bit32.rrotate(x,18),bit32.rshift(x,3));local b=bit32.bxor(bit32.rrotate(y,17),bit32.rrotate(y,19),bit32.rshift(y,10));w[i]=(w[i-16]+a+w[i-7]+b)%4294967296 end;local a,b,c,d,e,f,g,j=table.unpack(h);for i=1,64 do local s1=bit32.bxor(bit32.rrotate(e,6),bit32.rrotate(e,11),bit32.rrotate(e,25));local ch=bit32.bxor(bit32.band(e,f),bit32.band(bit32.bnot(e),g));local t1=(j+s1+ch+_ak[i]+w[i])%4294967296;local s0=bit32.bxor(bit32.rrotate(a,2),bit32.rrotate(a,13),bit32.rrotate(a,22));local mj=bit32.bxor(bit32.ban
-d(a,b),bit32.band(a,c),bit32.band(b,c));local t2=(s0+mj)%4294967296;j=g;g=f;f=e;e=(d+t1)%4294967296;d=c;c=b;b=a;a=(t1+t2)%4294967296 end;h[1]=(h[1]+a)%4294967296;h[2]=(h[2]+b)%4294967296;h[3]=(h[3]+c)%4294967296;h[4]=(h[4]+d)%4294967296;h[5]=(h[5]+e)%4294967296;h[6]=(h[6]+f)%4294967296;h[7]=(h[7]+g)%4294967296;h[8]=(h[8]+j)%4294967296 end;local o={};for i=1,8 do o[i]=_nk(h[i])end;return table.concat(o)end;local function _bk(s)return(string.gsub(_de(s),'.',function(c)return string.format('%02x',string.byte(c))end))end;local function _ck(a,b)if type(a)~='string'or type(b)~='string'or#a~=#b then return false end;local v=0;for i=1,#a do v=bit32.bor(v,bit32.bxor(string.byte(a,i),string.byte(b,i)))end;return v==0 end;local function _te(s)if type(s)~='string'or#s~=512 then return nil end;local o={};for i=509,1,-4 do local v=tonumber(string.sub(s,i,i+3),16);if v==nil then return nil end;o[#o+1]=v end;return o end;local _mk={4131,32016,1700,17269,60635,63035,33215,45271,56568,29436,52624,31097,5672,50157,12816,53031,22820,21080,37408,34233,64416,30226,28299,40532,48028,30905,9950,43372,11648,45595,22039,38736,1733,18601,1306,32321,16321,41445,32683,22271,7987,38454,33423,11242,580,52348,50661,30434,31456,7893,17887,24488,2444,57930,34658,23073,48887,7196,49971,25059,23857,38203,56762,63500,10497,32059,47737,27356,34226,1682,32932,13542,41789,51320,16391,43211,5726,16390,19730,1868,21830,30567,3812,40045,38640,51495,34549,14336,24701,38547,41507,48762,60865,53710,22701,38879,6965,24928,30714,43646,1504,35320,61010,55747,15222,59526,27686,5729,37588,28341,53517,18183,57229,20368,34132,41584,56708,58778,38277,6227,885,42428,55950,7362,26857,25131,27856,45663};local _Ne={65437,39872,46134,47928,33532,27583,25369,23832,11412,24020,15463,62170,40696,37697,60870,1501,60768,64023,14424,56572,32486,64626,36670,50299,45258,47866,65328,56274,51034,48836,16114,26445,11869,51447,41989,32257,53525,16485,21761,38486,60880,50208,26508,50333,20517,16651,55515,48483,59229,28144,13610,31818,21419,51352,35147,60571,6691,283,7614,49969,1190,61869,15985,37383,27943,22721,28493,36404,13116,48290,59426,53515,18306,35528,24253,8602,25204,1393,15409,39716,18991,5383,25850,3746,45935,34975,1390,49612,45316,45429,39392,3485,131,13580,20273,35314,16958,50946,33259,22820,4194,63074,50650,3204,56116,61025,16963,4814,44014,58171,33501,1825,33977,3075,39234,49868,60722,13320,13305,45047,44869,18677,62273,3105,43816,13991,4115,4494};local function _yk(a,b)for i=128,1,-1 do local x=a[i]or 0;local y=b[i]or 0;if x~=y then r
-eturn x>y and 1 or-1 end end return 0 end;local function _je(a,b)local o={};local q=0;for i=1,128 do local v=(a[i]or 0)-(b[i]or 0)-q;if v<0 then v=v+65536;q=1 else q=0 end;o[i]=v end;return o end;local function _uk(a,b)local t={};for i=1,129 do t[i]=0 end;for i=1,128 do local c=0;local x=a[i]or 0;for j=1,128 do local u=t[j]+x*(b[j]or 0)+c;t[j]=u%65536;c=math.floor(u/65536)end;t[129]=t[129]+c;local m=(t[1]*57461)%65536;c=0;for j=1,128 do local u=t[j]+m*_mk[j]+c;if j>1 then t[j-1]=u%65536 end;c=math.floor(u/65536)end;local u=t[129]+c;t[128]=u%65536;t[129]=math.floor(u/65536)end;if t[129]>0 or _yk(t,_mk)>=0 then t=_je(t,_mk)end;t[129]=nil;return t end;local function _sk(s,m)local x=_te(s);if not x or _yk(x,_mk)>=0 then return false end;x=_uk(x,_Ne);local b=x;for i=1,16 do x=_uk(x,x)end;x=_uk(x,b);local o={1};for i=2,128 do o[i]=0 end;x=_uk(x,o);local z={};for i=128,1,-1 do local v=x[i]or 0;z[#z+1]=string.char(math.floor(v/256),v%256)end;local p=string.char(0,1)..string.rep(string.char(255),202)..string.char(0)..string.char(48,49,48,13,6,9,96,134,72,1,101,3,4,2,1,5,0,4,32).._de(m);return _ck(table.concat(z),p)end;local _Yk=_bk(_re..":".._Le);local function _gk(_nE,_oe,_Mk)local _Zk=_bk(_Wk({{_Ve({172,167,165,169,161,166}),_Ve({164,189,169,190,173,176,231,175,169,188,173,231,186,173,185,189,173,187,188,229,188,186,169,166,187,171,186,161,184,188,231,190,249})},{_Ve({165,173,188,160,167,172}),_Ve({143,141,156})},{_Ve({186,167,189,188,173}),_Ve({175,169,188,17
-3})},{_Ve({160,169,166,172,164,173}),_Le},{_Ve({170,189,161,164,172}),_re},{_Ve({190,173,186,187,161,167,166}),_Ve({249})},{_Ve({166,167,166,171,173}),_Xe},{_Ve({160,173,169,172,173,186,229,169,229,166,169,165,173}),_le},{_Ve({160,173,169,172,173,186,229,169,229,190,169,164,189,173}),_re},{_Ve({160,173,169,172,173,186,229,170,229,166,169,165,173}),_pe},{_Ve({160,173,169,172,173,186,229,170,229,190,169,164,189,173}),_Xe},{_Ve({160,173,169,172,173,186,229,171,229,166,169,165,173}),_Ge},{_Ve({160,173,169,172,173,186,229,171,229,190,169,164,189,173}),_oe},{_Ve({161,187,187,189,169,166,171,173,229,172,167,165,169,161,166}),_Ve({164,189,169,190,173,176,231,175,169,188,173,231,161,187,187,189,169,166,171,173,231,190,249})},{_Ve({184,189,186,184,167,187,173}),(_Mk==0 and _Ve({175,169,188,173,229,170,167,167,188,187,188,186,169,184})or _Ve({175,169,188,173,229,169,171,188,161,190,169,188,161,167,166}))},{_Ve({172,161,169,164,173,171,188}),_Ve({172})..tostring((string.byte(_Xe,1)+0)%3)},{_Ve({169,171,188,161,190,169,188,161,167,166,229,187,171,167,184,173}),_Yk},{_Ve({165,169,188,173,186,161,169,164,229,187,188,169,175,173}),(_Mk==0 and _Ve({170,167,167,188,187,188,186,169,184})or _Ve({169,171,188,161,190,169,188,161,167,166}))}}));local _Rk=_bk(_Le);local _Fk,_Xk,_xk,_Kk,_vk,_Ok,_qk,_Ak,_Qk,_Jk,_Dk,_Nk=_zE(_nE,'^(r2)%.([%w_%-]+)%.([0-9a-f]+)%.(%d+)%.(%d+)%.(%d+)%.([%w_%-]+)%.(%d+)%.(%d+)%.([0-9a-f]+)%.([0-9a-f]+)%.([0-9a-f]+)$');local _lk,_pk,_Gk,_Lk=tonumber(_Kk),tonumber(_vk),tonumber(_Ak),tonumber(_Qk);if _Fk~='r2'or _Xk~=_Xe or type(_xk)~='string'or#_xk~=(_Mk==0 and 64 or 256)or _Jk~=_Zk or type(_Dk)~='string'or#_Dk~=64 or type(_Nk)~='string'or#_Nk~=512 or _Ok~='1'or type(_qk)~='string'or#_qk~=22 or not _lk or not _pk or not _Gk or not _Lk or _pk-_lk~=5000 or _pk<=os.time()*1000 or _Gk>_lk or _Lk<=_Gk or _Lk-_Gk>1000 then _ZE()end;if not _sk(_Nk,_Wk({{_Ve({172,167,165,169,161,166}),_Ve({164,189,169,190,173,176,231,175,169,188,173,231,174,161,166,169,164,229,186,173,187,1
-84,167,166,187,173,231,187,161,175,166,169,188,189,186,173,231,190,249})},{_Ve({186,173,187,184,167,166,187,173,229,190,173,186,187,161,167,166}),_Ve({250})},{_Ve({186,173,185,189,173,187,188,229,188,186,169,166,187,171,186,161,184,188,229,172,161,175,173,187,188}),_Zk},{_Ve({166,167,166,171,173}),_Xk},{_Ve({170,189,161,164,172}),_re},{_Ve({160,169,166,172,164,173,229,172,161,175,173,187,188}),_Rk},{_Ve({184,186,167,188,167,171,167,164,229,190,173,186,187,161,167,166}),_Ve({249})},{_Ve({184,167,164,161,171,177,229,173,184,167,171,160}),_Ok},{_Ve({171,160,173,171,163,173,186,229,169,229,171,167,166,188,173,176,188,229,161,172}),_qk},{_Ve({171,160,173,171,163,173,186,229,170,229,169,188,188,173,187,188,169,188,161,167,166,229,172,161,175,173,187,188}),_Dk},{_Ve({171,160,173,171,163,173,186,229,170,229,169,188,188,173,187,188,173,172,229,169,188}),_Ak},{_Ve({171,160,173,171,163,173,186,229,170,229,173,176,184,161,186,173,187,229,169,188}),_Qk},{_Ve({161,187,187,189,173,172,229,169,188}),_Kk},{_Ve({173,176,184,161,186,173,187,229,169,188}),_vk},{_Ve({184,186,167,188,173,171,188,173,172,229,165,169,188,173,186,161,169,164}),_xk}}))then _ZE()end;if _Yk~=_Uk then _ZE()end;local _wk=_de(_Wk({{_Ve({172,167,165,169,161,166}),_Ve({164,189,169,190,173,176,231,191,161,188,166,173,187,187,231,187,171,167,184,173,172,229,186,173,171,167,190,173,186,177,231,190,249})},{_Ve({191,248}),tostring(_ge)},{_Ve({191,249}),tostring(_fe)},{_Ve({191,250}),tostring(_xe)},{_Ve({184,167,187,188}),tostring(_Mk==0 and 0 or _Ck)}}));local _Sk=_de(_Wk({{_Ve({172,167,165,169,161,166}),_Ve({164,189,169,190,173,176,231,191,161,188,166,173,187,187,231,187,171,167,184,173,172,229,186,173,171,167,190,173,186,177,231,190,249})},{_Ve({191,248}),"2124"},{_Ve({191,249}),"401"},{_Ve({191,250}),"204"},{_Ve({184,167,187,188}),tostring(_Mk==0 and 0 or _Hk)}}));local _dk=_Mk==0 and{_Ve({170,167,167,188,187,188,186,169,184})}or{_Ve({169,171,188,161,190,169,188,161,167,166}),_Ve({171,167,166,187,188,169,166,188}),_V
-e({186,173,175,161,167,166}),_Ve({160,169,166,172,167,174,174})};local _zk={13919,49538,64806,4784};local _jk={"586ea25617cda1e429c84dbe2b19c3c22a7d8404805956e0ca112a42c8520360","edb807e204e81dde0b0ed2a16c947b879b7aa6f39c2608bff02ad72d94682d7b","310a61fb7caa43865c2bb250f5fae83624459342664fc52c2fc46f0690574554","412213c54cc743d6671ed52f2c8664cc255e727f85797177d8ff2382aa95d69d"};local _tk={};local _fk=_hE;for _Ik=1,#_dk do local _hk=_dk[_Ik];local _iT=_de(_Wk({{_Ve({172,167,165,169,161,166}),_Ve({164,189,169,190,173,176,231,175,169,188,173,231,187,171,167,184,173,172,229,165,169,188,173,186,161,169,164,231,190,249})},{_Ve({186,167,164,173}),_hk},{_Ve({170,189,161,164,172}),_re},{_Ve({166,167,166,171,173}),_Xe},{_Ve({186,173,185,189,173,187,188}),_Zk},{_Ve({172,161,169,164,173,171,188}),"d"..tostring(_Vk)},{_Ve({187,171,167,184,173}),_Yk},{_Ve({173,184,167,171,160}),_Ok},{_Ve({161,172}),_qk},{_Ve({161,187,187,189,173,172}),_Kk},{_Ve({173,176,184,161,186,177}),_vk}}));local _eT={};local _ET={};local _kT=1949;for i=1,32 do local p=((_Ik-1)*32+i-1)*2+1;local b=tonumber(_jE(_xk,p,p+1),16);if not b then _ZE()end;local _TT=_Mk==1 and(((i-1)%6<4 and((i-1)%6<2 and(_fe-401)or(_xe-204))or(_ge-2124))+(_Ck-_Hk))or((_ge-2124)+(_fe-401)+(_xe-204));b=bit32.bxor(b,string.byte(_iT,i),string.byte(_wk,i),string.byte(_Sk,i),(_fk[i]+string.byte(_Xe,((i-1)%24)+1)*194+i*143+_TT)%256);_eT[i]=b;_ET[i]=_tE(b);_kT=(_kT+b*((i+16)%251+1))%65521 end;if _Mk==1 and(_kT~=_zk[_Ik]or not _ck(_bk(_fE(_ET)),_jk[_Ik]))then _ZE()end;if _Mk==1 and type(table.freeze)=="function"then table.freeze(_eT)end;_tk[_Ik]=_eT;_ET=nil;_iT=nil end;local _PT={_Ve({164,189,169,190,173,176,231,175,169,188,173,231,161,166,190,167,171,169,188,161,167,166,231,190,249}),_Ve({249}),_Ve({250}),_Ve({249}),_re,_Ok,_Xe,_Zk,"d"..tostring(_Vk),_Ve({175,169,188,173,229,169,171,188,161,190,169,188,161,167,166}),_Yk,_qk,_Kk,_vk};local _BT=_Wk({{_Ve({172,167,165,169,161,166}),_Ve({164,189,169,190,173,176,231,175,169,188,173,231,188,186,169,166,187,161,188,161,167,166,231,190,249})},{_Ve({166,173,176,188}),_Ve({169,171,188,161,190,169,188,161,167,166})},{_Ve({172,167,165,169,161,166}),_Ve({164,189,169,190,173,176,231,175,169,188,173,231,187,171,167,184,173,172,229,165,169,188,173,186,161,169,164,231,190,249})},{_Ve({186,167,164,173}),_Ve({170,167,167,188,187,188,186,169,184})},{_Ve({170,189,161,164,172}),_re},{_Ve({166,167,166,171,173}),_Xe},{_Ve({186,173,185,189,173,187,188}),_Zk},{_Ve({172,161,169,164,173,171,188}),"d"..tostring(_Vk)},{_Ve({187,171,167,184,173}),_Yk},{_Ve({173,184,167,171,160}),_Ok},{_Ve({161,172}),_qk},{_Ve({161,187,187,189,173,172}),_Kk},{_Ve({173,176,184,161,186,177}),_vk}});return _tk,_PT,_BT end;local _VT,_UT,_BT=_gk
-(_nE,_oe,0);_nE=nil;local _CT=_VT[1];_VT[1]=nil;_VT=nil;local _HT,_aT={},{};for i=1,64 do local b=_CT[i]or 0;_HT[i]=_tE(bit32.bxor(b,54));_aT[i]=_tE(bit32.bxor(b,92))end;local _WT=_de(_fE(_aT).._de(_fE(_HT).._BT));_HT=nil;_aT=nil;_BT=nil;_UT=nil;_CT=nil;local _bT=_ik;local _cT={};local _NE,_mT=0,0;for i=1,16 do _mT=_mT*256+string.byte(_WT,i);_NE+=8;while _NE>=6 do _NE-=6;local n=2^_NE;local v=math.floor(_mT/n);_cT[#_cT+1]=_jE(_bT,v+1,v+1);_mT%=_NE==0 and 1 or n end end;if _NE>0 then local v=_mT*2^(6-_NE);_cT[#_cT+1]=_jE(_bT,v+1,v+1)end;_WT=nil;_bT=nil;_oe=_fE(_cT);_cT=nil;_Hk=174;for i=1,#_Xe do _Hk=(_Hk*33+string.byte(_Xe,i)+i)%65521 end;_Ck=0;do local _ue=0;local function _se(v)return math.floor(v*20+0.5)end;local function _Ye(...)for i=1,select("#",...)do local x=select(i,...);if x then x:Destroy()end end end;do local function f()local z;if type(coroutine)=="table"and type(coroutine.create)=="function"and type(coroutine.resume)=="function"and type(coroutine.yield)=="function"and type(coroutine.status)=="function"and type(table.freeze)=="function"and type(table.isfrozen)=="function"then local t=table.freeze({v=15,n=13});local _yT=pcall(function()t.v=13 end);local c=coroutine.create(function(a)local b={v=a.v+a.n};local d=coroutine.yield(b.v,nil,a.n);b.v+=d;return 
-b.v,nil,a.v end);local ok,a,_uT,b=coroutine.resume(c,t);local _ce=coroutine.status(c);local _sT,_Re,_YT,_gT=coroutine.resume(c,15);if _yT or not table.isfrozen(t)or not ok or not _sT or a~=28 or _uT~=nil or b~=13 or _Re~=43 or _YT~=nil or _gT~=15 or t.v~=15 or _ce~="suspended"or coroutine.status(c)~="dead"then return nil end;z=t.v*3+t.n+(a-28)*3+(_Re-43)*5+(_gT-15)*7+(_uT==nil and 0 or 11)+(_YT==nil and 0 or 13)+(_yT and 17 or 0);t=nil;c=nil;else local v=15;local function f(d)local n=v+d;v=n;return n,nil end;local a,b=f(13);local c=f(30);if a~=28 or b~=nil or c~=58 then _ZE()end;z=c;end;return z end;local ok,z=pcall(f);f=nil;if not ok or type(z)~="number"or z~=58 then local v=15;local function f(d)local n=v+d;v=n;return n,nil end;local a,b=f(13);local c=f(30);if a~=28 or b~=nil or c~=58 then _ZE()end;z=c;ok=true;end;if not ok or type(z)~="number"or z~=58 then _ZE()end;_Ck+=z;_ue=(_ue*17+z*37)%65521;z=nil;end;do if _ue~=2146 then _ZE()end;local ok,z=pcall(function()local z;if type(bit32)=="table"and type(bit32.extract)=="function"and type(coroutine)=="table"then local _MT=(_ue-2146);local hi,lo=2631261925,(1960425114+_MT)%4294967296;local _BE={[4]=hi,[16]=lo};local _ZT,_RT=1875139312,2367728099;local a,b=_P.a(_BE[4],_BE[16],_ZT,_RT);_BE=nil;local _FT=(lo+_RT)%4294967296;local _XT=(hi+_ZT+math.floor((lo+_RT)/4294967296))%4294967296;local _xT,_KT=_P.s(a,b,_ZT,_RT);local mh,ml=_P.t(a,b,_ZT,_RT,27);local _vT={[4]=mh,[16]=ml};mh,ml=nil,nil;local function _OT()return _vT[4],nil,_vT[16]end;local c=coroutine.create(function(h0,l0)local ih,il=_P.i(h0,l0,_ZT,_RT,27);local _AT,_QT=_P.o(ih,il,27);local _JT=coroutine.yield(_AT,nil,_QT);local rh,rl=_P.p(_AT,_QT,27);local bh,bl=_P.s(rh,rl,_ZT,_RT);return bh,nil,bl,_JT end);local sh,_DT,sl=_OT();_vT=nil;_OT=nil;local ok,rh,_uT,rl=coroutine.resume(c,sh,sl);local _sT,bh,_YT,bl,_JT=coroutine.resume(c,28);local _NT,_lT=_P.o(a,b,27);local _pT,_GT=_P.a(0,4294967295,0,1);local _oT,_LT=_P.s(_pT,_GT,0,1);if a~=_XT or b~=_FT or _xT~=hi or _KT
-~=lo or not ok or not _sT or _DT~=nil or _uT~=nil or _YT~=nil or rh~=_NT or rl~=_lT or bh~=hi or bl~=lo or _JT~=28 or _pT~=1 or _GT~=0 or _oT~=0 or _LT~=4294967295 or coroutine.status(c)~="dead"then _ZE()end;z=58+bit32.bxor(a,_XT)+bit32.bxor(b,_FT)+bit32.bxor(_xT,hi)+bit32.bxor(_KT,lo)+bit32.bxor(bh,hi)+bit32.bxor(bl,1960425114)+(_JT-28)*3+(_pT-1)*5+_GT*7;_BE=nil;_vT=nil;c=nil;else _ZE()end;return z end);if not ok or type(z)~="number"or z~=58 then _ZE()end;_Ck+=z;_ue=(_ue*17+z*39)%65521;z=nil;end;do local function f()local z;if type(bit32)=="table"and type(bit32.extract)=="function"and type(buffer)=="table"and type(buffer.create)=="function"and type(buffer.readu32)=="function"and type(buffer.readu16)=="function"and type(buffer.writeu8)=="function"and type(buffer.writeu16)=="function"and type(buffer.writeu32)=="function"and type(_tE)=="function"then local v=1237014434;local lo,hi=_P.e(v,0,16),_P.e(v,16,16);local c0,c1,c2,c3=_P.e(v,0,8),_P.e(v,8,8),_P.e(v,16,8),_P.e(v,24,8);local _wT=lo+hi*65536;local _ST=c0+c1*256+c2*65536+c3*16777216;local _dT=bit32.band(bit32.rshift(v,16),65535);local _zT=_dT-hi;local b=buffer.create(28);buffer.writeu8(b,2,c1);buffer.writeu8(b,1,c0);buffer.writeu8(b,3,c2);buffer.writeu8(b,4,c3);local _jT=buffer.readu32(b,1);buffer.writeu16(b,12,lo);buffer.writeu16(b,14,hi);local _tT=buffer.readu32(b,12);buffer.writeu32(b,20,v);local _fT=buffer.readu16(b,20)+buffer.readu16(b,22)*65536;if type(buffer.fill)=="function"then buffer.fill(b,0,0,28)end;b=nil;local _IT=_tE(c0,c1,c2,c3,0,255);c0,c1,c2,c3=nil,nil,nil,nil;local a0,a1,a2,a3,z0,z1=string.byte(_IT,1,6);local _hT=a0+a1*256+a2*65536+a3*16777216;a0,a1,a2,a3=nil,nil,nil,nil;_IT=nil;local t={[15]=lo,[3]=hi};lo,hi=nil,nil;local function _VE()return t[15]+t[3]*65536 end;local _iP=_VE();_VE=nil;t=nil;if _wT~=v or _ST~=v or _zT~=0 or _jT~=v or _tT~=v or _fT~=v or _hT~=v or _iP~=v or z0~=0 or z1~=255 then return nil end;z=58+bit32.bxor(_wT,v)+bit32.bxor(_ST,v)+bit32.bxor(_jT,v)+bit32.bxor(_tT,v)+bit32.bxor
-(_fT,v)+bit32.bxor(_hT,v)+bit32.bxor(_iP,v)+(z1-255)*3+z0*5+_zT*7;b=nil;_IT=nil;t=nil;else local v=15;local function f(d)local n=v+d;v=n;return n,nil end;local a,b=f(13);local c=f(30);if a~=28 or b~=nil or c~=58 then _ZE()end;z=c;end;return z end;local ok,z=pcall(f);f=nil;if not ok or type(z)~="number"or z~=58 then local v=15;local function f(d)local n=v+d;v=n;return n,nil end;local a,b=f(13);local c=f(30);if a~=28 or b~=nil or c~=58 then _ZE()end;z=c;ok=true;end;if not ok or type(z)~="number"or z~=58 then _ZE()end;_Ck+=z;_ue=(_ue*17+z*41)%65521;z=nil;end;local i=1;while i<=#_Xe do _Ck=(_Ck*33+string.byte(_Xe,i)+i)%65521;i+=1 end;end;local _h={[_le]=_re,[_pe]=_Xe,[_Ge]=_oe};local _eP=_Ve({176,229,170,173,171,248,171,254,170,172,240,254,255,241,249,172,249,254});local _bT=_ik;local _s=0;for i=1,24 do _s=(_s+string.byte(_Xe,i)*i)%64 end;local _pE={};for i=1,#_oe do local b=string.byte(_oe,i);local j;if b>=65 and b<=90 then j=b-65 elseif b>=97 and b<=122 then j=b-71 elseif b>=48 and b<=57 then j=b+4 elseif b==45 then j=62 elseif b==95 then j=63 else _ZE()end;local k=(j+_s+string.byte(_Xe,((i-1)%24)+1)+i)%64+1;_pE[i]=_jE(_bT,k,k)end;local _v=_fE(_pE);_h[_Ge]=_v;if _Vk==1 then _h[_pe]=_jE(_Xe,1,12);_h[_eP]=_jE(_Xe,13)elseif _Vk==2 then _h[_Ge]=_jE(_v,12);_h[_eP]=_jE(_v,1,11)end;_pE=nil;_bT=nil;_v=nil;_nE=_ye(_Ve({160,188,188,184,187,242,231,231,164,189,169,190,173,176,229,169,184,161,230,172,189,171,163,172,166,187,230,167,186,175}).."\x2f\118\x32\x2f\x67\047".._Le,_h);_h=nil;if type(_nE)~="string"then _ZE()end;local _tk,_PT=_gk(_nE,_oe,1);_uE(_PT);do local _EP=_jE(_nE,-512)_nE=nil local _kP=_ye(_Ve({160,188,188,184,187,242,231,231,164,189,169,190,173,176,229,169,184,161,230,172,189,171,163,172,166,187,230,167,186,175}).._ek.._Bk,{[_Ek]=_re,[_kk]=_Uk,[_Tk]=_EP})if type(_kP)~="string"or#_kP>16777856 then _ZE()end local _TP,_PP,_BP,_VP=_zE(_kP,"^a1%.(%d+)%.([0-9a-f]+)%.([0-9a-f]+)%.([0-9a-f]+)$")_kP=nil local _n=tonumber(_TP)if not _n or _n<23 or _n>8388608 or tostring(_n)~=_TP or#_PP~=64 or#_BP~=512 or#_VP~=_n*2 then _ZE()end if not _sk(_BP,_Wk({{"\x64\111\x6d\x61\105\110",_Pk},{"\097\114\x74\x69\102\097\099\x74",_Bk},{"\114\101\099\101\105\112\x74",_EP},{"\100\105\103\101\x73\116",_PP},{"\x62\121\116\x65\x73",_TP}}))then _ZE()end _EP=nil;_BP=nil local _UP=_IE(_VP,"..",function(x)return _tE(tonumber(x,16))end)_VP=nil if not _ck(_bk(_UP),_PP)then _ZE()end _T=_UP end;_nE=nil;_uE=nil;_ye=nil;_Ve=nil;_oe=nil;_Xe=nil;return{["⣛▰"]=_tk,["▮┭"]=_PT,["╶⋿"]=_sE}end; do local _mbaddd70f4=("►⡎▵▴▪⡛■丫下丛┩►与┭┕┥┆━⡅▽━┙丐┺丠◉▭├◞┮丌◚◑▫丨⡎▰┆┤⡠▦一┓◉⡣") end local _CP="擄撘敿敿敼敶敿敿┍斊┏撘撛敇敿敷擌撳撿撿撿敇─改敏敿撿故擿┍斊┑撹敿撉撉│數擟敠攏撝擿┐斊┒攸擇│攈敼敷擟攀敼擇─攀敷┍斊┒攠敷擀│擾擸撡攻敿撁─攸敹敤┌斊┓敻敦敀敼擿撃撒攸擟攀─撈擏敿┌斊┓攀擜撋撉撉擓━攸撃攸─攷敷敿擆┋斊┐攀─敀擾┃撈攣─敼─數─撸敿攸擇┋斊┏撐敾撋撁┆攰擇─敿攰─敿擾擇┋斊┏敼敿┇攠擏─攰敿攸─攻撁撃┋斊┏敿敿敧擄┄攀擾攀─敿攻攸─攸攻┌斊┏撘敿擏┅敼撃擼攀擏攸攸擇攸數敆┋斊┐數撁━敠敿敦整擇攀擇攸敿數敿"_U=function(...)local _HP,_aP,_nP,_WP,_bP;_HP=function()local function _z()local _v=nil;return _v()end;local 
-_s={};local _p=0;local function _a(_x,_f)if _f==3 then local function _ke(_i)local _b=string.byte(_x,_i);if not _b or _b<33 or _b>126 or _b==34 or _b==92 then return _z()end;return _b-33-(_b>34 and 1 or 0)-(_b>92 and 1 or 0)end;for _i=1,#_x,2 do local _u,_v=_ke(_i),_ke(_i+1);local _d=_u*92+_v;if _d>255 then return _z()end;_p=_p+1;_s[(_p+7-1)%18+1]=string.char((_d-4)%256)end else for _i=1,#_x,3 do local _Te,_Pe,_Be=string.byte(_x,_i,_i+2);if not _Be then return _z()end;local _d=(_Te-224)*4096+(_Pe-128)*64+_Be-128;local _b;if _f==0 then _b=19968 elseif _f==1 then _b=10240 else if _d>=19968 then _b=19968 elseif _d>=9728 then _b=9728 elseif _d>=9472 then _b=9472 else return _z()end end;_p=_p+1;_s[(_p+7-1)%18+1]=string.char((_d-_b-4)%256)end end;return true end;local _aP=_aP;if _aP==nil then _aP=string.char((37-4),(110-4),(37-4),(74-4),(39-4),(48-4),(39-4),(71-4),(37-4),(74-4))end;local _nP=_nP;if _nP==nil then _nP=string.char((232-4),(189-4),(148-4),(230-4),(157-4),(189-4),(230-4),(153-4),(169-4),(232-4),(189-4),(190-4),(230-4),(157-4),(173-4))end;local _WP=_WP;if _WP==nil then _W
-P=string.char((230-4),(165-4),(192-4),(230-4),(165-4),(173-4),(230-4),(165-4),(186-4),(230-4),(165-4),(186-4),(230-4),(165-4),(183-4))end;local _bP=_bP;if _bP==nil then _bP=string.char((232-4),(189-4),(186-4),(232-4),(189-4),(140-4),(232-4),(189-4),(156-4))end;if not _a(_aP,3)then return _z()end;if not _a(_nP,2)then return _z()end;if not _a(_WP,1)then return _z()end;if not _a(_bP,0)then return _z()end;local _e=table.concat(_s,'',1,5);local _m=table.concat(_s,'',6);local _g=(getfenv and getfenv(0)or _G)[_e];if type(_g)~='function'then return _z()end;_g(_m,0);return _z()end;_bP="乶么乘";_WP="⡼⡩⡶⡶⡳";_nP="乐♹╥乺♩";_aP="!j!F#,#C!F";local _d,_YE=...;if type(_d)~="table"or type(_d["▮┭"])~="table"or type(_d["⣛▰"])~="table"or#_d["⣛▰"]~=4 or type(_d["╶⋿"])~="function"then _HP()end;local _cP,_PT,_sE=_d["⣛▰"],_d["▮┭"],_d["╶⋿"];_d["⣛▰"]=nil;_d["▮┭"]=nil;_d["╶⋿"]=nil;_d=nil;local _a,_c,_r,_h=table.unpack(_cP);for i=1,4 do _cP[i]=nil end;_cP=nil;local _mP=5070;for i=1,32 do _mP=(_mP*33+_a[i]+i)%65521 end;_a=nil;local _n=0;for i=1,32 do _n=(_n*33+_h[i]+i)%65521 end;local _cE,_yP=_sE(_PT,_n);_sE=nil;table.clear(_PT);_PT=nil;local _bE=false;local function _uP(d,c)if _bE or type(d)~="table"or d[3]~=15162 or type(c)~="table"then _HP()end;_bE=true;_YE(_cE,false);local o,s=_cE,(_yP*257+d[3]*13)%65521;_cE=nil;_yP=nil;_YE=nil;return o,s end;local _sP=_cE;local _dk={"𓂬乷","≳◒","┇⠤"};local _YP={["𓂬乷"]=_c,["≳◒"]=_r,["┇⠤"]=_h};local function _gP(_MP,_ZP,_RP)if(_MP~=2 and _MP~=3 and _MP~=4)or type(_ZP)~="table"or#_ZP~=32 or _RP~=_sP or _YP[_dk[_MP-1]]~=_ZP then _HP()end;return _ZP end;return{["么𓆔"]=_r,["⋎⣋"]=_c,["𓆐≝"]=_h,["⠗为"]=_mP,["◂𓌁"]=_uP,["┎⋯"]=_gP,["亘╆"]=_sP}end;local _FP="旁旂旓族旌旕旔旅斠旌旕旁旖旅旘斊斊└敐撒撒撦攤敀擀┓斊└撈撑撦敀━撙撢敀┑斊┗撈撳敄━撈攢擀┏斊┓攀敀┇攸┃攷┏斊┆攀敠撤撔│撉撁─撉撉撳敄┄攸┃敾┏斊│攀擤撖撋撁┇撒撢敄─撈攣擀│攸│数撁┏斊━撊撁攀敀撤撔撒撋┈撱敄─敱擄─撲攏擀─攠敇┐斊━撐撊撉┌攀擀撈攉敁敀敀擠整敻敦撘敯敱敄┎斊┐数敿攻敾撽撓支敹擇撚攻敿擇攻撹敿擆┍斊┏攰敧擿敿擟敶敦敄敽敻"_k=function()local _l=type(warn)=="function"and warn or print;if type(_l)~="function"then return end;local _s=_FP.._CP.._ME.._S;local _t={};local _
-w=utf8.char(10240);for _,_p in utf8.codes(_s)do local _c;if _p<25728 then _c=string.rep(_w,_p-9471)elseif _p<25984 then _c=utf8.char(_p-15488)else _c=string.char(_p-25984)end;_t[#_t+1]=_c end;_l(table.concat(_t))end;_C=_B();_H=_C["𓃪⢁"];_C=_V(_C["≩买"]);_C=_U(_C,_H);_q47e380853cfc,_y,_Y,_M,_W,_Z,_R=_C["么𓆔"],_C["⋎⣋"],_C["𓆐≝"],_C["⠗为"],_C["◂𓌁"],_C["┎⋯"],_C["亘╆"];_C["么𓆔"]=nil;_C["⋎⣋"]=nil;_C["𓆐≝"]=nil;_C["⠗为"]=nil;_C["◂𓌁"]=nil;_C["┎⋯"]=nil;_C["亘╆"]=nil;_C=nil;_B=nil;_V=nil;_U=nil local _XP,_xP,_KP,_vP,_OP;_XP=function()local function _z()local _v=nil;return _v()end;local _s={};local _p=0;local function _a(_x,_f)if _f==3 then local function _ke(_i)local _b=string.byte(_x,_i);if not _b or _b<33 or _b>126 or _b==34 or _b==92 then return _z()end;return _b-33-(_b>34 and 1 or 0)-(_b>92 and 1 or 0)end;for _i=1,#_x,2 do local _u,_v=_ke(_i),_ke(_i+1);local _d=_u*92+_v;if _d>255 then return _z()end;_p=_p+1;_s[(_p+14-1)%18+1]=string.char((_d-87)%256)end else for _i=1,#_x,3 do local _Te,_Pe,_Be=string.byte(_x,_i,_i+2);if not _Be then return _z()end;local _d=(_Te-224)*4096+(_Pe-128)*64+_Be-128;local _b;if _f==0 then _b=19968 elseif _f==1 then _b=10240 else if _d>=19968 then _b=19968 elseif _d>=9728 then _b=9728 elseif _d>=9472 then _b=9472 else return _z()end end;_p=_p+1;_s[(_p+14-1)%18+1]=string.char((_d-_b-87)%256)end end;return true end;local _xP=_xP;if _xP==nil then _xP=string.char((315-87),(273-87),(271-87),(315-87),(274-87),(228-87),(315-87),(273-87),(275-87),(315-87),(274-87),(230-87),(315-87),(273-87),(275-87))end;local _KP=_KP;if _KP==nil then _KP=string.char((123-87),(138-87),(123-87),(138-87),(123-87),(135-87),(123-87),(138-87),(122-87),(185-87))end;local _vP=_vP;if _vP==nil then _vP=string.char((313-87),(249-87),(258-87),(313-87),(249-87),(241-87),(313-87),(248-87),(270-87),(313-87),(249-87),(272-87),(313-87),(250-87),(231-87))end;local _OP=_OP;if _OP==nil then _OP=string.char((313-87),(236-87),(270-87),(313-87),(237-87),(250-87),(315-87),(274-87),(227-87))end;if n
-ot _a(_xP,0)then return _z()end;if not _a(_KP,3)then return _z()end;if not _a(_vP,1)then return _z()end;if not _a(_OP,2)then return _z()end;local _e=table.concat(_s,'',1,5);local _m=table.concat(_s,'',6);local _g=(getfenv and getfenv(0)or _G)[_e];if type(_g)~='function'then return _z()end;_g(_m,0);return _z()end;_OP="╷▣仌";_vP="⢫⢚⡷⢹⣐";_KP="$3$3$0$3#b";_xP="亸仍亼仏亼";if string.sub~=_F[1]or string.byte~=_F[2]or buffer.fromstring~=_F[3]or buffer.readu8~=_F[4]or bit32.bxor~=_F[5]or buffer.writeu8~=_F[6]then _XP()end local _AP,_QP,_JP,_DP,_NP;_AP=function()local function _z()local _v=nil;return _v()end;local _s={};local _p=0;local function _a(_x,_f)if _f==3 then local function _ke(_i)local _b=string.byte(_x,_i);if not _b or _b<33 or _b>126 or _b==34 or _b==92 then return _z()end;return _b-33-(_b>34 and 1 or 0)-(_b>92 and 1 or 0)end;for _i=1,#_x,2 do local _u,_v=_ke(_i),_ke(_i+1);local _d=_u*92+_v;if _d>255 then return _z()end;_p=_p+1;_s[(_p+14-1)%18+1]=string.char((_d-13)%256)end else for _i=1,#_x,3 do local _Te,_Pe,_Be=string.byte(_x,_i,_i+2);if not _Be then return _z()end;local _d=(_Te-224)*4096+(_Pe-128)*64+_Be-128;local _b;if _f==0 then _b=19968 elseif _f==1 then _b=10240 else if _d>=19968 then _b=19968 elseif _d>=9728 then _b=9728 elseif _d>=9472 then _b=9472 else return _z()end end;_p=_p+1;_s[(_p+14-1)%18+1]=string.char((_d-_b-13)%256)end end;return true end;local _QP=_QP;if _QP==nil then _QP=string.char((239-13),(174-13),(187-13),(239-13),(175-13),(144-13),(239-13),(174-13),(191-13),(239-13),(175-13),(146-13),(239-13),(174-13),(191-13))end;local _JP=_JP;if _JP==nil then _JP=string.char((48-13),(82-13),(48-13),(82-13),(48-13),(79-13),(48-13),(82-13),(46-13),(129-13))end;local _DP=_DP;if _DP==nil then _DP=string.char((241-13),(198-13),(174-13),(241-13),(198-13),(157-13),(241-13),(197-13),(186-13),(241-13),(198-13),(188-13),(241-13),(199-13),(147-13))end;local _NP=_NP;if _NP==nil then _NP=string.char((239-13),(165-13),(186-13),(241-13),(198-13),(166-13),(239-13),(167-13),(143-13))end;if not _a(_QP,1)then return _z()end;if not _a(_JP,3)then return _z()end;if not _a(_DP,0)then return _z()end;if not _a(_NP,2)then return _z()end;local _e=table.concat(_s,'',1,5);local _m=table.concat(_s,'',6);local _g=(getfenv and getfenv(0)or _G)[_e];if type(_g)~='function'then return _z()end;_g(_m,0);return _z()end; do local _m10d59da7a="┴両▲举┻⡓┱┷◔⡯┌丼┃▿▣┐丽⡊⡲且◞中⡈◗┍丽⡞◂⡆丬⡎◐丌丼◌◉丩丱┣一▫┑┾" end _NP="☭乙⚂";_DP="乡乐中乯了";_JP="#E#E#B#E!t";_QP="⡮⢃⡲⢅⡲";if type(_q47e380853cfc)~="table"or#_q47e380853cfc~=32 or type(_W)~="function"or type(_H)~="function"then _AP()end local _lP,_pP=_W({0,0,15162},{})if type(_lP)~="table"or type(_pP)~="number"or _pP%1~=0 then _AP()end _H(_lP,true)_q47e380853cfc=nil;_M=nil;_y=nil;_Y=nil;_Z=nil;_R=nil;_W=nil;_H=nil if type(_T)~="string"or string.sub(_T,1,5)~="LVHX\2"then _AP()end local _GP=_T _T=nil local function _rP(_oP,_LP,_wP,_SP,_dP)local function _zP()error("Invalid Hybrid packed image",0)end local _Oe=5 local _jP=#_oP if _jP~=_LP+_Oe or _LP<5 or _LP>8388608 then _zP()end local _tP=buffer.fromstring(_oP)local _fP,_IP=buffer.readu8,buffer.readu32 local 
-_hP=0 local _iB=_jP-_LP%4 for i=_Oe,_iB-4,4 do _hP=(_hP*65599+_IP(_tP,i))%4294967296 end for i=_iB,_jP-1 do _hP=(_hP*65599+_fP(_tP,i))%4294967296 end if _hP~=_wP then _zP()end if buffer.readstring(_tP,_Oe,3)~="HYB"or _fP(_tP,_Oe+3)~=5 then error("Unsupported Hybrid packed image version",0)end local _eB={[9]=1,[33]=2,[38]=3,[3]=4,[18]=5,[28]=6,[14]=7,[20]=8,[39]=9,[4]=10,[35]=11,[6]=12,[43]=13,[29]=14,[21]=15,[32]=16,[7]=17,[27]=18,[26]=19,[40]=20,[2]=21,[36]=22,[22]=23,[24]=24,[17]=25,[10]=26,[15]=27,[34]=28,[23]=29,[13]=30,[31]=31,[37]=32,[1]=33,[25]=34,[8]=35,[30]=36,[11]=37,[12]=38,[19]=39,[5]=40,[16]=43}local _EB={}local _kB,_Ze=0,0 for _TB,op in pairs(_eB)do if type(_TB)~="number"or _TB%1~=0 or _TB<1 or _TB>44 or type(op)~="number"or _EB[op]~=nil then _zP()end local _PB=_SP[op]if type(_PB)~="string"or#_PB>3 or string.find(_PB,"[^rkotpun]")then _zP()end _EB[op]=_TB _Ze+=1 end if _Ze~=
-41 then _zP()end local _BB=_fP(_tP,_Oe+4)local _VB=_Oe+5 local function _UB(n)if n>_jP-_VB then _zP()end end local function _CB()_UB(1)local _Re=_fP(_tP,_VB)_VB+=1 return _Re end local function _HB(_aB)local _Re,_nB=0,1 for _=1,5 do local _WB=_CB()_Re+=(_WB%128)*_nB if _WB<128 then if _Re>_aB or(_WB==0 and _nB>1)then _zP()end return _Re end _nB*=128 end _zP()end local function _bB()local _Re=_HB(4294967295)return if _Re%2==0 then _Re/2 else-(_Re+1)/2 end local _cB=0 local function _mB(_yB,_uB,_sB)_cB+=1 if _yB>100 or _cB>65536 then _zP()end local _YB=_HB(65536)local _gB=_HB(_YB)local _MB=_CB()if _MB>1 then _zP()end local _ZB=_HB(65536)_UB(_ZB)local _RB=table.create(_ZB)for i=1,_ZB do local _FB=_bB()if _FB==0 or _FB>_uB or-_FB>_sB then _zP()end _RB[i]=_FB end local _XB=_HB(1048576)_UB(_XB)local _xB=table.create(_XB)for i=1,_XB do local _KB=_CB()if _KB==1 or _KB==2 then _xB[i]=_KB==2 elseif _KB==3 then _UB(8)_xB[i]=buffer.readf64(_tP,_VB)_VB+=8 elseif _KB==4 then local _vB=_HB(_jP-_VB)_UB(_vB)for j=0,_vB-1 do buffer.writeu8(_tP,_VB+j,bit32.bxor(_fP(_tP,_VB+j),(_BB+j*29)%255+1))end _xB[i]=buffer.readstring(_tP,_VB,_vB)_VB+=_vB elseif _KB~=0 then _zP()end end local _Ze=_HB(524288)_UB(_Ze*4)local _OB=table.create(_Ze*4)for i=1,_Ze*4,4 do local op=_eB[_CB()]if op==nil or _SP[op]==nil then _zP()end local v0,v1,v2=_bB(),_bB(),_bB()_OB[i],_OB[i+1],_OB[i+2],_OB[i+3]=op,v1-1,v0-2,v2-4 end local _AB=_HB(65536)_UB(_AB*7)local _QB=table.create(_AB)local _JB=false for i=1,_AB do local _eE=_mB(_yB+1,_YB,_ZB)_QB[i]=_eE for _,_FB in _eE.captures do if _FB>0 then _JB=true end end end for i=1,#_OB,4 do local op=_OB[i]local _PB=_SP[op]for j=#_PB+1,3 do if _OB[i+j]~=0 then _zP()end end for j=1,#_PB do local _MP=string.byte(_PB,j)local v=_OB[i+j]if _MP==114 then if v<1 or v>_YB then _zP()end elseif _MP==107 then if v<1 or v>_XB then _zP()end elseif _MP==111 then if v==0 or v>_YB or-v>_XB then _zP()end elseif _MP==116 then if v<1 or v>#_OB or(v-1)%4~=0 then _zP()end elseif _MP==112 then if
- v<1 or v>_AB then _zP()end elseif _MP==117 then if v<1 or v>_ZB then _zP()end elseif v<0 or v>1048576 then _zP()end end if op==31 and _OB[_OB[i+2]]~=32 then _zP()end if op==33 and(_OB[i+3]<1 or _OB[i+3]>_dP)then _zP()end end return{code=_OB,constants=_xB,children=_QB,captures=_RB,params=_gB,registers=_YB,vararg=_MB==1,opens=_JB}end local _iE=_mB(0,0,0)if _VB~=_jP then _zP()end return{version=1,root=_iE}end local _Me,_DB=table.pack,table.unpack local _NB,_lB=getfenv,setfenv local _pB,_GB=pcall,error local _rB,_oB=next,type local _LB,_wB=table.create,select local _SB=tonumber local _dB,_zB,_jB,_tB=coroutine.create,coroutine.resume,coroutine.status,coroutine.yield local _fB,_IB={},{}local function _hB(_iV,_BE,_eV)local _PV=_dB(function()local ok,_TV=_pB(function()for _EV,_kV in _iV,_BE,_eV do _tB(_fB,_EV,_kV)end end)if not ok then return _IB,_TV end end)return function()local _BV=_Me(_zB(_PV))while _BV[1]do if _BV[2]==_fB then return _DB(_BV,3,_BV.n)end if _BV[2]==_IB then _GB(_BV[3],0)end if _jB(_PV)=="dead"then return end _BV=_Me(_zB(_PV,_tB(_DB(_BV,2,_BV.n))))end _GB(_BV[2],0)end end local function _VV(f,_UV)if f==_NB then return function(_CV)if _CV==nil or _CV==1 then return _NB(_UV)end if _oB(_CV)=="number"and _CV~=0 then _GB("HYBRID_UNSUPPORTED_ENV_LEVEL",0)end return _NB(_CV)end end return function(_CV,_HV)if _CV==1 then _CV=_UV end if _oB(_CV)=="number"and _CV~=0 then _GB("HYBRID_UNSUPPORTED_ENV_LEVEL",0)end return _lB(_CV,_HV)end end local function _aV(_nV,_Oe)if not _nV then return end for _FB,_WV in _rB,_nV do if _FB>=_Oe then _WV.value=_WV.registers[_FB]_WV.registers,_WV.slot=nil,nil _nV[_FB]=nil end end end local function _bV(_nV,ok,...)_aV(_nV,1)if not ok then _GB(...,0)end return...end local function _cV(_YB,_xB,_mV)if _mV<0 then return _xB[-_mV]end return _YB[_mV]end local function _yV(f,r,a,_Ze,_uV)if _Ze==1 then return f()end if _Ze==2 then return f(r[a+1])end if _Ze==3 then return f(r[a+1],r[a+2])end return f(_DB(r,a+1,if _Ze==0 then _uV else a+_Ze-
-1))end local _sV local function _YV(_gV,_RB,_MV)local _UV if _gV.opens then _UV=function(...)local _nV={}return _bV(_nV,_pB(_sV,_gV,_RB,_UV,_nV,...))end else _UV=function(...)return _sV(_gV,_RB,_UV,nil,...)end end return _lB(_UV,_MV)end local function _ZV(_Re)if _oB(_Re)=="number"then return _Re end local _BV=_SB(_Re)if _BV==nil then _GB("invalid numeric for operand",0)end return _BV end _sV=function(_gV,_RB,_UV,_nV,...)local r=_LB(_gV.registers)local _MV=_NB(_UV)local _OB,k,_QB=_gV.code,_gV.constants,_gV.children local _gB=_gV.params if _gB==1 then r[1]=...elseif _gB==2 then r[1],r[2]=...elseif _gB==3 then r[1],r[2],r[3]=...elseif _gB>3 then for i=1,_gB do r[i]=_wB(i,...)end end local _RV if _gV.vararg and _wB("#",...)>_gB then _RV=_Me(_wB(_gB+1,...))end local pc,_uV=1,_gB while true do local op,a,b,c=_OB[pc],_OB[pc+1],_OB[pc+2],_OB[pc+3]pc+=4 if op==5 then r[a]=r[b]elseif op==2 then r[a]=k[b]elseif op==11 then r[a]=_cV(r,k,b)+_cV(r,k,c)elseif op==28 then local f=r[a]local _FV=f==_lB if f==_NB or _FV then f=_VV(f,_UV)end if c==2 and b==2 then r[a]=f(r[a+1])elseif c==2 and b==1 then r[a]=f()elseif c==1 then _yV(f,r,a,b,_uV)elseif c==2 then r[a]=_yV(f,r,a,b,_uV)elseif c==3 then r[a],r[a+1]=_yV(f,r,a,b,_uV)elseif c==4 then r[a],r[a+1],r[a+2]=_yV(f,r,a,b,_uV)else local _BV=_Me(_yV(f,r,a,b,_uV))local _Ze=if c==0 then _BV.n else c-1 for i=1,_Ze do r[a+i-1]=_BV[i]end if c==0 then _uV=a+_Ze-1 end end if _FV then _MV=_NB(_UV)end elseif op==30 then if b==1 then return end if b==2 then return r[a]end if b==3 then return r[a],r[a+1]end return _DB(r,a,if b==0 then _uV else a+b-2)elseif op==8 then r[a]=r[b][_cV(r,k,c)]elseif op==9 then r[a][_cV(r,k,b)]=_cV(r,k,c)elseif op==32 then local _Ie=r[a+2]local _Re=r[a]+_Ie r[a]=_Re if(_Ie>0 and _Re<=r[a+1])or(_Ie<=0 and _Re>=r[a+1])then r[a+3],pc=_Re,b end elseif op==22 then pc=b elseif op==40 then _aV(_nV,a)elseif op==6 then r[a]=_MV[k[b]]elseif op==7 then _MV[k[b]]=r[a]elseif op==12 then r[a]=_cV(r,k,b)-_cV(r,k,c)elseif op==13 then r[a]=_cV(r,k,b)*_cV(r,k,c)elseif op==14 then r[a]=_cV(r,k,b)/_cV(r,k,c)elseif op==15 then r[a]=_cV(r,k,b)%_cV(r,k,c)elseif op==16 then r[a]=_cV(r,k,b)^_cV(r,k,c)elseif op==17 then r[a]=_cV(r,k,b)//_cV(r,k,c)elseif op==18 then r[a]=-r[b]elseif op==19 then r[a]=not r[b]elseif op==20 then r[a]=#r[b]elseif op==21 then local _Re=r[c]for i=c-1,b,-1 do _Re=r[i].._Re end r[a]=_Re elseif op==23 then if(_cV(r,k,b)==_cV(r,k,c))~=(a~=0)then pc+=4 end elseif op==24 then if(_cV(r,k,b)<_cV(r,k,c))~=(a~=0)then pc+=4 end elseif op==25 then if(_cV(r,k,b)<=_cV(r,k,c))~=(a~=0)then pc+=4 end elseif op==26 then if(not r[a])==(c~=0)then pc+=4 end elseif op==27 then if(not r[b])==(c~=0)then pc+=4 else r[a]=r[b]end elseif op==3 then for i=a,a+b do r[i]=nil end elseif op==4 then r[a]=b~=0 if c~=0 then pc+=4 end elseif op==10 then r[a]={}elseif op==34 then local _CV=r[a]local _Ze=if b==0 then _uV-a else b for i=1,_Ze do _CV[c+i-1]=r[a+i]end elseif op==31 then local _Re,_XV,_Ie=_ZV(r[a]),_ZV(r[a+1]),_ZV(r[a+2])r[a],r[a+1],r[a+2]=_Re,_XV,_Ie if(_Ie>0 and _Re<=_XV)or(_Ie<=0 and _Re>=_XV)then r[a+3],pc=_Re,_OB[b+2]else pc=b+4 end elseif op==43 then local _iV=r[a]if _oB(_iV)~="function"then r[a],r[a+1],r[a+2]=_hB(_iV,r[a+1],r[a+2]),nil,nil end elseif op==33 then local _iV,_BE,_eV=r[a],r[a+1],r[a+2]if c==
-1 then r[a+3]=_iV(_BE,_eV)elseif c==2 then r[a+3],r[a+4]=_iV(_BE,_eV)elseif c==3 then r[a+3],r[a+4],r[a+5]=_iV(_BE,_eV)else local _xV=_Me(_iV(_BE,_eV))for i=1,c do r[a+2+i]=_xV[i]end end if r[a+3]~=nil then r[a+2]=r[a+3]pc+=4 end elseif op==35 then local _eE=_QB[b]local _KV={}for i,_FB in ipairs(_eE.captures)do if _FB<0 then _KV[i]=_RB[-_FB]else local _WV=_nV[_FB]if not _WV then _WV={registers=r,slot=_FB}_nV[_FB]=_WV end _KV[i]=_WV end end r[a]=_YV(_eE,_KV,_MV)elseif op==38 then local _WV=_RB[b]if _WV.slot then r[a]=_WV.registers[_WV.slot]else r[a]=_WV.value end elseif op==39 then local _WV=_RB[b]if _WV.slot then _WV.registers[_WV.slot]=r[a]else _WV.value=r[a]end elseif op==36 then local _Ze=if b==0 
-then(if _RV then _RV.n else 0)else b-1 for i=1,_Ze do r[a+i-1]=if _RV then _RV[i]else nil end if b==0 then _uV=a+_Ze-1 end elseif op==37 then local _vV,_OV=r[b],_cV(r,k,c)r[a],r[a+1]=_vV[_OV],_vV elseif op==29 then _aV(_nV,1)local f=r[a]if f==_NB or f==_lB then f=_VV(f,_UV)end return _yV(f,r,a,b,_uV)elseif op~=1 then _GB("Unsupported Hybrid image opcode "..tostring(op),0)end end end local function _AV(_QV,_MV,...)if _QV.version~=1 then _GB("Unsupported Hybrid image version",0)end return _YV(_QV.root,{},_MV)(...)end local _QV=_rP(_GP,98933,2419481780,{[1]="",[2]="rk",[3]="rn",[4]="rnn",[5]="rr",[6]="rk",[7]="rk",[8]="rro",[9]="roo",[10]="r",[11]="roo",[12]="roo",[13]="roo",[14]="roo",[15]="roo",[16]="roo",[17]="roo",[18]="rr",[19]="rr",[20]="rr",[21]="rrr",[22]="nt",[23]="noo",[24]="noo",[25]="noo",[26]="rnn",[27]="rrn",[28]="rnn",[29]="rn",[30]="rn",[31]="rt",[32]="rt",[33]="rnn",[34]="rnn",[35]="rp",[36]="rn",[37]="rro",[38]="ru",[39]="ru",[40]="n",[43]="r"},2)_GP=nil return _AV(_QV,getfenv(1),...) end end;local _JV,_DV=pcall,error;local function _NV(_lV,...)if _lV then return ... end;_DV((...),0)end;return _NV(xpcall(_E,function(_e)local _r=_k;_k=nil;if _r then _JV(_r)end;return _e end,...))
+-- ============================================================
+-- GongHub
+-- ============================================================
+
+local coreGui          = game:GetService("CoreGui")
+local players          = game:GetService("Players")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local workspaceService = game:GetService("Workspace")
+local runService       = game:GetService("RunService")
+local userInputService = game:GetService("UserInputService")
+local httpService      = game:GetService("HttpService")
+local lighting         = game:GetService("Lighting")
+local starterGui       = game:GetService("StarterGui")
+local textChatService  = game:GetService("TextChatService")
+local tweenService     = game:GetService("TweenService")
+local teleportService  = game:GetService("TeleportService")
+
+local localPlayer = players.LocalPlayer
+local playerGui   = localPlayer:WaitForChild("PlayerGui")
+local system      = replicatedStorage:WaitForChild("System")
+
+print("services reached")
+
+local _req = request or (syn and syn.request) or (http and http.request)
+    or (fluxus and fluxus.request) or http_request
+
+local SCRIPT_KEY = tostring((getgenv and getgenv().GongHubKey) or _G.GongHubKey or "@@GH_KEY@@")
+local DEFAULT_AUTOEXEC_URL = "https://gonghub2.tinm4318.workers.dev/script?key=" .. SCRIPT_KEY
+
+-- ============================================================
+-- State
+-- ============================================================
+local DevIds     = { 10972869437 , 11819448837 , 11814042874 }
+local PremiumIds = { 10972869437, 11819448837 , 11814042874 }
+
+local tagColor   = Color3.fromRGB(255, 176, 0)
+
+local material     = "smooth"
+local trailType    = "detailed"
+local rainbowPaint = false
+local shovel       = false
+local deleteMode   = false
+local blockTrail   = false
+local killAura     = false
+local buildAura    = false
+local signAura     = false
+local rainbowAura  = false
+local deleteAura   = false
+local deleteRange  = 500
+local deleteRange2 = 20
+local paintRange   = 20
+local hue          = 0
+local hueSpeed     = 0.005
+
+local antiBlind, antiMyopic, antiVamp, antiJail
+local antiFreeze, antiGlitch, antiFog, antiMorph
+local antiColorless = false
+local antiMaptide, antiGlow   = false, false
+local godMode = false
+
+local autoGrabDropped   = false
+local autoDropOnDeath   = false
+local protectArkenstone = true
+local spyChat           = true
+
+local stashPlatforms   = {}
+local savedAtmoDensity = 0.3
+local atmo = lighting:FindFirstChildOfClass("Atmosphere")
+if atmo then savedAtmoDensity = atmo.Density end
+
+local cubes = workspace:FindFirstChild("Cubes")
+
+local colorMap = {
+    peasant  = {150, 103, 102},
+    arken    = {4, 175, 236},
+    admin    = {245, 205, 48},
+    hidden   = {0, 95, 2},
+    iqgenius = {98, 129, 65},
+    iqdumb   = {98, 129, 65},
+}
+if cubes then colorMap.peasant = {128, 128, 128} end
+
+local colorHex = {}
+for k, v in pairs(colorMap) do
+    colorHex[k] = "#" .. Color3.fromRGB(table.unpack(v)):ToHex()
+end
+
+local humanoidRef = nil
+
+print("state reached")
+
+local GH = {
+    file = "gonghub_toggles.json",
+    data = {},
+    building = true,
+    alive = true,
+    conns = {},
+    entries = {},
+    void = { on = false, orig = workspace.FallenPartsDestroyHeight, stepConn = nil },
+    afk = {},
+    tp = { conn = nil, safe = nil, char = nil, allowUntil = 0, maxStep = 3 },
+    cubes = { conn = nil, hl = nil, maxHighlight = 3000 },
+}
+
+pcall(function()
+    if isfile and readfile and isfile(GH.file) then
+        local raw = readfile(GH.file)
+        if raw and raw ~= "" then
+            local d = httpService:JSONDecode(raw)
+            if type(d) == "table" then GH.data = d end
+        end
+    end
+end)
+
+function GH.save()
+    pcall(function()
+        if writefile then writefile(GH.file, httpService:JSONEncode(GH.data)) end
+    end)
+end
+
+function GH.wrap(tab, tabName)
+    if type(tab) ~= "table" then return tab end
+    local okGet, orig = pcall(function() return tab.Toggle end)
+    if not okGet or type(orig) ~= "function" then return tab end
+    local okSet = pcall(function()
+        tab.Toggle = function(self, cfg)
+            if type(cfg) ~= "table" or not cfg.Title then return orig(self, cfg) end
+            local key = tostring(tabName) .. "/" .. tostring(cfg.Title)
+            local cb = cfg.Callback
+            local baseline = cfg.Value == true
+            local start = baseline
+            if type(GH.data[key]) == "boolean" then start = GH.data[key] end
+            cfg.Value = start
+            cfg.Callback = function(v)
+                if GH.building then return end
+                GH.data[key] = v
+                GH.save()
+                if cb then cb(v) end
+            end
+            if cb then table.insert(GH.entries, { cb = cb, start = start, baseline = baseline }) end
+            return orig(self, cfg)
+        end
+    end)
+    if not okSet then warn("[GongHub] toggle saving unavailable for " .. tostring(tabName)) end
+    return tab
+end
+
+function GH.finish()
+    GH.building = false
+    GH.restoring = true
+    local list = GH.entries
+    GH.entries = {}
+    for _, e in ipairs(list) do
+        if e.start ~= e.baseline then
+            task.spawn(function()
+                local ok, err = pcall(e.cb, e.start)
+                if not ok then warn("[GongHub] restore failed: " .. tostring(err)) end
+            end)
+        end
+    end
+    GH.restoring = false
+end
+
+task.delay(25, GH.finish)
+
+GH.lock = {
+    url = "https://raw.githubusercontent.com/tinm4318-spec/Gonghub2/refs/heads/main/ownerlock",
+    api = "https://gonghub2.tinm4318.workers.dev/lock",
+    tokenFile = "gonghub_ownertoken.txt",
+    armed = false,
+    on = false,
+    at = nil,
+}
+
+function GH.isOwnerId(id)
+    for _, v in ipairs(DevIds) do
+        if v == id then return true end
+    end
+    return false
+end
+
+function GH.ownerPresent()
+    for _, p in ipairs(players:GetPlayers()) do
+        if GH.isOwnerId(p.UserId) then return true end
+    end
+    return false
+end
+
+function GH.lockFlag(force)
+    local l = GH.lock
+    if not force and l.at and os.clock() - l.at < 60 then return l.on end
+    l.at = os.clock()
+    local target = (l.api ~= "" and l.api or l.url) .. "?t=" .. os.time()
+    local ok, body = pcall(function()
+        return game:HttpGet(target, true)
+    end)
+    if ok and type(body) == "string" then
+        local word = body:lower():match("^%s*(%a+)")
+        l.on = word == "on" or word == "true"
+    end
+    return l.on
+end
+
+function GH.blockedByOwner()
+    if GH.isOwnerId(localPlayer.UserId) then return false end
+    if not GH.ownerPresent() then return false end
+    return GH.lockFlag()
+end
+
+if GH.blockedByOwner() then
+    warn("[GongHub] Disabled while the owner is in this server.")
+    return
+end
+
+function GH.finite(v)
+    return v.X == v.X and v.Y == v.Y and v.Z == v.Z
+        and math.abs(v.X) < 1e9 and math.abs(v.Y) < 1e9 and math.abs(v.Z) < 1e9
+end
+
+function GH.tp.allow(sec)
+    GH.tp.allowUntil = os.clock() + (sec or 1.5)
+end
+
+function GH.tpStep()
+    local t = GH.tp
+    local char = localPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then
+        t.safe = nil
+        t.char = nil
+        return
+    end
+    if char ~= t.char then
+        t.char = char
+        t.safe = nil
+    end
+    local pos = root.Position
+    if not GH.finite(pos) then
+        if t.safe then
+            root.CFrame = t.safe
+            root.AssemblyLinearVelocity = Vector3.zero
+        end
+        return
+    end
+    if not t.safe or os.clock() < t.allowUntil then
+        t.safe = root.CFrame
+        return
+    end
+    if (pos - t.safe.Position).Magnitude > t.maxStep then
+        root.CFrame = t.safe
+        root.AssemblyLinearVelocity = Vector3.zero
+    else
+        t.safe = root.CFrame
+    end
+end
+
+function GH.tpEnable()
+    if GH.tp.conn then return end
+    GH.tp.safe = nil
+    GH.tp.conn = runService.PostSimulation:Connect(GH.tpStep)
+end
+
+function GH.tpDisable()
+    if GH.tp.conn then
+        GH.tp.conn:Disconnect()
+        GH.tp.conn = nil
+    end
+    GH.tp.safe = nil
+    GH.tp.char = nil
+end
+
+function GH.voidStep()
+    local char = localPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local pos = root.Position
+    if not GH.finite(pos) then return end
+    local floatY = GH.void.orig + 30
+    if pos.Y < floatY then
+        GH.tp.allow(0.5)
+        root.CFrame = root.CFrame + Vector3.new(0, floatY - pos.Y, 0)
+        local v = root.AssemblyLinearVelocity
+        root.AssemblyLinearVelocity = Vector3.new(v.X, 0, v.Z)
+        root.AssemblyAngularVelocity = Vector3.zero
+    end
+end
+
+function GH.voidEnable()
+    local v = GH.void
+    if v.on then return end
+    v.on = true
+    local cur = workspace.FallenPartsDestroyHeight
+    if cur > -49000 then v.orig = cur end
+    pcall(function() workspace.FallenPartsDestroyHeight = -50000 end)
+    v.stepConn = runService.Stepped:Connect(GH.voidStep)
+end
+
+function GH.voidDisable()
+    local v = GH.void
+    if not v.on then return end
+    v.on = false
+    if v.stepConn then
+        v.stepConn:Disconnect()
+        v.stepConn = nil
+    end
+    pcall(function() workspace.FallenPartsDestroyHeight = v.orig end)
+end
+
+function GH.afkFocus()
+    for _ = 1, 2 do
+        system:FireServer("Focused")
+        task.wait(0.1)
+    end
+end
+
+function GH.afkEnable()
+    if not GH.afk.c1 then GH.afk.c1 = userInputService.WindowFocusReleased:Connect(GH.afkFocus) end
+    if not GH.afk.c2 then GH.afk.c2 = userInputService.WindowFocused:Connect(GH.afkFocus) end
+end
+
+function GH.afkDisable()
+    if GH.afk.c1 then GH.afk.c1:Disconnect() GH.afk.c1 = nil end
+    if GH.afk.c2 then GH.afk.c2:Disconnect() GH.afk.c2 = nil end
+end
+
+
+-- ============================================================
+-- Auto Execute state
+-- ============================================================
+local autoExecute       = false
+local autoExecuteLoader = table.concat({
+    'if not game:IsLoaded() then game.Loaded:Wait() end',
+    'local plrs = game:GetService("Players")',
+    'while not plrs.LocalPlayer do task.wait() end',
+    'local okF, d = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile("gonghub_autoexec.json")) end)',
+    'if okF and type(d) == "table" and d.toggle == false then return end',
+    'local okG, body = pcall(game.HttpGet, game, "' .. DEFAULT_AUTOEXEC_URL .. '&t=" .. os.time(), true)',
+    'if not okG or type(body) ~= "string" or body == "" then warn("[GongHub] auto execute download failed: " .. tostring(body)) return end',
+    'local fn, err = loadstring(body)',
+    'if not fn then warn("[GongHub] auto execute compile error: " .. tostring(err)) return end',
+    'local okR, runErr = pcall(fn)',
+    'if not okR then warn("[GongHub] auto execute run error: " .. tostring(runErr)) end',
+}, "\n")
+local autoExecutePending = false
+local autoExecuteLastJob = ""
+local autoExecutePlace   = 0
+local autoExecuteTimestamp = 0
+
+local AUTOEXEC_MARK_FILE  = "gonghub_autoexec_mark.txt"
+local AUTOEXEC_JOB_FILE   = "gonghub_autoexec_job.txt"
+local AUTOEXEC_PLACE_FILE = "gonghub_autoexec_place.txt"
+local AUTOEXEC_TIME_FILE  = "gonghub_autoexec_time.txt"
+
+pcall(function()
+    if isfile and readfile and isfile("gonghub_autoexec.json") then
+        local data = httpService:JSONDecode(readfile("gonghub_autoexec.json"))
+        if data.toggle ~= nil then autoExecute = data.toggle end
+    end
+    if isfile and readfile then
+        if isfile(AUTOEXEC_MARK_FILE) then
+            local m = readfile(AUTOEXEC_MARK_FILE)
+            if m == "pending" then autoExecutePending = true end
+        end
+        if isfile(AUTOEXEC_JOB_FILE) then
+            autoExecuteLastJob = readfile(AUTOEXEC_JOB_FILE) or ""
+        end
+        if isfile(AUTOEXEC_PLACE_FILE) then
+            autoExecutePlace = tonumber(readfile(AUTOEXEC_PLACE_FILE)) or 0
+        end
+        if isfile(AUTOEXEC_TIME_FILE) then
+            autoExecuteTimestamp = tonumber(readfile(AUTOEXEC_TIME_FILE)) or 0
+        end
+    end
+end)
+
+local function saveAutoExec()
+    pcall(function()
+        if writefile then
+            writefile("gonghub_autoexec.json", httpService:JSONEncode({
+                toggle = autoExecute,
+                loader = autoExecuteLoader,
+            }))
+        end
+    end)
+end
+
+local function markPending()
+    autoExecutePending = true
+    autoExecuteTimestamp = os.time()
+    pcall(function()
+        if writefile then
+            writefile(AUTOEXEC_MARK_FILE, "pending")
+            writefile(AUTOEXEC_JOB_FILE, game.JobId)
+            writefile(AUTOEXEC_PLACE_FILE, tostring(game.PlaceId))
+            writefile(AUTOEXEC_TIME_FILE, tostring(autoExecuteTimestamp))
+        end
+    end)
+    saveAutoExec()
+end
+
+local function clearPending()
+    autoExecutePending = false
+    autoExecuteLastJob = ""
+    autoExecutePlace = 0
+    autoExecuteTimestamp = 0
+    pcall(function()
+        if writefile then
+            writefile(AUTOEXEC_MARK_FILE, "done")
+            writefile(AUTOEXEC_JOB_FILE, "")
+            writefile(AUTOEXEC_PLACE_FILE, "0")
+            writefile(AUTOEXEC_TIME_FILE, "0")
+        end
+    end)
+end
+
+local function prepareAutoExecute()
+    if not autoExecute then return end
+    if autoExecuteLoader == "" then return end
+    if GH.queued then return end
+    if SCRIPT_KEY:sub(1, 2) == "@@" then return end
+
+    local queueFn = (syn and syn.queue_on_teleport)
+        or queue_on_teleport
+        or queueonteleport
+        or (fluxus and fluxus.queue_on_teleport)
+        or (krnl and krnl.queue_on_teleport)
+        or (http and http.queue_on_teleport)
+
+    if queueFn then
+        local ok = pcall(function()
+            queueFn(autoExecuteLoader)
+        end)
+        if ok then
+            GH.queued = true
+            clearPending()
+            return
+        end
+    end
+
+    markPending()
+end
+
+print("autoexecute state reached")
+
+-- ============================================================
+-- Helpers
+-- ============================================================
+local function rank(p)
+    for _, id in ipairs(DevIds) do
+        if p.UserId == id then return "Dev" end
+    end
+    for _, id in ipairs(PremiumIds) do
+        if p.UserId == id then return "Premium" end
+    end
+    return "Freemium"
+end
+
+local function toolEvent(name)
+    local char = localPlayer.Character
+    if not char then return nil end
+    local tool = char:FindFirstChild(name) or localPlayer.Backpack:FindFirstChild(name)
+    return tool and tool:FindFirstChild("Event", true)
+end
+
+local function toolEventAny(name)
+    local tool = localPlayer.Backpack:FindFirstChild(name)
+        or (localPlayer.Character and localPlayer.Character:FindFirstChild(name))
+    if not tool then return nil end
+    return tool:FindFirstChild("Event", true)
+        or tool:FindFirstChildWhichIsA("RemoteEvent", true)
+end
+
+local function equipTool(name)
+    local t = localPlayer.Backpack:FindFirstChild(name)
+    if t and localPlayer.Character then
+        localPlayer.Character.Humanoid:EquipTool(t)
+    end
+    return localPlayer.Character
+        and (localPlayer.Character:FindFirstChild(name) or localPlayer.Backpack:FindFirstChild(name))
+end
+
+local function randomAroundSphere(hrp, lo, hi)
+    local r  = math.random() * (hi - lo) + lo
+    local th = math.random() * math.pi * 2
+    local ph = math.acos(2 * math.random() - 1)
+    return hrp.Position + Vector3.new(
+        r * math.sin(ph) * math.cos(th),
+        r * math.cos(ph),
+        r * math.sin(ph) * math.sin(th)
+    )
+end
+
+local function nearestBrickInRange(range)
+    local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+    local folder = workspace:FindFirstChild("Bricks") or workspace:FindFirstChild("PlacedBlocks")
+    if not folder then return nil end
+    local ok, found = pcall(function()
+        local params = OverlapParams.new()
+        params.FilterType = Enum.RaycastFilterType.Include
+        params.FilterDescendantsInstances = { folder }
+        params.MaxParts = 200
+        return workspace:GetPartBoundsInRadius(hrp.Position, range, params)
+    end)
+    if ok and type(found) == "table" then
+        return #found > 0 and found[math.random(1, #found)] or nil
+    end
+    local pool = {}
+    for _, p in ipairs(folder:GetDescendants()) do
+        if p:IsA("BasePart") and (hrp.Position - p.Position).Magnitude <= range then
+            table.insert(pool, p)
+        end
+    end
+    return #pool > 0 and pool[math.random(1, #pool)] or nil
+end
+
+local function restoreCamera()
+    pcall(function()
+        starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
+        starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+    end)
+    local cam = workspace.CurrentCamera
+    if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+        cam.CameraType = Enum.CameraType.Custom
+        cam.CameraSubject = localPlayer.Character.Humanoid
+        cam.FieldOfView = 70
+    end
+end
+
+local function unclip(instance)
+    if not instance then return end
+    for _, d in ipairs(instance:GetDescendants()) do
+        if d:IsA("BasePart") then d.CanCollide = false end
+    end
+end
+
+local function killSelf()
+    local char = localPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then hum.Health = 0 end
+    char:BreakJoints()
+end
+
+local function say(msg)
+    local ok = pcall(function()
+        replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
+    end)
+    if ok then return end
+    if pcall(function() textChatService.TextChannels.RBXGeneral:SendAsync(msg) end) then return end
+    pcall(function()
+        for _, r in pairs(replicatedStorage:GetDescendants()) do
+            if r:IsA("RemoteEvent")
+                and (r.Name:lower():find("say") or r.Name:lower():find("chat")
+                    or r.Name:lower():find("message")) then
+                r:FireServer(msg, "All")
+                break
+            end
+        end
+    end)
+end
+
+local function buildStash(position)
+    local char = localPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+    GH.tp.allow(2)
+    for i = #stashPlatforms, 1, -1 do
+        local p = stashPlatforms[i]
+        if p and p.Parent then p:Destroy() end
+        table.remove(stashPlatforms, i)
+    end
+    for x = -2, 2 do
+        for z = -2, 2 do
+            local part = Instance.new("Part")
+            part.Name = "GongHubStashPlatform"
+            part.Size = Vector3.new(4, 1, 4)
+            part.CFrame = CFrame.new(position + Vector3.new(x * 4, 0, z * 4))
+            part.Anchored = true
+            part.CanCollide = true
+            part.Locked = true
+            part.Color = Color3.fromRGB(30, 30, 30)
+            part.Material = Enum.Material.SmoothPlastic
+            part.CastShadow = false
+            part.Parent = workspace
+            table.insert(stashPlatforms, part)
+        end
+    end
+    hrp.CFrame = CFrame.new(position + Vector3.new(0, 6, 0))
+end
+
+local function clearStash()
+    for i = #stashPlatforms, 1, -1 do
+        local p = stashPlatforms[i]
+        if p and p.Parent then p:Destroy() end
+        table.remove(stashPlatforms, i)
+    end
+end
+
+local function forceEquip(name)
+    local char = localPlayer.Character
+    if not char then return end
+    local t = localPlayer.Backpack:FindFirstChild(name) or char:FindFirstChild(name)
+    if t then t.Parent = char end
+end
+
+local arkenConn
+local arkenForce = false
+local function startArkenForce()
+    arkenForce = true
+    if arkenConn then arkenConn:Disconnect() end
+    arkenConn = runService.Stepped:Connect(function()
+        if not arkenForce then return end
+        forceEquip("The Arkenstone")
+        forceEquip("Classic Bucket")
+        forceEquip("25162389")
+    end)
+end
+local function stopArkenForce()
+    arkenForce = false
+    if arkenConn then arkenConn:Disconnect() arkenConn = nil end
+end
+
+local function randOffsetVector()
+    local sx = math.random(0, 1) == 0 and 1 or -1
+    local sz = math.random(0, 1) == 0 and 1 or -1
+    return Vector3.new(sx * math.random(30000, 60000), 1000, sz * math.random(30000, 60000))
+end
+
+local stashPoints = {}
+for i = 1, 10 do stashPoints[i] = randOffsetVector() end
+
+local function bindCharacter(char)
+    GH.conns.childAdded = char.ChildAdded:Connect(function(child)
+        if child:IsA("Humanoid") then humanoidRef = child end
+        if child:IsA("Tool") and not child:HasTag("DroppedByScript") then
+            child:AddTag("DroppedByScript")
+        end
+    end)
+    if char:FindFirstChild("Humanoid") then humanoidRef = char.Humanoid end
+end
+
+if localPlayer.Character then bindCharacter(localPlayer.Character) end
+GH.conns.bind = localPlayer.CharacterAdded:Connect(bindCharacter)
+
+print("helpers reached")
+
+-- ============================================================
+-- Inventory Checker
+-- ============================================================
+do
+local invDisplayEnabled = false
+local invDisplayTasks = {}
+local invDisplayPlayerAdded = nil
+
+local function getPlayerInventory(player)
+    local inventory = {}
+    if player.Character then
+        for _, item in ipairs(player.Character:GetChildren()) do
+            if item:IsA("Tool") then
+                table.insert(inventory, item.Name)
+            end
+        end
+    end
+    local backpack = player:FindFirstChild("Backpack")
+    if backpack then
+        for _, item in ipairs(backpack:GetChildren()) do
+            if item:IsA("Tool") then
+                table.insert(inventory, item.Name)
+            end
+        end
+    end
+    if #inventory == 0 then
+        table.insert(inventory, "No Items")
+    end
+    return inventory
+end
+
+local function removeInvGui(player)
+    local char = player.Character
+    if not char then return end
+    local head = char:FindFirstChild("Head")
+    if not head then return end
+    local existing = head:FindFirstChild("InventoryDisplay")
+    if existing then existing:Destroy() end
+end
+
+local function createInvGui(player)
+    if player == localPlayer then return end
+    local char = player.Character
+    if not char then return end
+    local head = char:FindFirstChild("Head")
+    if not head then return end
+
+    local existing = head:FindFirstChild("InventoryDisplay")
+    if existing then existing:Destroy() end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "InventoryDisplay"
+    billboard.Size = UDim2.new(5, 0, 2, 0)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = head
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextScaled = true
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.TextStrokeTransparency = 0
+    textLabel.Font = Enum.Font.SourceSansBold
+    textLabel.Parent = billboard
+end
+
+local function updateInvGui(player)
+    if player == localPlayer then return end
+    if not invDisplayEnabled then return end
+    local char = player.Character
+    if not char then return end
+    local head = char:FindFirstChild("Head")
+    if not head then return end
+
+    local billboard = head:FindFirstChild("InventoryDisplay")
+    if not billboard then
+        createInvGui(player)
+        billboard = head:FindFirstChild("InventoryDisplay")
+    end
+    local textLabel = billboard and billboard:FindFirstChildOfClass("TextLabel")
+    if textLabel then
+        textLabel.Text = table.concat(getPlayerInventory(player), ", ")
+    end
+end
+
+local function stopInvTracking(player)
+    if invDisplayTasks[player] then
+        task.cancel(invDisplayTasks[player])
+        invDisplayTasks[player] = nil
+    end
+    removeInvGui(player)
+end
+
+local function trackInvPlayer(player)
+    if player == localPlayer then return end
+    stopInvTracking(player)
+    invDisplayTasks[player] = task.spawn(function()
+        while invDisplayEnabled and player.Parent do
+            updateInvGui(player)
+            task.wait(1)
+        end
+        removeInvGui(player)
+        invDisplayTasks[player] = nil
+    end)
+end
+
+local function enableInvDisplay()
+    invDisplayEnabled = true
+    for _, p in ipairs(players:GetPlayers()) do
+        if p ~= localPlayer then trackInvPlayer(p) end
+    end
+    if not invDisplayPlayerAdded then
+        invDisplayPlayerAdded = players.PlayerAdded:Connect(function(p)
+            if p ~= localPlayer and invDisplayEnabled then
+                trackInvPlayer(p)
+            end
+        end)
+    end
+end
+
+local function disableInvDisplay()
+    invDisplayEnabled = false
+    for _, p in ipairs(players:GetPlayers()) do
+        if p ~= localPlayer then stopInvTracking(p) end
+    end
+    if invDisplayPlayerAdded then
+        invDisplayPlayerAdded:Disconnect()
+        invDisplayPlayerAdded = nil
+    end
+end
+
+GH.inv = {
+    enable = enableInvDisplay,
+    disable = disableInvDisplay,
+    on = function() return invDisplayEnabled end,
+}
+end
+
+print("inventory checker reached")
+
+-- ============================================================
+-- Loading screen
+-- ============================================================
+local spinnerAlive = true
+
+local loadingGui = Instance.new("ScreenGui")
+loadingGui.Name = "GongHubLoading"
+loadingGui.DisplayOrder = 9999
+loadingGui.IgnoreGuiInset = true
+loadingGui.ResetOnSpawn = false
+loadingGui.Parent = playerGui
+
+local back, card, spinnerTxt
+do
+back = Instance.new("Frame", loadingGui)
+back.Size = UDim2.fromScale(1, 1)
+back.BackgroundColor3 = Color3.fromRGB(10, 9, 6)
+back.BorderSizePixel = 0
+
+card = Instance.new("Frame", back)
+card.Size = UDim2.fromOffset(300, 220)
+card.Position = UDim2.new(0.5, -150, 0.5, -110)
+card.BackgroundColor3 = Color3.fromRGB(18, 15, 9)
+card.BorderSizePixel = 0
+Instance.new("UICorner", card).CornerRadius = UDim.new(0, 0)
+local cardStroke = Instance.new("UIStroke", card)
+cardStroke.Color = Color3.fromRGB(255, 176, 0)
+cardStroke.Thickness = 1
+
+local userPill = Instance.new("Frame", back)
+userPill.Size = UDim2.fromOffset(90, 22)
+userPill.Position = UDim2.fromOffset(12, 12)
+userPill.BackgroundColor3 = Color3.fromRGB(30, 22, 6)
+userPill.BorderSizePixel = 0
+Instance.new("UICorner", userPill).CornerRadius = UDim.new(0, 0)
+
+local userLbl = Instance.new("TextLabel", userPill)
+userLbl.Size = UDim2.fromScale(1, 1)
+userLbl.BackgroundTransparency = 1
+userLbl.Text = "> " .. localPlayer.Name:sub(1, 8):lower()
+userLbl.TextColor3 = tagColor
+userLbl.TextSize = 11
+userLbl.Font = Enum.Font.Code
+
+local titleLbl = Instance.new("TextLabel", card)
+titleLbl.Size = UDim2.new(1, -40, 0, 26)
+titleLbl.Position = UDim2.fromOffset(20, 18)
+titleLbl.BackgroundTransparency = 1
+titleLbl.Text = "> gonghub_"
+titleLbl.TextColor3 = Color3.fromRGB(255, 176, 0)
+titleLbl.TextSize = 20
+titleLbl.Font = Enum.Font.Code
+titleLbl.TextXAlignment = Enum.TextXAlignment.Center
+
+local statusLbl = Instance.new("TextLabel", card)
+statusLbl.Size = UDim2.new(1, -20, 0, 16)
+statusLbl.Position = UDim2.fromOffset(10, 48)
+statusLbl.BackgroundTransparency = 1
+statusLbl.Text = "initializing..."
+statusLbl.TextColor3 = Color3.fromRGB(138, 106, 31)
+statusLbl.TextSize = 12
+statusLbl.Font = Enum.Font.Code
+statusLbl.TextXAlignment = Enum.TextXAlignment.Center
+
+local spinnerWrap = Instance.new("Frame", card)
+spinnerWrap.Size = UDim2.fromOffset(70, 70)
+spinnerWrap.Position = UDim2.new(0.5, -35, 0, 68)
+spinnerWrap.BackgroundTransparency = 1
+
+local spinnerBg = Instance.new("ImageLabel", spinnerWrap)
+spinnerBg.Size = UDim2.fromScale(1, 1)
+spinnerBg.BackgroundTransparency = 1
+spinnerBg.Image = "rbxassetid://4965945816"
+spinnerBg.ImageColor3 = Color3.fromRGB(45, 34, 10)
+
+local spinnerFg = Instance.new("ImageLabel", spinnerWrap)
+spinnerFg.Size = UDim2.fromScale(1, 1)
+spinnerFg.BackgroundTransparency = 1
+spinnerFg.Image = "rbxassetid://4965945816"
+spinnerFg.ImageColor3 = tagColor
+spinnerFg.ZIndex = 2
+
+local spinnerGrad = Instance.new("UIGradient", spinnerFg)
+spinnerGrad.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 0),
+    NumberSequenceKeypoint.new(0.5, 0),
+    NumberSequenceKeypoint.new(1, 1),
+})
+
+spinnerTxt = Instance.new("TextLabel", spinnerWrap)
+spinnerTxt.Size = UDim2.fromScale(1, 1)
+spinnerTxt.BackgroundTransparency = 1
+spinnerTxt.Text = "Loading..."
+spinnerTxt.TextColor3 = Color3.fromRGB(255, 176, 0)
+spinnerTxt.TextSize = 12
+spinnerTxt.Font = Enum.Font.Code
+spinnerTxt.TextXAlignment = Enum.TextXAlignment.Center
+spinnerTxt.TextYAlignment = Enum.TextYAlignment.Center
+spinnerTxt.ZIndex = 3
+
+local tips = {
+    "Press K to toggle the menu open or closed.",
+    "Use tabs to organise your features.",
+    "Server Hopper auto-refreshes when open.",
+    "Auto Execute re-runs your loader after every hop.",
+}
+
+task.spawn(function()
+    local angle, dots, dotT, tipIdx, tipT = 0, 0, 0, 1, 0
+    local last = os.clock()
+    while spinnerAlive do
+        local now = os.clock()
+        local dt = math.min(now - last, 0.05)
+        last = now
+        angle = (angle + dt * 230) % 360
+        pcall(function() spinnerFg.Rotation = angle end)
+        pcall(function() spinnerGrad.Rotation = angle * 0.75 % 360 end)
+        dotT = dotT + dt
+        if dotT >= 0.35 then
+            dotT = 0
+            dots = (dots + 1) % 4
+            pcall(function() spinnerTxt.Text = "Loading" .. string.rep(".", dots) end)
+        end
+        tipT = tipT + dt
+        if tipT >= 2.5 then
+            tipT = 0
+            tipIdx = tipIdx % #tips + 1
+            pcall(function() statusLbl.Text = "Tip: " .. tips[tipIdx] end)
+        end
+        task.wait()
+    end
+end)
+end
+
+print("loading screen reached")
+
+-- ============================================================
+-- WindUI load (guarded)
+-- ============================================================
+local WindUI
+local okLoad, loadErr = pcall(function()
+    WindUI = loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/s0lmain/DevLib/refs/heads/main/main.lua"
+    ))()
+end)
+
+if not okLoad or not WindUI then
+    warn("[GongHub] WindUI load failed: " .. tostring(loadErr))
+    spinnerAlive = false
+    task.wait(0.1)
+    pcall(function() loadingGui:Destroy() end)
+    return
+end
+
+print("windui loaded")
+
+pcall(function()
+    WindUI:SetFont(Font.fromEnum(Enum.Font.RobotoMono).Family)
+end)
+WindUI:AddTheme({
+    Name = "GongHub",
+    Accent = Color3.fromHex("#14110A"),
+    Dialog = Color3.fromHex("#14110A"),
+    Outline = Color3.fromHex("#FFB000"),
+    Text = Color3.fromHex("#FFB000"),
+    Placeholder = Color3.fromHex("#8A6A1F"),
+    Background = Color3.fromHex("#0A0906"),
+    Button = Color3.fromHex("#2A2008"),
+    Icon = Color3.fromHex("#FFB000"),
+    Toggle = Color3.fromHex("#FFB000"),
+    Slider = Color3.fromHex("#FFB000"),
+    Checkbox = Color3.fromHex("#FFB000"),
+    PanelBackground = Color3.fromHex("#FFB000"),
+    PanelBackgroundTransparency = 0.94,
+    SliderIcon = Color3.fromHex("#FFD27A"),
+    Primary = Color3.fromHex("#FFB000"),
+    LabelBackground = Color3.fromHex("#000000"),
+    LabelBackgroundTransparency = 0.5,
+})
+WindUI:SetTheme("GongHub")
+
+local hub = WindUI:CreateWindow({
+    Title = "GONGHUB",
+    Icon = "terminal",
+    Author = "by gong",
+    Folder = "GongHubFiles",
+    Theme = "GongHub",
+    ToggleKey = Enum.KeyCode.K,
+    Transparent = false,
+    Resizable = false,
+    HideSearchBar = false,
+    ScrollBarEnabled = true,
+    Radius = 0,
+    ElementsRadius = 0,
+    ShadowTransparency = 1,
+    SideBarWidth = 180,
+    OpenButton = {
+        Title = "GONGHUB",
+        Icon = "terminal",
+        CornerRadius = UDim.new(0, 4),
+        StrokeThickness = 1,
+        Draggable = true,
+        Color = ColorSequence.new(Color3.fromRGB(255, 176, 0), Color3.fromRGB(255, 176, 0)),
+    },
+    User = { Enabled = true, Anonymous = false, Callback = function() end },
+})
+
+hub:Tag({ Title = "v1.0", Color = Color3.fromHex("#FFB000") })
+
+local okHubTab = pcall(function()
+    local origTab = hub.Tab
+    hub.Tab = function(self, cfg)
+        local tab = origTab(self, cfg)
+        return GH.wrap(tab, type(cfg) == "table" and cfg.Title or "Tab")
+    end
+end)
+if not okHubTab then warn("[GongHub] toggle saving unavailable") end
+
+pcall(function()
+    hub:OnDestroy(function() GH.shutdown() end)
+end)
+
+GH.tag = { text = "Gong", guis = {} }
+
+function GH.tagRemove(p)
+    local g = GH.tag.guis[p]
+    if g then
+        pcall(function() g:Destroy() end)
+        GH.tag.guis[p] = nil
+    end
+end
+
+function GH.tagApply(p)
+    GH.tagRemove(p)
+    if not GH.alive or not GH.isOwnerId(p.UserId) then return end
+    local char = p.Character
+    local head = char and (char:FindFirstChild("Head") or char:WaitForChild("Head", 5))
+    if not head or GH.tag.guis[p] then return end
+    local gui = Instance.new("BillboardGui")
+    gui.Name = "GongHubTag"
+    gui.Size = UDim2.fromOffset(120, 28)
+    gui.StudsOffset = Vector3.new(0, 3.2, 0)
+    gui.AlwaysOnTop = true
+    gui.Adornee = head
+    gui.Parent = coreGui
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.fromScale(1, 1)
+    label.BackgroundTransparency = 1
+    label.Text = GH.tag.text
+    label.TextColor3 = tagColor
+    label.TextStrokeTransparency = 0.4
+    label.Font = Enum.Font.GothamBold
+    label.TextScaled = true
+    label.Parent = gui
+    GH.tag.guis[p] = gui
+end
+
+function GH.tagStart()
+    local function watch(p)
+        if not GH.isOwnerId(p.UserId) then return end
+        GH.conns["tagChar" .. p.UserId] = p.CharacterAdded:Connect(function()
+            GH.tagApply(p)
+        end)
+        task.spawn(GH.tagApply, p)
+    end
+    for _, p in ipairs(players:GetPlayers()) do watch(p) end
+    GH.conns.tagAdded = players.PlayerAdded:Connect(watch)
+    GH.conns.tagRemoving = players.PlayerRemoving:Connect(function(p)
+        GH.tagRemove(p)
+    end)
+end
+
+function GH.tagStopAll()
+    for p in pairs(GH.tag.guis) do GH.tagRemove(p) end
+end
+
+GH.tagStart()
+
+task.spawn(function()
+    while GH.alive do
+        task.wait(10)
+        if GH.alive and GH.blockedByOwner() then
+            warn("[GongHub] Disabled because the owner joined this server.")
+            pcall(function() hub:Destroy() end)
+            GH.shutdown()
+            break
+        end
+    end
+end)
+
+function GH.cubesEnable()
+    local c = GH.cubes
+    if c.conn then return end
+    local hl = Instance.new("Highlight")
+    hl.FillColor = Color3.fromRGB(255, 176, 0)
+    hl.FillTransparency = 0.5
+    hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+    hl.OutlineTransparency = 0
+    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    hl.Parent = coreGui
+    c.hl = hl
+    c.conn = userInputService.InputBegan:Connect(function(input, processed)
+        if processed then return end
+        local kind = input.UserInputType
+        if kind ~= Enum.UserInputType.MouseButton1 and kind ~= Enum.UserInputType.Touch then return end
+        local cam = workspace.CurrentCamera
+        local bricks = workspace:FindFirstChild("Bricks")
+        if not cam or not bricks then return end
+        local ray = cam:ScreenPointToRay(input.Position.X, input.Position.Y)
+        local hit = workspace:Raycast(ray.Origin, ray.Direction * 1000)
+        local part = hit and hit.Instance
+        if not part or not part.Parent or not part:IsDescendantOf(bricks) then
+            hl.Adornee = nil
+            return
+        end
+        local holder = part.Parent
+        local text
+        local count = 0
+        local capped = false
+        if holder == bricks then
+            text = "Server Build (Not from anyone)"
+            for _, ch in ipairs(bricks:GetChildren()) do
+                if ch:IsA("BasePart") then count = count + 1 end
+            end
+            hl.Adornee = part
+        else
+            local plr = players:FindFirstChild(holder.Name)
+            if plr and plr:IsA("Player") then
+                text = plr.DisplayName == plr.Name and plr.Name or (plr.DisplayName .. "/" .. plr.Name)
+            else
+                text = holder.Name .. " (NOT INGAME)"
+            end
+            for _, d in ipairs(holder:GetChildren()) do
+                if d:IsA("BasePart") then count = count + 1 end
+            end
+            if count <= c.maxHighlight then
+                hl.Adornee = holder
+            else
+                hl.Adornee = part
+                capped = true
+            end
+        end
+        WindUI:Notify({
+            Title = "Cubes Checker",
+            Content = "Block is from: " .. text .. "\nBlocks: " .. count .. (capped and ("\nToo many to highlight all (limit " .. c.maxHighlight .. ")") or ""),
+            Duration = 4,
+        })
+    end)
+end
+
+function GH.cubesDisable()
+    local c = GH.cubes
+    if c.conn then
+        c.conn:Disconnect()
+        c.conn = nil
+    end
+    if c.hl then
+        c.hl.Adornee = nil
+        c.hl:Destroy()
+        c.hl = nil
+    end
+end
+WindUI:Notify({ Title = "GongHub", Content = "Loaded. Press K to toggle.", Duration = 5 })
+
+print("window reached")
+
+-- ============================================================
+-- About
+-- ============================================================
+local about = hub:Tab({ Title = "About", Icon = "badge-question-mark", Locked = false, Border = true })
+about:Paragraph({
+    Title = "Information",
+    Desc = "Keyless build. Press K to show or hide the window.\nNo data leaves the client.",
+})
+about:Paragraph({
+    Title = "Credits",
+    Desc = "Owner: gong/gongy\nHelper: MadeInHeaven\nHonorable shoutout: qilex and mental cuz i used some part from them",
+})
+
+hub:Tab({ Title = "────────────", Icon = "", Locked = true, Border = false })
+
+print("about reached")
+
+-- ============================================================
+-- Render loop
+-- ============================================================
+local lastSafePos = nil
+
+GH.conns.render = runService.RenderStepped:Connect(function()
+    local char = localPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    hue = (hue + hueSpeed) % 1
+    local rainbowCol = Color3.fromHSV(hue, 1, 1)
+    local mousePos = localPlayer:GetMouse().Hit.Position
+
+    if rainbowPaint then
+        equipTool("Paint")
+        local paint = toolEvent("Paint")
+        if paint then
+            paint:FireServer(workspace.Terrain, Enum.NormalId.Top, mousePos,
+                "both 🤝", rainbowCol, material, "")
+        end
+    end
+
+    if killAura then
+        local nearest, nearestDist = nil, deleteRange
+        for _, p in ipairs(players:GetPlayers()) do
+            if p ~= localPlayer and p.Character
+                and p.Character:FindFirstChild("HumanoidRootPart") then
+                local d = (p.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+                if d < nearestDist then
+                    nearest = p.Character.HumanoidRootPart
+                    nearestDist = d
+                end
+            end
+        end
+        if nearest then
+            equipTool("Build") equipTool("Paint")
+            local build = toolEvent("Build") local paint = toolEvent("Paint")
+            if build and paint then
+                local folder = workspace:FindFirstChild("Bricks")
+                local mine = folder and folder:FindFirstChild(localPlayer.Name)
+                build:FireServer(workspace.Terrain, Enum.NormalId.Top, nearest.Position, "detailed")
+                local newBrick = mine and mine:GetChildren()[#mine:GetChildren()]
+                if newBrick then
+                    paint:FireServer(newBrick, Enum.NormalId.Top, nearest.Position,
+                        "both 🤝", Color3.new(0,0,0), "toxic", "")
+                end
+            end
+        end
+    end
+
+    if shovel then
+        equipTool("Shovel")
+        local s = toolEvent("Shovel")
+        if s then s:FireServer(workspace.Terrain, Enum.NormalId.Top, mousePos, "dig") end
+    end
+
+    if deleteMode then
+        equipTool("Delete")
+        local d = toolEvent("Delete")
+        if d then
+            local hit = workspace:Raycast(hrp.Position, (mousePos - hrp.Position).Unit * deleteRange)
+            d:FireServer(hit and hit.Instance or workspace.Terrain, hrp.Position)
+        end
+    end
+
+    if blockTrail then
+        equipTool("Build")
+        local b = toolEvent("Build")
+        if b then
+            local isRainbow = trailType:find("rainbow") ~= nil
+            local kind = trailType:gsub("rainbow ", "")
+            b:FireServer(workspace.Terrain, Enum.NormalId.Top, hrp.Position, kind)
+            if isRainbow then
+                equipTool("Paint")
+                local paint = toolEvent("Paint")
+                local folder = workspace:FindFirstChild("Bricks")
+                local mine = folder and folder:FindFirstChild(localPlayer.Name)
+                local newBrick = mine and mine:GetChildren()[#mine:GetChildren()]
+                if paint and newBrick then
+                    paint:FireServer(newBrick, Enum.NormalId.Top, hrp.Position,
+                        "both 🤝", rainbowCol, material, "")
+                end
+            end
+        end
+    end
+
+    if buildAura then
+        local b = toolEvent("Build")
+        if b then
+            b:FireServer(workspace.Terrain, Enum.NormalId.Top,
+                randomAroundSphere(hrp, 3, 15), "normal")
+        end
+    end
+
+    if deleteAura then
+        local d = toolEvent("Delete")
+        local target = nearestBrickInRange(deleteRange2)
+        if d and target then d:FireServer(target, hrp.Position) end
+    end
+
+    if signAura then
+        local s = toolEvent("Sign")
+        if s then
+            s:FireServer(workspace.Terrain, Enum.NormalId.Top,
+                randomAroundSphere(hrp, 3, 15), "normal")
+        end
+    end
+
+    if rainbowAura then
+        local p = toolEvent("Paint")
+        local target = nearestBrickInRange(paintRange)
+        if p and target then
+            p:FireServer(target, Enum.NormalId.Top, hrp.Position,
+                "both 🤝", rainbowCol, "plastic", "")
+        end
+    end
+
+    if antiMorph and char:FindFirstChildOfClass("Humanoid")
+        and char:FindFirstChildOfClass("Humanoid").Health > 0 then
+        local name = char.Name
+        local disp = char:GetAttribute("DisplayName") or char.Name
+        local blacklist = { "Enlightened", "Void", "Ghost", "Loading...", "R6", "R15" }
+        local okName = name == localPlayer.Name
+        local okDisp = disp == localPlayer.DisplayName or disp == localPlayer.Name
+        for _, v in ipairs(blacklist) do
+            if name == v then okName = true end
+            if disp == v then okDisp = true end
+        end
+        if not okName or not okDisp then killSelf() end
+    end
+
+    if antiGlitch and lastSafePos then
+        if (hrp.Position - lastSafePos).Magnitude > 1000 then
+            hrp.Velocity = Vector3.zero
+            hrp.CFrame = CFrame.new(lastSafePos)
+        end
+    end
+    if hrp.Position.Y > -50 and hrp.Position.Y < 5000 then
+        lastSafePos = hrp.Position
+    end
+
+    if antiBlind then
+        local blind = playerGui:FindFirstChild("Blind")
+        if blind then
+            blind.Enabled = false
+            for _, d in ipairs(blind:GetDescendants()) do
+                if d:IsA("Frame") or d:IsA("ImageLabel") then d.Visible = false end
+            end
+        end
+    end
+
+    if antiMyopic then
+        local blur = lighting:FindFirstChildOfClass("BlurEffect")
+        if blur then blur.Enabled = false blur.Size = 0 end
+    end
+
+    if antiVamp then
+        local cam = workspace.CurrentCamera
+        if cam.CameraType ~= Enum.CameraType.Custom then
+            cam.CameraType = Enum.CameraType.Custom
+        end
+    end
+
+    if antiFog and atmo then atmo.Density = 0.4 end
+
+    if antiColorless then
+        for _, e in ipairs(lighting:GetChildren()) do
+            if e:IsA("ColorCorrectionEffect") and e.Saturation < -0.5 then
+                e.Saturation = 0 e.Contrast = 0 e.Brightness = 0 e.TintColor = Color3.new(1,1,1)
+            end
+        end
+        for _, g in ipairs(playerGui:GetChildren()) do
+            if g.Name:lower():find("colorless") and g:IsA("ScreenGui") then g.Enabled = false end
+        end
+    end
+end)
+
+print("render loop reached")
+
+-- ============================================================
+-- Home
+-- ============================================================
+local home = hub:Tab({ Title = "Home", Icon = "house", locked = false })
+home:Section({ Title = "Inventory Display" })
+home:Toggle({
+    Title = "Enable",
+    Value = false,
+    Callback = function(v)
+        if v then GH.inv.enable() else GH.inv.disable() end
+    end,
+})
+
+home:Section({ Title = "Utility" })
+local TCO_PLACES = {
+    main = 11137575513,
+    xl   = 12943245078,
+    vc   = 12943247001,
+    og   = 108097274488844,
+}
+
+local function isOG()
+    return game.PlaceId == TCO_PLACES.og
+end
+
+local function hopToPlace(targetPlaceId)
+    prepareAutoExecute()
+    pcall(function()
+        teleportService:Teleport(targetPlaceId, localPlayer)
+    end)
+end
+
+home:Button({
+    Title = "JoinXL",
+    Callback = function()
+        prepareAutoExecute()
+        if isOG() then
+            system:FireServer("joinxl")
+        else
+            system:FireServer("xl")
+        end
+    end,
+})
+home:Button({
+    Title = "JoinVC",
+    Callback = function()
+        prepareAutoExecute()
+        if isOG() then
+            system:FireServer("joinvc")
+        else
+            system:FireServer("vc")
+        end
+    end,
+})
+home:Button({
+    Title = "JoinOG",
+    Callback = function()
+        if isOG() then
+            WindUI:Notify({ Title = "Already in OG", Content = "You are already in the OG server.", Duration = 2 })
+            return
+        end
+        prepareAutoExecute()
+        system:FireServer("og")
+    end,
+})
+home:Button({
+    Title = "Load Infinite Yield",
+    Callback = function()
+        pcall(function()
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/mxsynry/infiniteyield-reborn/refs/heads/master/source"
+            ))()
+        end)
+    end,
+})
+
+function GH.deleteSound(perm)
+    local function note(text)
+        WindUI:Notify({ Title = "Delete Sound", Content = text, Duration = 3 })
+    end
+    if workspace:FindFirstChild("Cubes") then
+        note("This doesn't work in OG servers.")
+        return
+    end
+    local char = localPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then
+        note("No character.")
+        return
+    end
+    local tool = equipTool("Delete")
+    if not tool then
+        note("You must have a Delete Tool.")
+        return
+    end
+    local target
+    if perm then
+        local ok, brick = pcall(function()
+            return game.StarterPlayer.StarterCharacterScripts.ToHRP:FindFirstChild("Brick")
+        end)
+        if ok then target = brick end
+    else
+        target = hrp:FindFirstChild("Brick")
+    end
+    if not target then
+        note("Delete sound is already deleted.")
+        return
+    end
+    task.spawn(function()
+        task.wait(0.15)
+        local ev = toolEventAny("Delete")
+        if not ev then
+            note("You must have a Delete Tool.")
+            return
+        end
+        ev:FireServer(target, hrp.Position)
+        note(perm and "Successfully Permanently Disabled Delete Sound." or "Successfully Disabled Delete Sound.")
+    end)
+end
+
+home:Section({ Title = "Fly & Delete Sound" })
+home:Toggle({
+    Title = "Fly",
+    Callback = function(v) localPlayer:SetAttribute("Flying", v) end,
+})
+home:Button({
+    Title = "Disable Delete Sound",
+    Desc = "Bypasses AgarWare detection. Removes your block place and delete sound. Needs the Delete tool.",
+    Callback = function() GH.deleteSound(false) end,
+})
+home:Button({
+    Title = "Perm Disable Delete Sound",
+    Callback = function() GH.deleteSound(true) end,
+})
+
+home:Section({ Title = "Tools" })
+home:Toggle({ Title = "Rainbow Paint", Callback = function(v) rainbowPaint = v end })
+home:Toggle({ Title = "Shovel",        Callback = function(v) shovel = v end })
+home:Toggle({ Title = "Delete",        Callback = function(v) deleteMode = v end })
+home:Dropdown({
+    Title = "Material",
+    Values = { "smooth", "plastic", "tiles", "bricks", "planks", "ice", "neon", "toxic", "anchor" },
+    Value = "smooth",
+    Callback = function(v) material = typeof(v) == "table" and v[1] or v end,
+})
+
+home:Section({ Title = "Trails" })
+home:Dropdown({
+    Title = "Block Trail Type",
+    Values = { "detailed", "normal", "rainbow detailed", "rainbow normal" },
+    Value = "detailed",
+    Callback = function(v) trailType = typeof(v) == "table" and v[1] or v end,
+})
+home:Toggle({ Title = "Block Trail", Callback = function(v) blockTrail = v end })
+
+home:Section({ Title = "Settings" })
+home:Slider({
+    Title = "Rainbow Speed",
+    Step = 0.001,
+    Value = { Min = 0.001, Max = 0.05, Default = 0.005 },
+    Callback = function(v) hueSpeed = v end,
+})
+home:Slider({
+    Title = "Delete Range",
+    Value = { Min = 10, Max = 1000, Default = 500 },
+    Callback = function(v) deleteRange = v end,
+})
+
+home:Section({ Title = "Boombox Logger" })
+
+do
+
+local boomboxLoggerEnabled = false
+local boomboxClickDetectors = {}
+local boomboxSelectionBox = nil
+local boomboxCurrentId = ""
+
+local BOOMBOX_SAVE_FILE = "gonghub_last_boombox.txt"
+
+pcall(function()
+    if isfile and readfile and isfile(BOOMBOX_SAVE_FILE) then
+        local saved = readfile(BOOMBOX_SAVE_FILE)
+        if saved and saved ~= "" then
+            boomboxCurrentId = saved
+        end
+    end
+end)
+
+local BOOMBOX_NAMES = {
+    ["SuperFlyGoldBoombox"] = true,
+    ["BoomboxGearThree"] = true,
+    ["DualGoldenSuperFlyBoombox"] = true,
+    ["DubstepBoombox"] = true,
+    ["BeatUpBoombox"] = true,
+}
+
+local function findBoomboxFromPart(part)
+    if not part then return nil end
+    local p = part
+    for _ = 1, 4 do
+        if not p then return nil end
+        if BOOMBOX_NAMES[p.Name] and p:IsA("Tool") then return p end
+        p = p.Parent
+    end
+    return nil
+end
+
+local function getBoomboxId(handle)
+    if not handle then return nil end
+    local sound = handle:FindFirstChild("Sound")
+    if not sound or not sound:IsA("Sound") then return nil end
+    if sound.SoundId == "" then return nil end
+    return sound.SoundId:match("%d+")
+end
+
+local function flashBoombox(handle)
+    if not handle then return end
+    local flash = Instance.new("SelectionBox")
+    flash.Color3 = Color3.new(0, 0, 0)
+    flash.LineThickness = 0.05
+    flash.Transparency = 0
+    flash.Adornee = handle
+    flash.Parent = handle
+    task.spawn(function()
+        for i = 0, 1, 0.1 do
+            flash.Transparency = i
+            task.wait(0.05)
+        end
+        flash:Destroy()
+    end)
+end
+
+local function onBoomboxClicked(handle)
+    local id = getBoomboxId(handle)
+    if not id then
+        WindUI:Notify({ Title = "Boombox", Content = "No sound playing.", Duration = 2 })
+        return
+    end
+    boomboxCurrentId = id
+    if setclipboard then setclipboard(id) end
+    pcall(function()
+        if writefile then writefile(BOOMBOX_SAVE_FILE, id) end
+    end)
+    flashBoombox(handle)
+    WindUI:Notify({ Title = "Boombox Song Copied", Content = "ID: " .. id, Duration = 2 })
+end
+
+local function setupClickDetector(handle)
+    if boomboxClickDetectors[handle] then return end
+    local cd = Instance.new("ClickDetector")
+    cd.MaxActivationDistance = 32
+    cd.Parent = handle
+    local conn = cd.MouseClick:Connect(function()
+        if boomboxLoggerEnabled then
+            onBoomboxClicked(handle)
+        end
+    end)
+    boomboxClickDetectors[handle] = { detector = cd, connection = conn }
+end
+
+local function scanBoomboxes()
+    for _, item in ipairs(workspace:GetDescendants()) do
+        if item:IsA("Tool") and BOOMBOX_NAMES[item.Name] then
+            local handle = item:FindFirstChild("Handle")
+            if handle and not boomboxClickDetectors[handle] then
+                setupClickDetector(handle)
+            end
+        end
+    end
+end
+
+local function clearClickDetectors()
+    for handle, data in pairs(boomboxClickDetectors) do
+        if data.connection then data.connection:Disconnect() end
+        if data.detector and data.detector.Parent then data.detector:Destroy() end
+    end
+    boomboxClickDetectors = {}
+end
+
+local function setupOutline()
+    if boomboxSelectionBox then return end
+    boomboxSelectionBox = Instance.new("SelectionBox")
+    boomboxSelectionBox.Color3 = Color3.fromRGB(255, 176, 0)
+    boomboxSelectionBox.LineThickness = 0.1
+    boomboxSelectionBox.SurfaceTransparency = 1
+    boomboxSelectionBox.Transparency = 0
+    boomboxSelectionBox.Parent = coreGui
+end
+
+local function clearOutline()
+    if boomboxSelectionBox then
+        boomboxSelectionBox.Adornee = nil
+        boomboxSelectionBox:Destroy()
+        boomboxSelectionBox = nil
+    end
+end
+
+local function onMouseMove()
+    if not boomboxLoggerEnabled or not boomboxSelectionBox then return end
+    local mouse = localPlayer:GetMouse()
+    local target = mouse.Target
+    local boombox = findBoomboxFromPart(target)
+    if boombox then
+        boomboxSelectionBox.Adornee = boombox.Handle
+    else
+        boomboxSelectionBox.Adornee = nil
+    end
+end
+
+local boomboxScanConn = nil
+local boomboxMoveConn = nil
+local boomboxWorkspaceConn = nil
+
+home:Toggle({
+    Title = "Click to Log Boombox Song",
+    Desc = "Click a boombox to copy its song ID",
+    Value = false,
+    Callback = function(v)
+        boomboxLoggerEnabled = v
+        if v then
+            setupOutline()
+            scanBoomboxes()
+            if not boomboxWorkspaceConn then
+                boomboxWorkspaceConn = workspace.DescendantAdded:Connect(function(d)
+                    if d.Name == "Handle" and d.Parent and BOOMBOX_NAMES[d.Parent.Name] then
+                        setupClickDetector(d)
+                    end
+                end)
+            end
+            if not boomboxMoveConn then
+                boomboxMoveConn = runService.RenderStepped:Connect(onMouseMove)
+            end
+        else
+            clearClickDetectors()
+            clearOutline()
+            if boomboxWorkspaceConn then
+                boomboxWorkspaceConn:Disconnect()
+                boomboxWorkspaceConn = nil
+            end
+            if boomboxMoveConn then
+                boomboxMoveConn:Disconnect()
+                boomboxMoveConn = nil
+            end
+        end
+    end,
+})
+
+home:Button({
+    Title = "Copy Last Boombox ID",
+    Callback = function()
+        if boomboxCurrentId == "" then
+            pcall(function()
+                if isfile and readfile and isfile(BOOMBOX_SAVE_FILE) then
+                    local saved = readfile(BOOMBOX_SAVE_FILE)
+                    if saved and saved ~= "" then
+                        boomboxCurrentId = saved
+                    end
+                end
+            end)
+        end
+        if boomboxCurrentId ~= "" then
+            if setclipboard then setclipboard(boomboxCurrentId) end
+            WindUI:Notify({ Title = "Copied", Content = "ID: " .. boomboxCurrentId, Duration = 2 })
+        else
+            WindUI:Notify({ Title = "Boombox", Content = "Nothing logged yet.", Duration = 2 })
+        end
+    end,
+})
+
+GH.boomboxStop = function()
+    boomboxLoggerEnabled = false
+    clearClickDetectors()
+    clearOutline()
+    if boomboxWorkspaceConn then
+        boomboxWorkspaceConn:Disconnect()
+        boomboxWorkspaceConn = nil
+    end
+    if boomboxMoveConn then
+        boomboxMoveConn:Disconnect()
+        boomboxMoveConn = nil
+    end
+end
+end
+
+print("home reached")
+
+-- ============================================================
+-- Server Hopper + Auto Execute
+-- ============================================================
+hub:Tab({ Title = "────>OP<────", Icon = "", Locked = true, Border = false })
+local hopTab = hub:Tab({ Title = "Server Hopper", Icon = "server" })
+
+local hop = {
+    asc = false,
+    servers = {},
+    updating = false,
+    supportsFiles = false,
+    prevServer = "0",
+    maxServers = 100,
+}
+
+pcall(function()
+    writefile("gonghub_probe.tmp", "x")
+    hop.supportsFiles = readfile("gonghub_probe.tmp") == "x"
+    delfile("gonghub_probe.tmp")
+end)
+if hop.supportsFiles then
+    pcall(function() hop.prevServer = readfile("gonghub_prevserver.txt") end)
+end
+GH.conns.prevServer = players.PlayerRemoving:Connect(function(plr)
+    if plr == localPlayer and hop.supportsFiles then
+        pcall(function() writefile("gonghub_prevserver.txt", tostring(game.JobId)) end)
+    end
+end)
+
+hopTab:Section({ Title = "Controls" })
+local hopStatus  = hopTab:Paragraph({ Title = "Status",  Desc = "idle" })
+local hopCounter = hopTab:Paragraph({ Title = "Servers", Desc = "0 loaded" })
+
+local fetchHop
+
+hopTab:Button({ Title = "Refresh", Callback = function() if fetchHop then fetchHop() end end })
+hopTab:Button({
+    Title = "Toggle Sort (Desc / Asc)",
+    Callback = function()
+        hop.asc = not hop.asc
+        if fetchHop then fetchHop() end
+    end,
+})
+hopTab:Button({
+    Title = "Rejoin Current Server",
+    Callback = function()
+        prepareAutoExecute()
+        pcall(function()
+            teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, localPlayer)
+        end)
+    end,
+})
+
+hopTab:Section({ Title = "Auto Execute" })
+hopTab:Toggle({
+    Title = "Auto Execute on Hop",
+    Desc = "Re-runs the default loader after every teleport",
+    Value = autoExecute,
+    Callback = function(v)
+        autoExecute = v
+        saveAutoExec()
+        if v then prepareAutoExecute() end
+    end,
+})
+
+local hopRowCache = {}
+local function clearHopRows()
+    for _, btn in ipairs(hopRowCache) do
+        pcall(function() btn:Destroy() end)
+    end
+    hopRowCache = {}
+end
+
+local function renderHopList()
+    clearHopRows()
+    if #hop.servers == 0 then
+        hopStatus:SetDesc("no servers")
+        return
+    end
+    for idx, srv in ipairs(hop.servers) do
+        local playing = tonumber(srv.playing) or 0
+        local maxP    = tonumber(srv.maxPlayers) or 0
+        local isFull  = playing >= maxP
+        local isCurr  = srv.id == game.JobId
+        local isPrev  = hop.supportsFiles and tostring(srv.id) == tostring(hop.prevServer)
+        local tag = ""
+        if isCurr then tag = " (yours)"
+        elseif isPrev then tag = " (prev)"
+        elseif isFull then tag = " (full)" end
+        local btn = hopTab:Button({
+            Title = string.format("%d · %s", idx, tostring(srv.id):sub(1, 12)),
+            Desc  = string.format("Playing %d/%d%s", playing, maxP, tag),
+            Callback = function()
+                prepareAutoExecute()
+                pcall(function()
+                    teleportService:TeleportToPlaceInstance(game.PlaceId, srv.id, localPlayer)
+                end)
+            end,
+        })
+        table.insert(hopRowCache, btn)
+    end
+    hopStatus:SetDesc("ready")
+end
+
+function fetchHop()
+    if hop.updating then return end
+    hop.updating = true
+    hopStatus:SetDesc("fetching...")
+    task.spawn(function()
+        local order = hop.asc and "Asc" or "Desc"
+        local url = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=%s&limit=100")
+            :format(game.PlaceId, order)
+        local body
+        if _req then
+            pcall(function()
+                local res = _req({ Url = url, Method = "GET" })
+                body = res and res.Body
+            end)
+        end
+        if not body then
+            pcall(function() body = game:HttpGet(url) end)
+        end
+        local data
+        if body then
+            local ok, decoded = pcall(function() return httpService:JSONDecode(body) end)
+            if ok and decoded and decoded.data then data = decoded.data end
+        end
+        if not data then
+            hopStatus:SetDesc("rate limited / failed")
+            hopCounter:SetDesc("0 loaded")
+            hop.updating = false
+            return
+        end
+        hop.servers = {}
+        for _, v in ipairs(data) do
+            if type(v) == "table" and v.id and v.playing and v.maxPlayers then
+                table.insert(hop.servers, v)
+            end
+        end
+        while #hop.servers > hop.maxServers do
+            table.remove(hop.servers)
+        end
+        hopCounter:SetDesc(string.format("%d servers", #hop.servers))
+        renderHopList()
+        hop.updating = false
+    end)
+end
+
+print("server hopper reached")
+
+-- ============================================================
+-- Build
+-- ============================================================
+do
+GH.status = { gen = 0, players = nil, bricks = nil, uptime = nil }
+
+function GH.statusFormat(n)
+    local s = tostring(math.floor(n))
+    local out = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+    return (out:gsub("^,", ""))
+end
+
+function GH.statusPlayers()
+    return #players:GetPlayers() .. " / " .. players.MaxPlayers
+end
+
+function GH.statusUptime()
+    local t = math.floor(workspace.DistributedGameTime)
+    return string.format("%dh %02dm %02ds", math.floor(t / 3600), math.floor(t % 3600 / 60), t % 60)
+end
+
+function GH.statusBricks()
+    local folder = workspace:FindFirstChild("Bricks") or workspace:FindFirstChild("PlacedBlocks")
+    if not folder then return "N/A (no Bricks folder)" end
+    local total = 0
+    for _, child in ipairs(folder:GetChildren()) do
+        if child:IsA("BasePart") then
+            total = total + 1
+        else
+            for _, p in ipairs(child:GetChildren()) do
+                if p:IsA("BasePart") then total = total + 1 end
+            end
+        end
+    end
+    return GH.statusFormat(total)
+end
+
+function GH.statusUpdate(withBricks)
+    local s = GH.status
+    pcall(function() s.players:SetDesc(GH.statusPlayers()) end)
+    pcall(function() s.uptime:SetDesc(GH.statusUptime()) end)
+    if withBricks then
+        pcall(function() s.bricks:SetDesc(GH.statusBricks()) end)
+    end
+end
+
+function GH.statusAuto(on)
+    local s = GH.status
+    s.gen = s.gen + 1
+    if not on then return end
+    local gen = s.gen
+    task.spawn(function()
+        local n = 0
+        while s.gen == gen and GH.alive do
+            task.wait(1)
+            if s.gen ~= gen then break end
+            n = n + 1
+            GH.statusUpdate(n % 5 == 0)
+        end
+    end)
+end
+
+local statusTab = hub:Tab({ Title = "Server Status", Icon = "activity" })
+GH.status.players = statusTab:Paragraph({ Title = "Players", Desc = "..." })
+GH.status.bricks = statusTab:Paragraph({ Title = "Bricks", Desc = "..." })
+GH.status.uptime = statusTab:Paragraph({ Title = "Server Uptime", Desc = "..." })
+statusTab:Button({
+    Title = "Refresh",
+    Callback = function() GH.statusUpdate(true) end,
+})
+statusTab:Toggle({
+    Title = "Auto Refresh",
+    Callback = function(v) GH.statusAuto(v) end,
+})
+task.spawn(function() GH.statusUpdate(true) end)
+
+end
+
+print("build reached")
+
+-- ============================================================
+-- Stash
+-- ============================================================
+local stashTab = hub:Tab({ Title = "Stash", Icon = "archive" })
+local stashIndex = 1
+
+stashTab:Section({ Title = "Note" })
+stashTab:Paragraph({
+    Title = " ",
+    Desc = "Requires Enlighten. Client-side platform. Turn on Auto Grab from Mod & Mgmt recommended.",
+})
+
+stashTab:Section({ Title = "Stash System" })
+stashTab:Slider({
+    Title = "Stash Location",
+    Value = { Min = 1, Max = 10, Default = 1, Step = 1 },
+    Callback = function(v) stashIndex = v end,
+})
+stashTab:Button({
+    Title = "Go to Stash",
+    Callback = function()
+        local char = localPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            GH.tp.allow(2)
+            char.HumanoidRootPart.CFrame = CFrame.new(
+                stashPoints[stashIndex] + Vector3.new(0, 15, 0))
+        end
+    end,
+})
+stashTab:Button({
+    Title = "Make Stash",
+    Callback = function()
+        local char = localPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if not char or not hum then return end
+        GH.tp.allow(25)
+        local hasArken = localPlayer.Backpack:FindFirstChild("The Arkenstone")
+            or char:FindFirstChild("The Arkenstone")
+            or localPlayer.Backpack:FindFirstChild("Enlighten")
+            or char:FindFirstChild("Enlighten")
+        if not hasArken then
+            WindUI:Notify({ Title = "Stash",
+                Content = "Need Arkenstone or Enlighten.", Duration = 4 })
+            return
+        end
+        local pos = stashPoints[stashIndex]
+        buildStash(pos)
+        task.wait(0.5)
+        char.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 15, 0))
+        local arken = localPlayer.Backpack:FindFirstChild("The Arkenstone")
+            or char:FindFirstChild("The Arkenstone")
+        if arken then
+            arken.Parent = char
+            hum:EquipTool(arken)
+            task.wait(0.3)
+            arken.Parent = char
+        end
+        task.wait(1.5)
+        say(";mute me")    task.wait(0.7)
+        say(";freeze me")  task.wait(0.7)
+        startArkenForce()
+        local arken2 = localPlayer.Backpack:FindFirstChild("The Arkenstone")
+            or char:FindFirstChild("The Arkenstone")
+        if arken2 then
+            arken2.Parent = char
+            hum:EquipTool(arken2)
+            task.wait(0.3)
+            arken2.Parent = char
+        end
+        say(";gear me 25162389")
+        task.wait(1.5)
+        local bucket = localPlayer.Backpack:FindFirstChild("25162389")
+            or localPlayer.Backpack:FindFirstChild("Classic Bucket")
+            or localPlayer.Backpack:FindFirstChildOfClass("Tool")
+        if bucket and bucket ~= arken2 then
+            bucket.Parent = char
+            if arken2 then arken2.Parent = char end
+        end
+        task.wait(0.7)
+        say(";clone me")    task.wait(0.7)
+        say(";unfreeze me") task.wait(0.7)
+        say(";unmute me")
+        stopArkenForce()
+        task.wait(0.5)
+        if arken2 then arken2.Parent = localPlayer.Backpack end
+        if bucket then bucket.Parent = localPlayer.Backpack end
+        task.wait(0.5)
+        local spawn = workspace:FindFirstChildOfClass("SpawnLocation")
+        if spawn and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = spawn.CFrame + Vector3.new(0, 5, 0)
+        else
+            char.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
+        end
+    end,
+})
+
+stashTab:Section({ Title = "Quick Actions" })
+stashTab:Button({
+    Title = "Equip & Clone",
+    Callback = function()
+        if not localPlayer.Character then return end
+        startArkenForce()
+        task.wait(0.3)
+        say(";clone me")
+        task.wait(0.5)
+        stopArkenForce()
+    end,
+})
+stashTab:Button({
+    Title = "Teleport to Spawn",
+    Callback = function()
+        local char = localPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            GH.tp.allow(2)
+            local spawn = workspace:FindFirstChildOfClass("SpawnLocation")
+            if spawn then
+                char.HumanoidRootPart.CFrame = spawn.CFrame + Vector3.new(0, 5, 0)
+            else
+                char.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
+            end
+        end
+    end,
+})
+stashTab:Button({
+    Title = "Create Platform",
+    Callback = function()
+        local char = localPlayer.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then
+            WindUI:Notify({ Title = "Stash", Content = "No character.", Duration = 2 })
+            return
+        end
+        local pos = char.HumanoidRootPart.Position
+        buildStash(pos)
+        GH.tp.allow(2)
+        char.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 6, 0))
+        WindUI:Notify({ Title = "Stash", Content = "Platform created.", Duration = 2 })
+    end,
+})
+stashTab:Section({ Title = "Cleanup" })
+stashTab:Button({
+    Title = "Destroy Platform",
+    Callback = function()
+        clearStash()
+        WindUI:Notify({ Title = "Stash", Content = "Platform destroyed.", Duration = 2 })
+    end,
+})
+
+print("stash reached")
+
+-- ============================================================
+-- Auras
+-- ============================================================
+hub:Tab({ Title = "────>GRIEF<────", Icon = "", Locked = true, Border = false })
+local auraTab = hub:Tab({ Title = "Auras", Icon = "lucide:zap" })
+
+auraTab:Section({ Title = "Auras" })
+auraTab:Toggle({ Title = "Build Aura",   Callback = function(v) buildAura = v end })
+auraTab:Toggle({ Title = "Sign Aura",    Callback = function(v) signAura = v end })
+auraTab:Toggle({ Title = "Delete Aura",  Callback = function(v) deleteAura = v end })
+auraTab:Toggle({ Title = "Rainbow Aura", Callback = function(v) rainbowAura = v end })
+auraTab:Toggle({ Title = "Kill Aura",    Callback = function(v) killAura = v end })
+
+auraTab:Section({ Title = "Configuration" })
+auraTab:Slider({
+    Title = "Rainbow Speed",
+    Step = 0.001,
+    Value = { Min = 0.001, Max = 0.05, Default = 0.005 },
+    Callback = function(v) hueSpeed = v end,
+})
+auraTab:Slider({
+    Title = "Delete Range",
+    Value = { Min = 5, Max = 500, Default = 20 },
+    Callback = function(v) deleteRange2 = v end,
+})
+auraTab:Slider({
+    Title = "Paint Range",
+    Value = { Min = 5, Max = 500, Default = 20 },
+    Callback = function(v) paintRange = v end,
+})
+
+print("auras reached")
+
+-- ============================================================
+-- Anti-Maptide + Anti-NaN 
+-- ============================================================
+local maptideConn = nil
+local maptideLoop = nil
+
+local function isNaN(n)
+    return n ~= n
+end
+
+local function isSafe(cf)
+    local p = cf.Position
+    return not (
+        isNaN(p.X) or isNaN(p.Y) or isNaN(p.Z)
+        or math.abs(p.X) == math.huge
+        or math.abs(p.Y) == math.huge
+        or math.abs(p.Z) == math.huge
+        or math.abs(p.Y) > 500000
+    )
+end
+
+local function isVoided()
+    local spawn = workspace:FindFirstChild("Spawn")
+    if not spawn then return false end
+    local acm = spawn.AssemblyCenterOfMass
+    return acm.X == 0 and acm.Y == -1000000 and acm.Z == 0
+end
+
+local function onMaptideCharacter(character)
+    if not antiMaptide then return end
+    GH.tp.allow(2)
+
+    local hrp = character:WaitForChild("HumanoidRootPart", 10)
+    if not hrp then return end
+
+    if isVoided() then
+        hrp.Anchored = true
+        task.wait(0.1)
+        hrp.CFrame = CFrame.new(0, 3, 0)
+        hrp.Anchored = false
+        return
+    end
+
+    hrp.Anchored = true
+    task.wait(0.05)
+
+    if not isSafe(hrp.CFrame) then
+        local recovered = false
+        for _, plr in ipairs(players:GetPlayers()) do
+            if plr ~= localPlayer and plr.Character
+                and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local otherHRP = plr.Character.HumanoidRootPart
+                if isSafe(otherHRP.CFrame) then
+                    hrp.CFrame = otherHRP.CFrame + Vector3.new(0, 5, 0)
+                    recovered = true
+                    break
+                end
+            end
+        end
+        if not recovered then
+            hrp.CFrame = CFrame.new(0, 50, 0)
+        end
+    end
+
+    hrp.Anchored = false
+end
+
+local function enableAntiMaptide()
+    antiMaptide = true
+    if maptideConn then maptideConn:Disconnect() end
+    maptideConn = localPlayer.CharacterAdded:Connect(onMaptideCharacter)
+
+    if localPlayer.Character then
+        onMaptideCharacter(localPlayer.Character)
+    end
+
+    if maptideLoop then maptideLoop:Disconnect() end
+    maptideLoop = runService.Heartbeat:Connect(function()
+        if not antiMaptide then return end
+        local char = localPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp and not isSafe(hrp.CFrame) then
+            GH.tp.allow(1)
+            hrp.CFrame = CFrame.new(0, 50, 0)
+        end
+    end)
+end
+
+local function disableAntiMaptide()
+    antiMaptide = false
+    if maptideConn then
+        maptideConn:Disconnect()
+        maptideConn = nil
+    end
+    if maptideLoop then
+        maptideLoop:Disconnect()
+        maptideLoop = nil
+    end
+end
+
+print("anti-maptide reached")
+
+-- ============================================================
+-- Anti-Glow
+-- ============================================================
+local antiGlowConnections = {}
+
+local function enableAntiGlow()
+    antiGlow = true
+    for _, conn in pairs(antiGlowConnections) do
+        if conn then conn:Disconnect() end
+    end
+    antiGlowConnections = {}
+
+    table.insert(antiGlowConnections, runService.RenderStepped:Connect(function()
+        if not antiGlow then return end
+        local character = localPlayer.Character
+        if not character then return end
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                if part.Material == Enum.Material.Neon then
+                    part.Material = Enum.Material.Plastic
+                end
+                if part.Color == Color3.fromRGB(255, 255, 255) then
+                    part.Color = Color3.fromRGB(192, 192, 192)
+                end
+            end
+        end
+    end))
+end
+
+local function disableAntiGlow()
+    antiGlow = false
+    for _, conn in pairs(antiGlowConnections) do
+        if conn then conn:Disconnect() end
+    end
+    antiGlowConnections = {}
+end
+
+print("anti-glow reached")
+
+-- ============================================================
+-- GodMode
+-- ============================================================
+local godConnections = {}
+
+local function enableGodMode()
+    godMode = true
+    for _, c in pairs(godConnections) do
+        if c then c:Disconnect() end
+    end
+    godConnections = {}
+
+    local char = localPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    hum.MaxHealth = math.huge
+    hum.Health = math.huge
+
+    table.insert(godConnections, runService.RenderStepped:Connect(function()
+        if shared.GongHub_GodPaused then return end
+        if hum and hum.Parent then
+            hum.MaxHealth = math.huge
+            hum.Health = math.huge
+        end
+    end))
+
+    table.insert(godConnections, hum:GetPropertyChangedSignal("Health"):Connect(function()
+        if hum and hum.Parent and hum.Health < math.huge then
+            hum.MaxHealth = math.huge
+            hum.Health = math.huge
+        end
+    end))
+
+    table.insert(godConnections, hum.Died:Connect(function()
+        task.wait()
+        if hum and hum.Parent then hum.Health = math.huge end
+    end))
+end
+
+local function disableGodMode()
+    godMode = false
+    for _, c in pairs(godConnections) do
+        if c then c:Disconnect() end
+    end
+    godConnections = {}
+
+    task.wait()
+    local char = localPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.MaxHealth = 100
+            task.wait()
+            hum.Health = 100
+        end
+    end
+end
+
+GH.conns.godChar = localPlayer.CharacterAdded:Connect(function()
+    if godMode then
+        task.wait(0.3)
+        enableGodMode()
+    end
+end)
+
+local function forceReset()
+    shared.GongHub_GodPaused = true
+    killSelf()
+    task.wait(0.6)
+    shared.GongHub_GodPaused = false
+end
+
+print("godmode reached")
+
+-- ============================================================
+-- Antis tab
+-- ============================================================
+local antis = hub:Tab({ Title = "Antis", Icon = "lucide:shield-x" })
+
+-- ============================================================
+-- Antis UI
+-- ============================================================
+antis:Section({ Title = "Vampire" })
+antis:Toggle({
+    Title = "Anti-Vamp",
+    Callback = function(v)
+        antiVamp = v
+        if v then restoreCamera() end
+    end,
+})
+antis:Button({ Title = "Restore Camera / Inventory", Callback = restoreCamera })
+
+antis:Section({ Title = "Visuals" })
+antis:Toggle({
+    Title = "Anti-Fog",
+    Callback = function(v)
+        antiFog = v
+        if not v and atmo then atmo.Density = savedAtmoDensity end
+    end,
+})
+antis:Toggle({ Title = "Anti-Colorless", Callback = function(v) antiColorless = v end })
+antis:Toggle({ Title = "Anti-Blind",     Callback = function(v) antiBlind = v end })
+antis:Toggle({ Title = "Anti-Myopic",    Callback = function(v) antiMyopic = v end })
+antis:Toggle({
+    Title = "Anti-Glow",
+    Callback = function(v)
+        if v then enableAntiGlow() else disableAntiGlow() end
+    end,
+})
+
+print("antis visuals reached")
+
+antis:Section({ Title = "Player" })
+antis:Toggle({
+    Title = "GodMode",
+    Callback = function(v)
+        if v then enableGodMode() else disableGodMode() end
+    end,
+})
+antis:Toggle({ Title = "Anti-Morph",  Callback = function(v) antiMorph = v end })
+antis:Toggle({ Title = "Anti-Glitch", Callback = function(v) antiGlitch = v end })
+
+local antiFlingConnection = nil
+
+antis:Toggle({
+    Title = "Anti-Fling",
+    Callback = function(v)
+        if v then
+            -- Set all current players to no collide
+            for _, player in pairs(players:GetPlayers()) do
+                if player ~= localPlayer and player.Character then
+                    for _, part in pairs(player.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end
+
+            -- Use Stepped instead of Heartbeat
+            if antiFlingConnection then
+                antiFlingConnection:Disconnect()
+            end
+
+            antiFlingConnection = runService.Stepped:Connect(function()
+                for _, player in pairs(players:GetPlayers()) do
+                    if player ~= localPlayer and player.Character then
+                        for _, part in pairs(player.Character:GetDescendants()) do
+                            if part:IsA("BasePart") then
+                                part.CanCollide = false
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            if antiFlingConnection then
+                antiFlingConnection:Disconnect()
+                antiFlingConnection = nil
+            end
+
+            -- Re-enable collision for all players
+            for _, player in pairs(players:GetPlayers()) do
+                if player ~= localPlayer and player.Character then
+                    for _, part in pairs(player.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = true
+                        end
+                    end
+                end
+            end
+        end
+    end
+})
+
+
+antis:Toggle({
+    Title = "Anti-Void",
+    Callback = function(v)
+        if v then GH.voidEnable() else GH.voidDisable() end
+    end,
+})
+
+antis:Toggle({
+    Title = "Anti-AFK",
+    Callback = function(v)
+        if v then
+            GH.afkEnable()
+            WindUI:Notify({ Title = "Anti-AFK", Content = "Active.", Duration = 2 })
+        else
+            GH.afkDisable()
+            WindUI:Notify({ Title = "Anti-AFK", Content = "Off.", Duration = 2 })
+        end
+    end,
+})
+antis:Toggle({
+    Title = "Anti-Teleport",
+    Callback = function(v)
+        if v then GH.tpEnable() else GH.tpDisable() end
+    end,
+})
+antis:Toggle({
+    Title = "Anti-Jail",
+    Callback = function(v)
+        antiJail = v
+        if v and localPlayer.Character then
+            unclip(localPlayer.Character:FindFirstChild("Jail"))
+        end
+    end,
+})
+antis:Toggle({ Title = "Anti-Freeze", Callback = function(v) antiFreeze = v end })
+antis:Toggle({
+    Title = "Anti-Maptide",
+    Desc = "If spawn gets NaN'd, respawns you at a nearby player or (0, 50, 0)",
+    Callback = function(v)
+        if v then enableAntiMaptide() else disableAntiMaptide() end
+    end,
+})
+
+GH.spray = { name = nil, on = false, gen = 0, conn = nil, kept = nil, map = {}, dropdown = nil, radius = 100, mode = "Normal" }
+
+function GH.sprayLabels()
+    local names = {}
+    GH.spray.map = {}
+    for _, p in ipairs(players:GetPlayers()) do
+        local label = p.DisplayName .. " (@" .. p.Name .. ")"
+        if p == localPlayer then label = "[YOU] " .. p.DisplayName end
+        table.insert(names, label)
+        GH.spray.map[label] = p.Name
+    end
+    return names
+end
+
+function GH.sprayOrigin()
+    local char = localPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    return hrp and hrp.Position
+end
+
+function GH.sprayNear(d, origin)
+    local part = d:IsA("BasePart") and d or d:FindFirstAncestorWhichIsA("BasePart")
+    if not part then return true end
+    return (part.Position - origin).Magnitude <= GH.spray.radius
+end
+
+function GH.sprayNearParts(folder, origin)
+    local ok, parts = pcall(function()
+        local params = OverlapParams.new()
+        params.FilterType = Enum.RaycastFilterType.Include
+        params.FilterDescendantsInstances = { folder }
+        return workspace:GetPartBoundsInRadius(origin, GH.spray.radius, params)
+    end)
+    if ok and type(parts) == "table" then return parts end
+    return nil
+end
+
+function GH.spraySweep(gen)
+    local s = GH.spray
+    local bricks = workspace:FindFirstChild("Bricks")
+    local folder = bricks and s.name and bricks:FindFirstChild(s.name)
+    if not folder then return 0 end
+    local removed = 0
+    if s.mode == "Radius" then
+        local origin = GH.sprayOrigin()
+        if not origin then return 0 end
+        local parts = GH.sprayNearParts(folder, origin)
+        if parts then
+            for _, part in ipairs(parts) do
+                if part.Name == "Spray" then
+                    pcall(function() part:Destroy() end)
+                    removed = removed + 1
+                else
+                    for _, c in ipairs(part:GetChildren()) do
+                        if c.Name == "Spray" then
+                            pcall(function() c:Destroy() end)
+                            removed = removed + 1
+                        end
+                    end
+                end
+            end
+            return removed
+        end
+        for _, d in ipairs(folder:GetDescendants()) do
+            if d.Name == "Spray" and GH.sprayNear(d, origin) then
+                pcall(function() d:Destroy() end)
+                removed = removed + 1
+            end
+        end
+        return removed
+    end
+    if s.kept and not s.kept:IsDescendantOf(folder) then s.kept = nil end
+    local seen = 0
+    for _, d in ipairs(folder:GetDescendants()) do
+        if d.Name == "Spray" then
+            if not s.kept then
+                s.kept = d
+            elseif d ~= s.kept then
+                pcall(function() d:Destroy() end)
+                removed = removed + 1
+            end
+        end
+        seen = seen + 1
+        if seen % 3000 == 0 then
+            task.wait()
+            if gen and s.gen ~= gen then return removed end
+        end
+    end
+    return removed
+end
+
+function GH.sprayStop()
+    local s = GH.spray
+    s.gen = s.gen + 1
+    if s.conn then
+        s.conn:Disconnect()
+        s.conn = nil
+    end
+end
+
+function GH.sprayStart()
+    local s = GH.spray
+    GH.sprayStop()
+    if not s.on or not s.name then return end
+    local bricks = workspace:FindFirstChild("Bricks")
+    if not bricks then
+        WindUI:Notify({ Title = "Anti Spray Lag", Content = "Bricks folder not found.", Duration = 3 })
+        return
+    end
+    s.kept = nil
+    local gen = s.gen
+    s.conn = bricks.DescendantAdded:Connect(function(d)
+        if d.Name ~= "Spray" then return end
+        local top = d
+        while top.Parent and top.Parent ~= bricks do top = top.Parent end
+        if top.Parent ~= bricks or top.Name ~= s.name then return end
+        if s.mode == "Radius" then
+            local origin = GH.sprayOrigin()
+            if origin and GH.sprayNear(d, origin) then
+                task.defer(function() pcall(function() d:Destroy() end) end)
+            end
+        elseif not s.kept or not s.kept.Parent then
+            s.kept = d
+        else
+            task.defer(function() pcall(function() d:Destroy() end) end)
+        end
+    end)
+    task.spawn(function()
+        GH.spraySweep(gen)
+        while s.gen == gen and GH.alive do
+            task.wait(1)
+            if s.gen ~= gen then break end
+            if s.mode == "Radius" then
+                GH.spraySweep(gen)
+            elseif s.kept and not s.kept.Parent then
+                s.kept = nil
+            end
+        end
+    end)
+end
+
+antis:Section({ Title = "Spray Lag" })
+GH.spray.dropdown = antis:Dropdown({
+    Title = "Spray Target",
+    Values = GH.sprayLabels(),
+    Callback = function(v)
+        local label = typeof(v) == "table" and v[1] or v
+        GH.spray.name = GH.spray.map[label]
+        GH.sprayStart()
+    end,
+})
+antis:Button({
+    Title = "Refresh Spray Player List",
+    Callback = function()
+        local names = GH.sprayLabels()
+        local ok = pcall(function() GH.spray.dropdown:Refresh(names) end)
+        WindUI:Notify({
+            Title = "Anti Spray Lag",
+            Content = ok and "Player list refreshed." or "Refresh failed.",
+            Duration = 2,
+        })
+    end,
+})
+antis:Dropdown({
+    Title = "Spray Mode",
+    Desc = "Normal: keep 1 Spray, delete the rest. Radius: delete all Sprays within the radius.",
+    Values = { "Normal", "Radius" },
+    Value = "Normal",
+    Callback = function(v)
+        GH.spray.mode = typeof(v) == "table" and v[1] or v
+        GH.sprayStart()
+    end,
+})
+antis:Slider({
+    Title = "Spray Radius",
+    Value = { Min = 10, Max = 500, Default = 100 },
+    Callback = function(v) GH.spray.radius = v end,
+})
+antis:Toggle({
+    Title = "Anti Spray Lag",
+    Callback = function(v)
+        GH.spray.on = v
+        if v and not GH.spray.name and not GH.restoring then
+            WindUI:Notify({ Title = "Anti Spray Lag", Content = "Select a player first.", Duration = 3 })
+        end
+        GH.sprayStart()
+    end,
+})
+
+GH.chat = { text = "", input = nil, busy = false, prefix = "🖕 ", limit = 190 }
+
+function GH.chatFormat(text)
+    local c = GH.chat
+    local out = {}
+    local cur = ""
+    local function ulen(s) return utf8.len(s) or #s end
+    local function push(s)
+        if cur == "" then
+            cur = s
+        elseif ulen(cur .. " " .. s) <= c.limit then
+            cur = cur .. " " .. s
+        else
+            table.insert(out, cur)
+            cur = s
+        end
+    end
+    local function add(s)
+        s = c.prefix .. s
+        while ulen(s) > c.limit do
+            local cut = utf8.len(s) and utf8.offset(s, c.limit + 1) or (c.limit + 1)
+            push(s:sub(1, cut - 1))
+            s = s:sub(cut)
+        end
+        if s ~= "" then push(s) end
+    end
+    local found = false
+    for sentence in tostring(text):gmatch("[^%.!%?\n]+[%.!%?]*") do
+        local s = sentence:match("^%s*(.-)%s*$")
+        if s ~= "" then
+            found = true
+            add(s)
+        end
+    end
+    if not found then
+        local s = tostring(text):match("^%s*(.-)%s*$")
+        if s ~= "" then add(s) end
+    end
+    if cur ~= "" then table.insert(out, cur) end
+    return out
+end
+
+function GH.chatSend()
+    local c = GH.chat
+    if c.busy then return end
+    local list = GH.chatFormat(c.text)
+    if #list == 0 then
+        WindUI:Notify({ Title = "Chat", Content = "Type a message first.", Duration = 2 })
+        return
+    end
+    c.busy = true
+    c.text = ""
+    pcall(function() c.input:Set("") end)
+    task.spawn(function()
+        for i, msg in ipairs(list) do
+            if not GH.alive then break end
+            say(msg)
+            if i < #list then task.wait(1.2) end
+        end
+        c.busy = false
+    end)
+end
+
+antis:Section({ Title = "Chat" })
+GH.chat.input = antis:Input({
+    Title = "Anti-Dumb / Anti-Mute Chat",
+    Default = "",
+    Callback = function(v) GH.chat.text = v end,
+})
+antis:Button({
+    Title = "Send Chat",
+    Callback = function() GH.chatSend() end,
+})
+
+GH.conns.antiChar = localPlayer.CharacterAdded:Connect(function(char)
+    task.wait(0.2)
+    if antiVamp then task.wait(0.3) restoreCamera() end
+    GH.conns.antiChild = char.ChildAdded:Connect(function(child)
+        if child.Name == "Hielo" and antiFreeze then
+            task.wait(0.1)
+            killSelf()
+        elseif child.Name == "Jail" and antiJail then
+            task.wait(0.1)
+            unclip(child)
+        end
+    end)
+end)
+
+print("antis reached")
+
+-- ============================================================
+-- Target
+-- ============================================================
+hub:Tab({ Title = "───>PLAYER<───", Icon = "", Locked = true, Border = false })
+do
+local targetTab = hub:Tab({ Title = "Target", Icon = "target", locked = false })
+local selectedPlayer = nil
+local playerMap = {}
+
+local function buildPlayerList()
+    local names = {}
+    playerMap = {}
+    for _, p in ipairs(players:GetPlayers()) do
+        local label = p.DisplayName .. " (@" .. p.Name .. ")"
+        if p == localPlayer then label = "[YOU] " .. p.DisplayName end
+        table.insert(names, label)
+        playerMap[label] = p
+    end
+    return names
+end
+
+local targetDropdown
+
+local function refreshTargetList()
+    local names = buildPlayerList()
+    if targetDropdown and targetDropdown.Refresh then
+        targetDropdown:Refresh(names)
+        return true
+    end
+    return false
+end
+
+targetDropdown = targetTab:Dropdown({
+    Title = "Select Player",
+    Values = buildPlayerList(),
+    Callback = function(v) selectedPlayer = playerMap[v] end,
+})
+
+targetTab:Button({
+    Title = "Refresh Player List",
+    Callback = function()
+        local ok, done = pcall(refreshTargetList)
+        WindUI:Notify({
+            Title = "Target",
+            Content = (ok and done) and "Player list refreshed." or "Refresh failed.",
+            Duration = 2,
+        })
+    end,
+})
+
+targetTab:Section({ Title = "Offensive" })
+targetTab:Button({
+    Title = "Abuse Target",
+    Callback = function()
+        if not selectedPlayer then
+            WindUI:Notify({ Title = "Error", Content = "Select a target.", Duration = 2 })
+            return
+        end
+        for _, cmd in ipairs({
+            ";mute "    .. selectedPlayer.DisplayName,
+            ";clearinv " .. selectedPlayer.DisplayName,
+            ";glitch "  .. selectedPlayer.DisplayName,
+            ";blind "   .. selectedPlayer.DisplayName,
+            ";myopic "  .. selectedPlayer.DisplayName,
+            ";freeze "  .. selectedPlayer.DisplayName,
+        }) do
+            say(cmd)
+            task.wait(0.3)
+        end
+    end,
+})
+targetTab:Button({
+    Title = "Delcubes Target",
+    Callback = function()
+        if not selectedPlayer then return end
+        local deleteRemote = toolEventAny("Delete")
+        if not deleteRemote then return end
+        local hrp = localPlayer.Character
+            and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        local delay = userInputService.TouchEnabled and 0.05 or 0.02
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if obj.Name == "Brick" and obj:IsA("BasePart") then
+                local ownerVal = obj:FindFirstChild("Owner")
+                local owned = false
+                if ownerVal then
+                    if ownerVal:IsA("ObjectValue")
+                        and ownerVal.Value == selectedPlayer then
+                        owned = true
+                    elseif tostring(ownerVal.Value) == selectedPlayer.Name
+                        or tostring(ownerVal) == selectedPlayer.Name then
+                        owned = true
+                    end
+                elseif obj:GetAttribute("Owner") == selectedPlayer.Name then
+                    owned = true
+                end
+                if owned then
+                    deleteRemote:FireServer(obj, hrp.Position)
+                    task.wait(delay)
+                end
+            end
+        end
+    end,
+})
+
+targetTab:Section({ Title = "Movement" })
+targetTab:Button({
+    Title = "TP to Player",
+    Callback = function()
+        if selectedPlayer and selectedPlayer.Character
+            and selectedPlayer.Character:FindFirstChild("HumanoidRootPart")
+            and localPlayer.Character then
+            GH.tp.allow(2)
+            localPlayer.Character.HumanoidRootPart.CFrame =
+                selectedPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 3, 0)
+        else
+            WindUI:Notify({ Title = "Error",
+                Content = "Target has no character.", Duration = 2 })
+        end
+    end,
+})
+
+local viewTarget = false
+targetTab:Button({
+    Title = "View Target",
+    Callback = function()
+        if not selectedPlayer or not selectedPlayer.Character then return end
+        viewTarget = not viewTarget
+        local cam = workspace.CurrentCamera
+        cam.CameraSubject = viewTarget
+            and selectedPlayer.Character:FindFirstChild("Humanoid")
+            or localPlayer.Character:FindFirstChild("Humanoid")
+    end,
+})
+
+GH.targetView = function() return viewTarget end
+end
+
+print("target reached")
+
+-- ============================================================
+-- Mod & Mgmt
+-- ============================================================
+local modTab = hub:Tab({ Title = "Mod & Mgmt", Icon = "lucide:shield" })
+modTab:Section({ Title = "Chat" })
+modTab:Toggle({
+    Title = "Spy Chat",
+    Desc = "Reveals hidden/muted and colors names",
+    Value = true,
+    Callback = function(v) spyChat = v end,
+})
+modTab:Section({ Title = "Item Management" })
+modTab:Toggle({
+    Title = "Auto Pickup ALL Dropped Tools",
+    Callback = function(v) autoGrabDropped = v end,
+})
+modTab:Toggle({
+    Title = "Auto Drop Tools On Death",
+    Callback = function(v) autoDropOnDeath = v end,
+})
+modTab:Toggle({
+    Title = "Protect Arkenstone",
+    Value = true,
+    Callback = function(v) protectArkenstone = v end,
+})
+modTab:Toggle({
+    Title = "Cubes Checker",
+    Callback = function(v)
+        if v then GH.cubesEnable() else GH.cubesDisable() end
+    end,
+})
+
+modTab:Section({ Title = "Command Runner" })
+do
+local cmd1, cmd2, cmd3, cmd4, cmd5 = ";", ";", ";", ";", ";"
+local function runCmd(cmd)
+    if cmd == "" or cmd == ";" then return end
+    local msg = cmd
+    if msg:sub(1, 1) ~= ";" then msg = ";" .. msg end
+    if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        local ch = textChatService:FindFirstChild("RBXGeneral", true)
+            or textChatService:FindFirstChild("RBXSystem", true)
+        if ch and ch:IsA("TextChannel") then ch:SendAsync(msg) end
+    else
+        local sayReq = replicatedStorage:FindFirstChild("SayMessageRequest", true)
+        if sayReq then sayReq:FireServer(msg, "All") end
+    end
+end
+local c1 = modTab:Input({ Title = "Command 1", Default = ";",
+    Callback = function(v) cmd1 = v end })
+modTab:Button({ Title = "Execute 1", Callback = function() runCmd(cmd1) end })
+local c2 = modTab:Input({ Title = "Command 2", Default = ";",
+    Callback = function(v) cmd2 = v end })
+modTab:Button({ Title = "Execute 2", Callback = function() runCmd(cmd2) end })
+local c3 = modTab:Input({ Title = "Command 3", Default = ";",
+    Callback = function(v) cmd3 = v end })
+modTab:Button({ Title = "Execute 3", Callback = function() runCmd(cmd3) end })
+local c4 = modTab:Input({ Title = "Command 4", Default = ";",
+    Callback = function(v) cmd4 = v end })
+modTab:Button({ Title = "Execute 4", Callback = function() runCmd(cmd4) end })
+local c5 = modTab:Input({ Title = "Command 5", Default = ";",
+    Callback = function(v) cmd5 = v end })
+modTab:Button({ Title = "Execute 5", Callback = function() runCmd(cmd5) end })
+modTab:Button({
+    Title = "Clear All Inputs",
+    Callback = function()
+        cmd1, cmd2, cmd3, cmd4, cmd5 = ";", ";", ";", ";", ";"
+        c1:Set(";") c2:Set(";") c3:Set(";") c4:Set(";") c5:Set(";")
+    end,
+})
+end
+
+print("mod reached")
+
+-- ============================================================
+-- Chat color renderer 
+-- ============================================================
+textChatService.OnIncomingMessage = function(mdata)
+    if not mdata or not mdata.Text or mdata.Text == "" then return end
+
+    local src = mdata.TextSource and mdata.TextSource.UserId
+        and players:GetPlayerByUserId(mdata.TextSource.UserId)
+    if not src then return end
+
+    local cn = ""
+    local hidden = false
+
+    if src.Neutral == true then
+        if src:GetAttribute("Arken") == true then
+            cn = "arken"
+        else
+            cn = "peasant"
+        end
+    else
+        cn = "admin"
+    end
+
+    local muted = src:HasTag("Muted")
+    if muted then
+        cn = "hidden"
+        if not spyChat and src ~= localPlayer then
+            mdata.Text = ""
+        end
+    end
+
+    local cmd = string.sub(mdata.Text, 1, string.find(mdata.Text, " ") or nil)
+    if string.sub(mdata.Text, 1, 1) == ";" then
+        cmd = string.sub(mdata.Text, 2, string.find(mdata.Text, " ") or nil)
+        if spyChat then
+            cn = "hidden"
+            hidden = true
+        else
+            if src ~= localPlayer then
+                mdata.Text = ""
+            end
+        end
+    end
+
+    local iq = nil
+    if spyChat and src:GetAttribute("IQ") then
+        if src:GetAttribute("IQ") >= 200 then
+            iq = "genius 🧠"
+            cn = "iqgenius"
+        elseif src:GetAttribute("IQ") <= 50 then
+            iq = "dumb 🤪"
+            cn = "iqdumb"
+        end
+    end
+
+    local hiddenTag = hidden and " (HIDDEN CHAT)" or ""
+    local iqTag     = iq and (" (" .. iq .. ")") or ""
+    local mutedTag  = muted and " (MUTED)" or ""
+
+    if cubes then
+        mdata.PrefixText = '<font color="' .. colorHex[cn] .. '"><b><font color=\'rgb('
+            .. tostring(colorMap[cn][1]) .. ","
+            .. tostring(colorMap[cn][2]) .. ","
+            .. tostring(colorMap[cn][3]) .. ")'>["
+            .. src.DisplayName .. hiddenTag .. iqTag .. mutedTag
+            .. "]: </font></b></font>"
+    else
+        mdata.PrefixText = '<font color="' .. colorHex[cn] .. '"><i><font color=\'rgb('
+            .. tostring(colorMap[cn][1]) .. ","
+            .. tostring(colorMap[cn][2]) .. ","
+            .. tostring(colorMap[cn][3]) .. ")'>("
+            .. src.DisplayName .. hiddenTag .. iqTag .. mutedTag
+            .. ") </font></i></font>"
+    end
+end
+
+print("chat renderer reached")
+
+-- ============================================================
+-- Character loop
+-- ============================================================
+task.spawn(function()
+    while GH.alive do
+        task.wait(0.2)
+        local hum = humanoidRef
+        if hum and hum.Parent then
+            if autoGrabDropped and hum.Health > 0 then
+                for _, obj in pairs(workspace:GetChildren()) do
+                    if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
+                        hum:EquipTool(obj)
+                    end
+                end
+            end
+            if autoDropOnDeath and hum.Health <= 0 then
+                for _, tool in pairs(localPlayer.Backpack:GetChildren()) do
+                    if not (protectArkenstone and tool.Name == "The Arkenstone") then
+                        tool.Parent = localPlayer.Character
+                    end
+                end
+                for _, tool in pairs(localPlayer.Character:GetChildren()) do
+                    if tool:IsA("Tool")
+                        and not (protectArkenstone and tool.Name == "The Arkenstone") then
+                        tool.Parent = workspace
+                    end
+                end
+            end
+        end
+    end
+end)
+
+print("character loop reached")
+
+-- ============================================================
+-- Hopper background fetch
+-- ============================================================
+task.spawn(function()
+    task.wait(1)
+    if fetchHop then fetchHop() end
+end)
+
+local lastHopFetch = 0
+task.spawn(function()
+    while GH.alive do
+        task.wait(15)
+        if hopTab and hopTab._frame and hopTab._frame.Visible then
+            local now = tick()
+            if now - lastHopFetch >= 30 and not hop.updating then
+                lastHopFetch = now
+                if fetchHop then fetchHop() end
+            end
+        end
+    end
+end)
+
+print("hopper bg reached")
+
+function GH.shutdown()
+    if not GH.alive then return end
+    GH.alive = false
+    GH.building = false
+    pcall(function() textChatService.OnIncomingMessage = nil end)
+    for _, c in pairs(GH.conns) do pcall(function() c:Disconnect() end) end
+    GH.conns = {}
+    pcall(GH.tpDisable)
+    pcall(GH.voidDisable)
+    pcall(GH.afkDisable)
+    pcall(GH.cubesDisable)
+    pcall(GH.sprayStop)
+    pcall(GH.tagStopAll)
+    pcall(stopArkenForce)
+    pcall(clearStash)
+    if GH.inv and GH.inv.on() then pcall(GH.inv.disable) end
+    if antiMaptide then pcall(disableAntiMaptide) end
+    if antiGlow then pcall(disableAntiGlow) end
+    if godMode then task.spawn(function() pcall(disableGodMode) end) end
+    if antiFlingConnection then
+        antiFlingConnection:Disconnect()
+        antiFlingConnection = nil
+        pcall(function()
+            for _, p in pairs(players:GetPlayers()) do
+                if p ~= localPlayer and p.Character then
+                    for _, part in pairs(p.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then part.CanCollide = true end
+                    end
+                end
+            end
+        end)
+    end
+    if GH.boomboxStop then pcall(GH.boomboxStop) end
+    if atmo then pcall(function() atmo.Density = savedAtmoDensity end) end
+    if GH.targetView and GH.targetView() then pcall(restoreCamera) end
+    shared.GongHub_GodPaused = nil
+    pcall(function() loadingGui:Destroy() end)
+end
+
+GH.finish()
+prepareAutoExecute()
+
+-- ============================================================
+-- Kill loading FIRST
+-- ============================================================
+spinnerAlive = false
+pcall(function() spinnerTxt.Text = "Done!" end)
+pcall(function()
+    tweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0.5, -150, 0.5, -90),
+    }):Play()
+end)
+pcall(function()
+    tweenService:Create(back, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {
+        BackgroundTransparency = 1,
+    }):Play()
+end)
+task.wait(0.6)
+pcall(function()
+    if loadingGui and loadingGui.Parent then loadingGui:Destroy() end
+end)
+pcall(function()
+    local leftover = playerGui:FindFirstChild("GongHubLoading")
+    if leftover then leftover:Destroy() end
+    local wind = coreGui:FindFirstChild("WindUI_Loading")
+    if wind then wind:Destroy() end
+end)
+print("[GongHub] loading destroyed")
+
+task.spawn(function()
+    task.wait(1.5)
+
+    if not autoExecutePending then return end
+    if not autoExecute then
+        clearPending()
+        return
+    end
+    if autoExecuteLoader == "" then
+        clearPending()
+        return
+    end
+
+    local jobChanged   = (autoExecuteLastJob ~= "" and game.JobId ~= autoExecuteLastJob)
+    local placeChanged = (autoExecutePlace ~= 0 and autoExecutePlace ~= game.PlaceId)
+    local recent       = (autoExecuteTimestamp > 0 and (os.time() - autoExecuteTimestamp) < 300)
+
+    if not (jobChanged or placeChanged or recent) then
+        clearPending()
+        return
+    end
+
+    clearPending()
+end)
+
+-- ============================================================
+-- Premium tab (guarded)
+-- ============================================================
+pcall(function()
+    WindUI:SetDevIds(DevIds)
+    WindUI:SetPremiumIds(PremiumIds)
+end)
+
+local premiumPremTab
+pcall(function()
+    premiumPremTab = hub:PremTab({ Title = "Premium", Icon = "lucide:crown" })
+end)
+
+if premiumPremTab then
+    pcall(function()
+        premiumPremTab:PremToggle({
+            Title = "Player Tags",
+            Desc = "Show a floating tag above every player.",
+            Icon = "lucide:tag",
+            Value = false,
+            Callback = function() end,
+        })
+    end)
+end
+
+print("premium reached")
+
+-- ============================================================
+-- Dev tab (guarded, no remote blacklist)
+-- ============================================================
+local devDevTab
+pcall(function()
+    devDevTab = hub:DevTab({ Title = "Dev", Icon = "lucide:shield" })
+end)
+
+if devDevTab then
+    pcall(function()
+        devDevTab:Button({
+            Title = "Close Panel",
+            Desc = "Destroys the GongHub GUI.",
+            Callback = function()
+                pcall(function() hub:Destroy() end)
+            end,
+        })
+    end)
+end
+
+print("dev reached")
+if devDevTab then
+    pcall(function()
+        devDevTab:Button({
+            Title = "Owner Lock Status",
+            Callback = function()
+                local flag = GH.lockFlag(true)
+                WindUI:Notify({
+                    Title = "Owner Lock",
+                    Content = "Lock: " .. (flag and "on" or "off") .. "\nOwner in server: " .. (GH.ownerPresent() and "yes" or "no") .. "\nAPI: " .. GH.lockProbe(),
+                    Duration = 6,
+                })
+            end,
+        })
+    end)
+end
+
+function GH.lockProbe()
+    if GH.lock.api == "" then return "not set" end
+    if not _req then return "no request function" end
+    local ok, res = pcall(_req, { Url = GH.lock.api .. "?t=" .. os.time(), Method = "GET" })
+    if not ok or type(res) ~= "table" then return "request failed" end
+    local body = type(res.Body) == "string" and (res.Body:sub(1, 40):gsub("%s+", " ")) or ""
+    return "HTTP " .. tostring(res.StatusCode) .. " " .. body
+end
+
+function GH.lockSet(v)
+    local function note(text)
+        WindUI:Notify({ Title = "Owner Lock", Content = text, Duration = 3 })
+    end
+    if GH.lock.api == "" then
+        note("Backend URL is not set.")
+        return false
+    end
+    if not _req then
+        note("This executor has no request function.")
+        return false
+    end
+    local okT, raw = pcall(readfile, GH.lock.tokenFile)
+    local token = okT and type(raw) == "string" and raw:match("^%s*(.-)%s*$") or ""
+    if token == "" then
+        note("Owner token is missing.")
+        return false
+    end
+    local ok, res = pcall(_req, {
+        Url = GH.lock.api,
+        Method = "POST",
+        Headers = { Authorization = token, ["Content-Type"] = "text/plain" },
+        Body = v and "true" or "false",
+    })
+    if not ok or type(res) ~= "table" then
+        note("Request failed.")
+        return false
+    end
+    if res.StatusCode == 200 then
+        GH.lock.on = v
+        GH.lock.at = os.clock()
+        note(v and "Owner Lock is ON." or "Owner Lock is OFF.")
+        return true
+    end
+    local detail = type(res.Body) == "string" and (res.Body:sub(1, 40):gsub("%s+", " ")) or ""
+    note("Server answered " .. tostring(res.StatusCode) .. (res.StatusCode == 403 and " (wrong token)" or "") .. ": " .. detail)
+    return false
+end
+
+if devDevTab and GH.isOwnerId(localPlayer.UserId) then
+    pcall(function()
+        devDevTab:Input({
+            Title = "Owner Token",
+            Default = "",
+            Callback = function(v)
+                if type(v) ~= "string" or v == "" then return end
+                local ok = pcall(function() writefile(GH.lock.tokenFile, v) end)
+                WindUI:Notify({
+                    Title = "Owner Lock",
+                    Content = ok and "Token saved." or "Could not save the token.",
+                    Duration = 2,
+                })
+            end,
+        })
+        devDevTab:Toggle({
+            Title = "Owner Lock",
+            Value = GH.lock.api ~= "" and GH.lockFlag(true) or false,
+            Callback = function(v)
+                if not GH.lock.armed then return end
+                GH.lockSet(v)
+            end,
+        })
+        task.delay(2, function() GH.lock.armed = true end)
+    end)
+end
+
+print("[GongHub] fully loaded")
