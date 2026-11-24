@@ -33,7 +33,7 @@ local DEFAULT_AUTOEXEC_URL = "https://gonghub2.tinm4318.workers.dev/script?key="
 local DevIds     = { 10972869437 , 11819448837 , 11814042874 }
 local PremiumIds = { 10972869437, 11819448837 , 11814042874 }
 
-local tagColor   = Color3.fromRGB(255, 176, 0)
+local tagColor   = Color3.fromRGB(34, 197, 94)
 
 local material     = "smooth"
 local trailType    = "detailed"
@@ -802,52 +802,61 @@ local back, card, spinnerTxt
 do
 back = Instance.new("Frame", loadingGui)
 back.Size = UDim2.fromScale(1, 1)
-back.BackgroundColor3 = Color3.fromRGB(10, 9, 6)
+back.BackgroundColor3 = Color3.fromRGB(6, 19, 10)
 back.BorderSizePixel = 0
 
 card = Instance.new("Frame", back)
 card.Size = UDim2.fromOffset(300, 220)
 card.Position = UDim2.new(0.5, -150, 0.5, -110)
-card.BackgroundColor3 = Color3.fromRGB(18, 15, 9)
+card.BackgroundColor3 = Color3.fromRGB(12, 28, 18)
 card.BorderSizePixel = 0
-Instance.new("UICorner", card).CornerRadius = UDim.new(0, 0)
+Instance.new("UICorner", card).CornerRadius = UDim.new(0, 12)
 local cardStroke = Instance.new("UIStroke", card)
-cardStroke.Color = Color3.fromRGB(255, 176, 0)
+cardStroke.Color = Color3.fromRGB(31, 41, 55)
 cardStroke.Thickness = 1
 
 local userPill = Instance.new("Frame", back)
 userPill.Size = UDim2.fromOffset(90, 22)
 userPill.Position = UDim2.fromOffset(12, 12)
-userPill.BackgroundColor3 = Color3.fromRGB(30, 22, 6)
+userPill.BackgroundColor3 = Color3.fromRGB(20, 40, 26)
 userPill.BorderSizePixel = 0
-Instance.new("UICorner", userPill).CornerRadius = UDim.new(0, 0)
+Instance.new("UICorner", userPill).CornerRadius = UDim.new(0, 5)
 
 local userLbl = Instance.new("TextLabel", userPill)
 userLbl.Size = UDim2.fromScale(1, 1)
 userLbl.BackgroundTransparency = 1
-userLbl.Text = "> " .. localPlayer.Name:sub(1, 8):lower()
+userLbl.Text = "● " .. localPlayer.Name:sub(1, 6):upper()
 userLbl.TextColor3 = tagColor
 userLbl.TextSize = 11
-userLbl.Font = Enum.Font.Code
+userLbl.Font = Enum.Font.GothamMedium
 
 local titleLbl = Instance.new("TextLabel", card)
 titleLbl.Size = UDim2.new(1, -40, 0, 26)
 titleLbl.Position = UDim2.fromOffset(20, 18)
 titleLbl.BackgroundTransparency = 1
-titleLbl.Text = "> gonghub_"
-titleLbl.TextColor3 = Color3.fromRGB(255, 176, 0)
+titleLbl.Text = "Loading GongHub"
+titleLbl.TextColor3 = Color3.fromRGB(229, 231, 235)
 titleLbl.TextSize = 20
-titleLbl.Font = Enum.Font.Code
+titleLbl.Font = Enum.Font.GothamBold
 titleLbl.TextXAlignment = Enum.TextXAlignment.Center
+
+local eyeLbl = Instance.new("TextLabel", card)
+eyeLbl.Size = UDim2.fromOffset(22, 22)
+eyeLbl.Position = UDim2.new(1, -28, 0, 16)
+eyeLbl.BackgroundTransparency = 1
+eyeLbl.Text = "👁"
+eyeLbl.TextSize = 13
+eyeLbl.Font = Enum.Font.Gotham
+eyeLbl.TextColor3 = Color3.fromRGB(75, 85, 99)
 
 local statusLbl = Instance.new("TextLabel", card)
 statusLbl.Size = UDim2.new(1, -20, 0, 16)
 statusLbl.Position = UDim2.fromOffset(10, 48)
 statusLbl.BackgroundTransparency = 1
-statusLbl.Text = "initializing..."
-statusLbl.TextColor3 = Color3.fromRGB(138, 106, 31)
+statusLbl.Text = "Preparing your experience..."
+statusLbl.TextColor3 = Color3.fromRGB(107, 114, 128)
 statusLbl.TextSize = 12
-statusLbl.Font = Enum.Font.Code
+statusLbl.Font = Enum.Font.Gotham
 statusLbl.TextXAlignment = Enum.TextXAlignment.Center
 
 local spinnerWrap = Instance.new("Frame", card)
@@ -859,7 +868,7 @@ local spinnerBg = Instance.new("ImageLabel", spinnerWrap)
 spinnerBg.Size = UDim2.fromScale(1, 1)
 spinnerBg.BackgroundTransparency = 1
 spinnerBg.Image = "rbxassetid://4965945816"
-spinnerBg.ImageColor3 = Color3.fromRGB(45, 34, 10)
+spinnerBg.ImageColor3 = Color3.fromRGB(20, 45, 28)
 
 local spinnerFg = Instance.new("ImageLabel", spinnerWrap)
 spinnerFg.Size = UDim2.fromScale(1, 1)
@@ -879,9 +888,9 @@ spinnerTxt = Instance.new("TextLabel", spinnerWrap)
 spinnerTxt.Size = UDim2.fromScale(1, 1)
 spinnerTxt.BackgroundTransparency = 1
 spinnerTxt.Text = "Loading..."
-spinnerTxt.TextColor3 = Color3.fromRGB(255, 176, 0)
+spinnerTxt.TextColor3 = Color3.fromRGB(229, 231, 235)
 spinnerTxt.TextSize = 12
-spinnerTxt.Font = Enum.Font.Code
+spinnerTxt.Font = Enum.Font.GothamMedium
 spinnerTxt.TextXAlignment = Enum.TextXAlignment.Center
 spinnerTxt.TextYAlignment = Enum.TextYAlignment.Center
 spinnerTxt.ZIndex = 3
@@ -942,35 +951,23 @@ end
 
 print("windui loaded")
 
-pcall(function()
-    WindUI:SetFont(Font.fromEnum(Enum.Font.RobotoMono).Family)
-end)
+WindUI:SetFont("rbxassetid://16658246179")
 WindUI:AddTheme({
     Name = "GongHub",
-    Accent = Color3.fromHex("#14110A"),
-    Dialog = Color3.fromHex("#14110A"),
-    Outline = Color3.fromHex("#FFB000"),
-    Text = Color3.fromHex("#FFB000"),
-    Placeholder = Color3.fromHex("#8A6A1F"),
-    Background = Color3.fromHex("#0A0906"),
-    Button = Color3.fromHex("#2A2008"),
-    Icon = Color3.fromHex("#FFB000"),
-    Toggle = Color3.fromHex("#FFB000"),
-    Slider = Color3.fromHex("#FFB000"),
-    Checkbox = Color3.fromHex("#FFB000"),
-    PanelBackground = Color3.fromHex("#FFB000"),
-    PanelBackgroundTransparency = 0.94,
-    SliderIcon = Color3.fromHex("#FFD27A"),
-    Primary = Color3.fromHex("#FFB000"),
-    LabelBackground = Color3.fromHex("#000000"),
-    LabelBackgroundTransparency = 0.5,
+    Accent = Color3.fromHex("#14532D"),
+    Background = Color3.fromHex("#06130A"),
+    Outline = Color3.fromHex("#1F2937"),
+    Text = Color3.fromHex("#E5E7EB"),
+    Placeholder = Color3.fromHex("#4B5563"),
+    Button = Color3.fromHex("#166534"),
+    Icon = Color3.fromHex("#22C55E"),
 })
 WindUI:SetTheme("GongHub")
 
 local hub = WindUI:CreateWindow({
-    Title = "GONGHUB",
-    Icon = "terminal",
-    Author = "by gong",
+    Title = "GongHub",
+    Icon = "code",
+    Author = "GongHub",
     Folder = "GongHubFiles",
     Theme = "GongHub",
     ToggleKey = Enum.KeyCode.K,
@@ -978,22 +975,10 @@ local hub = WindUI:CreateWindow({
     Resizable = false,
     HideSearchBar = false,
     ScrollBarEnabled = true,
-    Radius = 0,
-    ElementsRadius = 0,
-    ShadowTransparency = 1,
-    SideBarWidth = 180,
-    OpenButton = {
-        Title = "GONGHUB",
-        Icon = "terminal",
-        CornerRadius = UDim.new(0, 4),
-        StrokeThickness = 1,
-        Draggable = true,
-        Color = ColorSequence.new(Color3.fromRGB(255, 176, 0), Color3.fromRGB(255, 176, 0)),
-    },
     User = { Enabled = true, Anonymous = false, Callback = function() end },
 })
 
-hub:Tag({ Title = "v1.0", Color = Color3.fromHex("#FFB000") })
+hub:Tag({ Title = "v1.0", Color = Color3.fromHex("#22CC5E") })
 
 local okHubTab = pcall(function()
     local origTab = hub.Tab
@@ -1080,7 +1065,7 @@ function GH.cubesEnable()
     local c = GH.cubes
     if c.conn then return end
     local hl = Instance.new("Highlight")
-    hl.FillColor = Color3.fromRGB(255, 176, 0)
+    hl.FillColor = Color3.fromRGB(0, 170, 255)
     hl.FillTransparency = 0.5
     hl.OutlineColor = Color3.fromRGB(255, 255, 255)
     hl.OutlineTransparency = 0
@@ -1631,7 +1616,7 @@ end
 local function setupOutline()
     if boomboxSelectionBox then return end
     boomboxSelectionBox = Instance.new("SelectionBox")
-    boomboxSelectionBox.Color3 = Color3.fromRGB(255, 176, 0)
+    boomboxSelectionBox.Color3 = Color3.fromRGB(0, 170, 255)
     boomboxSelectionBox.LineThickness = 0.1
     boomboxSelectionBox.SurfaceTransparency = 1
     boomboxSelectionBox.Transparency = 0
