@@ -1235,7 +1235,6 @@ local hub = WindUI:CreateWindow({
     ToggleKey = Enum.KeyCode.K,
     Transparent = false,
     Resizable = false,
-    Draggable = false,
     HideSearchBar = false,
     ScrollBarEnabled = true,
     Radius = 0,
@@ -2081,11 +2080,11 @@ local function renderHopList()
         local isCurr  = srv.id == game.JobId
         local isPrev  = hop.supportsFiles and tostring(srv.id) == tostring(hop.prevServer)
         local tag = ""
-        if isCurr then tag = " (yours)"
-        elseif isPrev then tag = " (prev)"
-        elseif isFull then tag = " (full)" end
+        if isCurr then tag = " [you]"
+        elseif isPrev then tag = " [prev]"
+        elseif isFull then tag = " [full]" end
         local btn = hopTab:Button({
-            Title = string.format("%d/%d players · #%d · %s%s", playing, maxP, idx, tostring(srv.id):sub(1, 8), tag),
+            Title = string.format("%d/%d %s%s", playing, maxP, tostring(srv.id):sub(1, 6), tag),
             Callback = function()
                 prepareAutoExecute()
                 pcall(function()
@@ -3190,6 +3189,84 @@ print("target reached")
 -- ============================================================
 -- Mod & Mgmt
 -- ============================================================
+GH.drop = { tag = "GongHubDeathDrop", on = false, charConn = nil, diedConn = nil }
+
+function GH.dropAll()
+    local char = localPlayer.Character
+    if not char then return end
+    local function keep(tool)
+        return protectArkenstone and tool.Name == "The Arkenstone"
+    end
+    for _, tool in ipairs(localPlayer.Backpack:GetChildren()) do
+        if tool:IsA("Tool") and not keep(tool) then tool.Parent = char end
+    end
+    task.wait(0.05)
+    for _, tool in ipairs(char:GetChildren()) do
+        if tool:IsA("Tool") and not keep(tool) then
+            tool:AddTag(GH.drop.tag)
+            tool.Parent = workspace
+        end
+    end
+end
+
+function GH.dropPickup(char)
+    local deadline = os.clock() + 3
+    repeat
+        local hum = char:FindFirstChildWhichIsA("Humanoid")
+        if hum and hum.Health > 0 then
+            for _, obj in ipairs(workspace:GetChildren()) do
+                if obj:IsA("Tool") and obj:HasTag(GH.drop.tag) and obj:FindFirstChild("Handle") then
+                    hum:EquipTool(obj)
+                end
+            end
+            local remaining = false
+            for _, obj in ipairs(workspace:GetChildren()) do
+                if obj:IsA("Tool") and obj:HasTag(GH.drop.tag) then
+                    remaining = true
+                    break
+                end
+            end
+            if not remaining then break end
+        end
+        task.wait(0.1)
+    until os.clock() > deadline or not GH.drop.on
+end
+
+function GH.dropSetup(char)
+    task.spawn(function() GH.dropPickup(char) end)
+    local hum = char:FindFirstChildWhichIsA("Humanoid") or char:WaitForChild("Humanoid", 10)
+    if not hum then return end
+    if GH.drop.diedConn then GH.drop.diedConn:Disconnect() end
+    GH.drop.diedConn = hum.Died:Connect(function()
+        task.wait(0.05)
+        if GH.drop.on then GH.dropAll() end
+    end)
+end
+
+function GH.dropStop()
+    local d = GH.drop
+    d.on = false
+    if d.charConn then
+        d.charConn:Disconnect()
+        d.charConn = nil
+    end
+    if d.diedConn then
+        d.diedConn:Disconnect()
+        d.diedConn = nil
+    end
+end
+
+function GH.dropToggle(v)
+    local d = GH.drop
+    GH.dropStop()
+    if not v then return end
+    d.on = true
+    if localPlayer.Character then task.spawn(GH.dropSetup, localPlayer.Character) end
+    d.charConn = localPlayer.CharacterAdded:Connect(function(char)
+        GH.dropSetup(char)
+    end)
+end
+
 local modTab = hub:Tab({ Title = "Mod & Mgmt", Icon = "lucide:shield" })
 modTab:Section({ Title = "Chat" })
 modTab:Toggle({
@@ -3205,7 +3282,10 @@ modTab:Toggle({
 })
 modTab:Toggle({
     Title = "Auto Drop Tools On Death",
-    Callback = function(v) autoDropOnDeath = v end,
+    Callback = function(v)
+        autoDropOnDeath = v
+        GH.dropToggle(v)
+    end,
 })
 modTab:Toggle({
     Title = "Protect Arkenstone",
@@ -3354,19 +3434,6 @@ task.spawn(function()
                     end
                 end
             end
-            if autoDropOnDeath and hum.Health <= 0 then
-                for _, tool in pairs(localPlayer.Backpack:GetChildren()) do
-                    if not (protectArkenstone and tool.Name == "The Arkenstone") then
-                        tool.Parent = localPlayer.Character
-                    end
-                end
-                for _, tool in pairs(localPlayer.Character:GetChildren()) do
-                    if tool:IsA("Tool")
-                        and not (protectArkenstone and tool.Name == "The Arkenstone") then
-                        tool.Parent = workspace
-                    end
-                end
-            end
         end
     end
 end)
@@ -3409,6 +3476,7 @@ function GH.shutdown()
     pcall(GH.afkDisable)
     pcall(GH.cubesDisable)
     pcall(GH.sprayStop)
+    pcall(GH.dropStop)
     pcall(GH.tagStopAll)
     pcall(stopArkenForce)
     pcall(clearStash)
