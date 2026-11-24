@@ -33,7 +33,7 @@ local DEFAULT_AUTOEXEC_URL = "https://gonghub2.tinm4318.workers.dev/script?key="
 local DevIds     = { 10972869437 , 11819448837 , 11814042874 }
 local PremiumIds = { 10972869437, 11819448837 , 11814042874 }
 
-local tagColor   = Color3.fromRGB(34, 197, 94)
+local tagColor   = Color3.fromRGB(255, 176, 0)
 
 local material     = "smooth"
 local trailType    = "detailed"
@@ -802,61 +802,52 @@ local back, card, spinnerTxt
 do
 back = Instance.new("Frame", loadingGui)
 back.Size = UDim2.fromScale(1, 1)
-back.BackgroundColor3 = Color3.fromRGB(6, 19, 10)
+back.BackgroundColor3 = Color3.fromRGB(10, 9, 6)
 back.BorderSizePixel = 0
 
 card = Instance.new("Frame", back)
 card.Size = UDim2.fromOffset(300, 220)
 card.Position = UDim2.new(0.5, -150, 0.5, -110)
-card.BackgroundColor3 = Color3.fromRGB(12, 28, 18)
+card.BackgroundColor3 = Color3.fromRGB(18, 15, 9)
 card.BorderSizePixel = 0
-Instance.new("UICorner", card).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", card).CornerRadius = UDim.new(0, 0)
 local cardStroke = Instance.new("UIStroke", card)
-cardStroke.Color = Color3.fromRGB(31, 41, 55)
+cardStroke.Color = Color3.fromRGB(255, 176, 0)
 cardStroke.Thickness = 1
 
 local userPill = Instance.new("Frame", back)
 userPill.Size = UDim2.fromOffset(90, 22)
 userPill.Position = UDim2.fromOffset(12, 12)
-userPill.BackgroundColor3 = Color3.fromRGB(20, 40, 26)
+userPill.BackgroundColor3 = Color3.fromRGB(30, 22, 6)
 userPill.BorderSizePixel = 0
-Instance.new("UICorner", userPill).CornerRadius = UDim.new(0, 5)
+Instance.new("UICorner", userPill).CornerRadius = UDim.new(0, 0)
 
 local userLbl = Instance.new("TextLabel", userPill)
 userLbl.Size = UDim2.fromScale(1, 1)
 userLbl.BackgroundTransparency = 1
-userLbl.Text = "● " .. localPlayer.Name:sub(1, 6):upper()
+userLbl.Text = "> " .. localPlayer.Name:sub(1, 8):lower()
 userLbl.TextColor3 = tagColor
 userLbl.TextSize = 11
-userLbl.Font = Enum.Font.GothamMedium
+userLbl.Font = Enum.Font.Code
 
 local titleLbl = Instance.new("TextLabel", card)
 titleLbl.Size = UDim2.new(1, -40, 0, 26)
 titleLbl.Position = UDim2.fromOffset(20, 18)
 titleLbl.BackgroundTransparency = 1
-titleLbl.Text = "Loading GongHub"
-titleLbl.TextColor3 = Color3.fromRGB(229, 231, 235)
+titleLbl.Text = "> gonghub_"
+titleLbl.TextColor3 = Color3.fromRGB(255, 176, 0)
 titleLbl.TextSize = 20
-titleLbl.Font = Enum.Font.GothamBold
+titleLbl.Font = Enum.Font.Code
 titleLbl.TextXAlignment = Enum.TextXAlignment.Center
-
-local eyeLbl = Instance.new("TextLabel", card)
-eyeLbl.Size = UDim2.fromOffset(22, 22)
-eyeLbl.Position = UDim2.new(1, -28, 0, 16)
-eyeLbl.BackgroundTransparency = 1
-eyeLbl.Text = "👁"
-eyeLbl.TextSize = 13
-eyeLbl.Font = Enum.Font.Gotham
-eyeLbl.TextColor3 = Color3.fromRGB(75, 85, 99)
 
 local statusLbl = Instance.new("TextLabel", card)
 statusLbl.Size = UDim2.new(1, -20, 0, 16)
 statusLbl.Position = UDim2.fromOffset(10, 48)
 statusLbl.BackgroundTransparency = 1
-statusLbl.Text = "Preparing your experience..."
-statusLbl.TextColor3 = Color3.fromRGB(107, 114, 128)
+statusLbl.Text = "initializing..."
+statusLbl.TextColor3 = Color3.fromRGB(138, 106, 31)
 statusLbl.TextSize = 12
-statusLbl.Font = Enum.Font.Gotham
+statusLbl.Font = Enum.Font.Code
 statusLbl.TextXAlignment = Enum.TextXAlignment.Center
 
 local spinnerWrap = Instance.new("Frame", card)
@@ -868,7 +859,7 @@ local spinnerBg = Instance.new("ImageLabel", spinnerWrap)
 spinnerBg.Size = UDim2.fromScale(1, 1)
 spinnerBg.BackgroundTransparency = 1
 spinnerBg.Image = "rbxassetid://4965945816"
-spinnerBg.ImageColor3 = Color3.fromRGB(20, 45, 28)
+spinnerBg.ImageColor3 = Color3.fromRGB(45, 34, 10)
 
 local spinnerFg = Instance.new("ImageLabel", spinnerWrap)
 spinnerFg.Size = UDim2.fromScale(1, 1)
@@ -888,9 +879,9 @@ spinnerTxt = Instance.new("TextLabel", spinnerWrap)
 spinnerTxt.Size = UDim2.fromScale(1, 1)
 spinnerTxt.BackgroundTransparency = 1
 spinnerTxt.Text = "Loading..."
-spinnerTxt.TextColor3 = Color3.fromRGB(229, 231, 235)
+spinnerTxt.TextColor3 = Color3.fromRGB(255, 176, 0)
 spinnerTxt.TextSize = 12
-spinnerTxt.Font = Enum.Font.GothamMedium
+spinnerTxt.Font = Enum.Font.Code
 spinnerTxt.TextXAlignment = Enum.TextXAlignment.Center
 spinnerTxt.TextYAlignment = Enum.TextYAlignment.Center
 spinnerTxt.ZIndex = 3
@@ -934,11 +925,262 @@ print("loading screen reached")
 -- ============================================================
 -- WindUI load (guarded)
 -- ============================================================
+function GH.makeUI(Library)
+    local UI = { Themes = {}, theme = nil, devIds = {}, premIds = {}, IsDev = false, IsPremium = false, footer = nil }
+    local counter = 0
+    local noop = function() end
+
+    local function nextId(prefix)
+        counter = counter + 1
+        return prefix .. counter
+    end
+
+    local function icon(name)
+        if type(name) ~= "string" or name == "" then return nil end
+        return (name:gsub("^lucide:", ""))
+    end
+
+    local function inList(list, id)
+        for _, v in ipairs(list) do
+            if tostring(v) == tostring(id) then return true end
+        end
+        return false
+    end
+
+    local function refreshAccess()
+        local id = localPlayer.UserId
+        UI.IsDev = inList(UI.devIds, id)
+        UI.IsPremium = inList(UI.premIds, id)
+    end
+
+    local function nullObject()
+        return setmetatable({}, { __index = function() return noop end })
+    end
+
+    local function decimals(step)
+        local n = 0
+        local s = tonumber(step) or 1
+        while n < 6 and math.abs(s - math.floor(s + 0.5)) > 1e-9 do
+            s = s * 10
+            n = n + 1
+        end
+        return n
+    end
+
+    local function element(el, text)
+        local w = {}
+        function w:Set(v) if el and el.SetValue then el:SetValue(v) end end
+        function w:Select(v) if el and el.SetValue then el:SetValue(v) end end
+        function w:Refresh(list) if el and el.SetValues then el:SetValues(list or {}) end end
+        function w:SetDesc(d)
+            if el and el.SetText then
+                el:SetText(text and (text .. ": " .. tostring(d)) or tostring(d))
+            end
+        end
+        function w:Destroy()
+            if el and el.Destroy then pcall(function() el:Destroy() end) end
+        end
+        return w
+    end
+
+    local function makeTab(tab, title)
+        local T = { gb = nil, side = 1, n = { 0, 0 } }
+
+        local function section(name)
+            local side = T.n[1] <= T.n[2] and 1 or 2
+            T.side = side
+            if side == 1 then
+                T.gb = tab:AddLeftGroupbox(name or title)
+            else
+                T.gb = tab:AddRightGroupbox(name or title)
+            end
+            return T.gb
+        end
+
+        local function box()
+            local gb = T.gb or section(title)
+            T.n[T.side] = T.n[T.side] + 1
+            return gb
+        end
+
+        function T:Section(cfg)
+            section(cfg and cfg.Title or title)
+        end
+
+        function T:Toggle(cfg)
+            cfg = cfg or {}
+            local el = box():AddToggle(nextId("t"), {
+                Text = cfg.Title or "Toggle",
+                Default = cfg.Value == true,
+                Tooltip = cfg.Desc,
+                Callback = function(v)
+                    if cfg.Callback then cfg.Callback(v) end
+                end,
+            })
+            return element(el)
+        end
+        T.PremToggle = T.Toggle
+
+        function T:Button(cfg)
+            cfg = cfg or {}
+            local el = box():AddButton({
+                Text = cfg.Title or "Button",
+                Tooltip = cfg.Desc,
+                Func = function()
+                    if cfg.Callback then cfg.Callback() end
+                end,
+            })
+            return element(el)
+        end
+
+        function T:Slider(cfg)
+            cfg = cfg or {}
+            local v = type(cfg.Value) == "table" and cfg.Value or {}
+            local min = v.Min or 0
+            local max = v.Max or 100
+            local step = cfg.Step or v.Step or 1
+            local el = box():AddSlider(nextId("s"), {
+                Text = cfg.Title or "Slider",
+                Default = v.Default or min,
+                Min = min,
+                Max = max,
+                Rounding = decimals(step),
+                Suffix = v.Suffix or cfg.Suffix or "",
+                Callback = function(x)
+                    if cfg.Callback then cfg.Callback(x) end
+                end,
+            })
+            return element(el)
+        end
+
+        function T:Dropdown(cfg)
+            cfg = cfg or {}
+            local el = box():AddDropdown(nextId("d"), {
+                Text = cfg.Title or "Dropdown",
+                Values = cfg.Values or {},
+                Default = type(cfg.Value) == "string" and cfg.Value or nil,
+                Multi = false,
+                Callback = function(x)
+                    if cfg.Callback then cfg.Callback(x) end
+                end,
+            })
+            return element(el)
+        end
+
+        function T:Input(cfg)
+            cfg = cfg or {}
+            local el = box():AddInput(nextId("i"), {
+                Text = cfg.Title or "Input",
+                Default = cfg.Default or "",
+                Placeholder = cfg.Placeholder or "",
+                ClearTextOnFocus = false,
+                Callback = function(x)
+                    if cfg.Callback then cfg.Callback(x) end
+                end,
+            })
+            return element(el)
+        end
+
+        function T:Paragraph(cfg)
+            cfg = cfg or {}
+            local name = cfg.Title
+            if type(name) == "string" and name:match("^%s*$") then name = nil end
+            local desc = cfg.Desc and tostring(cfg.Desc) or ""
+            local text = name and (desc ~= "" and (name .. ": " .. desc) or name) or desc
+            local el = box():AddLabel(text, true)
+            return element(el, name)
+        end
+
+        return T
+    end
+
+    function UI:SetFont() end
+    function UI:AddTheme(t)
+        UI.Themes[t.Name] = t
+        return t
+    end
+    function UI:SetTheme(name)
+        UI.theme = UI.Themes[name] or UI.theme
+    end
+    function UI:SetDevIds(ids) UI.devIds = ids or {} refreshAccess() end
+    function UI:SetPremiumIds(ids) UI.premIds = ids or {} refreshAccess() end
+    function UI:Notify(cfg)
+        cfg = cfg or {}
+        Library:Notify({
+            Title = cfg.Title or "GongHub",
+            Description = cfg.Content or "",
+            Time = cfg.Duration or 4,
+        })
+    end
+
+    function UI:CreateWindow(cfg)
+        cfg = cfg or {}
+        refreshAccess()
+        local t = UI.theme
+        if t then
+            local S = Library.Scheme
+            if t.Background then S.BackgroundColor = t.Background end
+            if t.Accent then S.MainColor = t.Accent end
+            local accent = t.Primary or t.Toggle or t.Icon
+            if accent then S.AccentColor = accent end
+            if t.Outline and t.Background then S.OutlineColor = t.Outline:Lerp(t.Background, 0.75) end
+            if t.Text then S.FontColor = t.Text end
+        end
+        UI.footer = cfg.Author
+        local win = Library:CreateWindow({
+            Title = cfg.Title or "GongHub",
+            Footer = cfg.Author or "",
+            Center = true,
+            AutoShow = true,
+            Size = UDim2.fromOffset(640, 470),
+            CornerRadius = cfg.Radius or 0,
+            ToggleKeybind = cfg.ToggleKey or Enum.KeyCode.K,
+            Font = Enum.Font.Code,
+            ShowCustomCursor = false,
+            ShowMobileButtons = true,
+            MobileButtonsSide = "Left",
+        })
+
+        local hub = {}
+        function hub:Tag(c)
+            if c and c.Title and win and win.SetFooter then
+                local text = (UI.footer and UI.footer ~= "") and (UI.footer .. " " .. c.Title) or c.Title
+                pcall(function() win:SetFooter(text) end)
+            end
+        end
+        function hub:Tab(c)
+            c = c or {}
+            if c.Locked then return nullObject() end
+            local name = c.Title or "Tab"
+            local ok, tab = pcall(function() return win:AddTab(name, icon(c.Icon)) end)
+            if not ok or not tab then
+                ok, tab = pcall(function() return win:AddTab(name) end)
+            end
+            if not ok or not tab then return nullObject() end
+            return makeTab(tab, name)
+        end
+        function hub:DevTab(c)
+            if UI.IsDev then return hub:Tab(c) end
+            return nullObject()
+        end
+        function hub:PremTab(c)
+            if UI.IsPremium then return hub:Tab(c) end
+            return nullObject()
+        end
+        function hub:OnDestroy(cb) Library:OnUnload(cb) end
+        function hub:Destroy() Library:Unload() end
+        return hub
+    end
+
+    return UI
+end
+
 local WindUI
 local okLoad, loadErr = pcall(function()
-    WindUI = loadstring(game:HttpGet(
-        "https://raw.githubusercontent.com/s0lmain/DevLib/refs/heads/main/main.lua"
+    local Library = loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"
     ))()
+    WindUI = GH.makeUI(Library)
 end)
 
 if not okLoad or not WindUI then
@@ -951,23 +1193,35 @@ end
 
 print("windui loaded")
 
-WindUI:SetFont("rbxassetid://16658246179")
+pcall(function()
+    WindUI:SetFont(Font.fromEnum(Enum.Font.RobotoMono).Family)
+end)
 WindUI:AddTheme({
     Name = "GongHub",
-    Accent = Color3.fromHex("#14532D"),
-    Background = Color3.fromHex("#06130A"),
-    Outline = Color3.fromHex("#1F2937"),
-    Text = Color3.fromHex("#E5E7EB"),
-    Placeholder = Color3.fromHex("#4B5563"),
-    Button = Color3.fromHex("#166534"),
-    Icon = Color3.fromHex("#22C55E"),
+    Accent = Color3.fromHex("#14110A"),
+    Dialog = Color3.fromHex("#14110A"),
+    Outline = Color3.fromHex("#FFB000"),
+    Text = Color3.fromHex("#FFB000"),
+    Placeholder = Color3.fromHex("#8A6A1F"),
+    Background = Color3.fromHex("#0A0906"),
+    Button = Color3.fromHex("#2A2008"),
+    Icon = Color3.fromHex("#FFB000"),
+    Toggle = Color3.fromHex("#FFB000"),
+    Slider = Color3.fromHex("#FFB000"),
+    Checkbox = Color3.fromHex("#FFB000"),
+    PanelBackground = Color3.fromHex("#FFB000"),
+    PanelBackgroundTransparency = 0.94,
+    SliderIcon = Color3.fromHex("#FFD27A"),
+    Primary = Color3.fromHex("#FFB000"),
+    LabelBackground = Color3.fromHex("#000000"),
+    LabelBackgroundTransparency = 0.5,
 })
 WindUI:SetTheme("GongHub")
 
 local hub = WindUI:CreateWindow({
-    Title = "GongHub",
-    Icon = "code",
-    Author = "GongHub",
+    Title = "GONGHUB",
+    Icon = "terminal",
+    Author = "by gong",
     Folder = "GongHubFiles",
     Theme = "GongHub",
     ToggleKey = Enum.KeyCode.K,
@@ -975,10 +1229,22 @@ local hub = WindUI:CreateWindow({
     Resizable = false,
     HideSearchBar = false,
     ScrollBarEnabled = true,
+    Radius = 0,
+    ElementsRadius = 0,
+    ShadowTransparency = 1,
+    SideBarWidth = 180,
+    OpenButton = {
+        Title = "GONGHUB",
+        Icon = "terminal",
+        CornerRadius = UDim.new(0, 4),
+        StrokeThickness = 1,
+        Draggable = true,
+        Color = ColorSequence.new(Color3.fromRGB(255, 176, 0), Color3.fromRGB(255, 176, 0)),
+    },
     User = { Enabled = true, Anonymous = false, Callback = function() end },
 })
 
-hub:Tag({ Title = "v1.0", Color = Color3.fromHex("#22CC5E") })
+hub:Tag({ Title = "v1.0", Color = Color3.fromHex("#FFB000") })
 
 local okHubTab = pcall(function()
     local origTab = hub.Tab
@@ -1065,7 +1331,7 @@ function GH.cubesEnable()
     local c = GH.cubes
     if c.conn then return end
     local hl = Instance.new("Highlight")
-    hl.FillColor = Color3.fromRGB(0, 170, 255)
+    hl.FillColor = Color3.fromRGB(255, 176, 0)
     hl.FillTransparency = 0.5
     hl.OutlineColor = Color3.fromRGB(255, 255, 255)
     hl.OutlineTransparency = 0
@@ -1616,7 +1882,7 @@ end
 local function setupOutline()
     if boomboxSelectionBox then return end
     boomboxSelectionBox = Instance.new("SelectionBox")
-    boomboxSelectionBox.Color3 = Color3.fromRGB(0, 170, 255)
+    boomboxSelectionBox.Color3 = Color3.fromRGB(255, 176, 0)
     boomboxSelectionBox.LineThickness = 0.1
     boomboxSelectionBox.SurfaceTransparency = 1
     boomboxSelectionBox.Transparency = 0
@@ -3355,6 +3621,15 @@ if devDevTab and GH.isOwnerId(localPlayer.UserId) then
         })
         task.delay(2, function() GH.lock.armed = true end)
     end)
+end
+
+do
+    local settingsTab = hub:Tab({ Title = "Settings", Icon = "settings" })
+    settingsTab:Section({ Title = "Script" })
+    settingsTab:Button({
+        Title = "Unload Script",
+        Callback = function() hub:Destroy() end,
+    })
 end
 
 print("[GongHub] fully loaded")
