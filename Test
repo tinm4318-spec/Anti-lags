@@ -991,9 +991,9 @@ function GH.makeUI(Library)
             local side = T.n[1] <= T.n[2] and 1 or 2
             T.side = side
             if side == 1 then
-                T.gb = tab:AddLeftGroupbox(name or title)
+                T.gb = tab:AddLeftGroupbox(name or title, nil, nil, nil, true)
             else
-                T.gb = tab:AddRightGroupbox(name or title)
+                T.gb = tab:AddRightGroupbox(name or title, nil, nil, nil, true)
             end
             return T.gb
         end
