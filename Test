@@ -1184,37 +1184,63 @@ function GH.makeUI(Library)
                     end
                 end
             end
-            if toggleBtn and lockBtn then
-                if side == "Right" then
-                    lockBtn.Position = UDim2.new(1, toggleBtn.Position.X.Offset - toggleBtn.Size.X.Offset, 0, toggleBtn.Position.Y.Offset)
-                else
-                    lockBtn.Position = UDim2.fromOffset(toggleBtn.Position.X.Offset + toggleBtn.Size.X.Offset, toggleBtn.Position.Y.Offset)
-                end
-            end
             local dragBtn = Library:AddDraggableButton({
                 Text = "Drag",
                 Callback = function() end,
                 ExcludeDragging = true,
             })
             local db = dragBtn.Button
-            if toggleBtn then
-                local mergedWidth = toggleBtn.Size.X.Offset + (lockBtn and lockBtn.Size.X.Offset or 0)
-                local belowY = toggleBtn.Position.Y.Offset + toggleBtn.Size.Y.Offset + 6
+            if toggleBtn and lockBtn then
+                local y = toggleBtn.Position.Y.Offset
                 if side == "Right" then
                     db.AnchorPoint = Vector2.new(1, 0)
-                    db.Position = UDim2.new(1, toggleBtn.Position.X.Offset, 0, belowY)
+                    db.Position = UDim2.new(1, toggleBtn.Position.X.Offset, 0, y)
+                    toggleBtn.Position = UDim2.new(1, db.Position.X.Offset - db.Size.X.Offset, 0, y)
+                    lockBtn.Position = UDim2.new(1, toggleBtn.Position.X.Offset - toggleBtn.Size.X.Offset, 0, y)
                 else
                     db.AnchorPoint = Vector2.new(0, 0)
-                    db.Position = UDim2.fromOffset(toggleBtn.Position.X.Offset, belowY)
+                    lockBtn.Position = UDim2.fromOffset(toggleBtn.Position.X.Offset, y)
+                    toggleBtn.Position = UDim2.fromOffset(lockBtn.Position.X.Offset + lockBtn.Size.X.Offset, y)
+                    db.Position = UDim2.fromOffset(toggleBtn.Position.X.Offset + toggleBtn.Size.X.Offset, y)
                 end
-                db.Size = UDim2.fromOffset(mergedWidth, toggleBtn.Size.Y.Offset)
-            end
-            if Library.Window and Library.Window.MainFrame then
-                Library:MakeDraggable(Library.Window.MainFrame, db, true, true)
+
+                local function isClick(input)
+                    return input.UserInputType == Enum.UserInputType.MouseButton1
+                        or input.UserInputType == Enum.UserInputType.Touch
+                end
+                local dragging = false
+                local startPos, startLock, startToggle, startDrag
+                local function move(pos, delta)
+                    return UDim2.new(pos.X.Scale, pos.X.Offset + delta.X, pos.Y.Scale, pos.Y.Offset + delta.Y)
+                end
+                db.InputBegan:Connect(function(input)
+                    if not isClick(input) then return end
+                    dragging = true
+                    startPos = input.Position
+                    startLock, startToggle, startDrag = lockBtn.Position, toggleBtn.Position, db.Position
+                    local changed
+                    changed = input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            dragging = false
+                            if changed then changed:Disconnect() end
+                        end
+                    end)
+                end)
+                GH.conns.mobileGroupDrag = userInputService.InputChanged:Connect(function(input)
+                    if not dragging then return end
+                    if input.UserInputType ~= Enum.UserInputType.MouseMovement
+                        and input.UserInputType ~= Enum.UserInputType.Touch then
+                        return
+                    end
+                    local delta = input.Position - startPos
+                    lockBtn.Position = move(startLock, delta)
+                    toggleBtn.Position = move(startToggle, delta)
+                    db.Position = move(startDrag, delta)
+                end)
             end
         end)
 
-        local hub = {}
+        local hub = {}        local hub = {}
         function hub:Tag(c)
             if c and c.Title and win and win.SetFooter then
                 local text = (UI.footer and UI.footer ~= "") and (UI.footer .. " " .. c.Title) or c.Title
