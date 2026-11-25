@@ -1171,75 +1171,6 @@ function GH.makeUI(Library)
 
         Library.CantDragForced = cfg.Draggable == false
 
-        pcall(function()
-            if not Library.IsMobile then return end
-            local side = cfg.MobileButtonsSide or "Left"
-            local toggleBtn, lockBtn
-            for _, btn in ipairs(Library.DraggableElements) do
-                if btn:IsA("TextButton") then
-                    if btn.Text == "Toggle" then
-                        toggleBtn = btn
-                    elseif btn.Text == "Lock" or btn.Text == "Unlock" then
-                        lockBtn = btn
-                    end
-                end
-            end
-            local dragBtn = Library:AddDraggableButton({
-                Text = "Drag",
-                Callback = function() end,
-                ExcludeDragging = true,
-            })
-            local db = dragBtn.Button
-            if toggleBtn and lockBtn then
-                local y = toggleBtn.Position.Y.Offset
-                if side == "Right" then
-                    db.AnchorPoint = Vector2.new(1, 0)
-                    db.Position = UDim2.new(1, toggleBtn.Position.X.Offset, 0, y)
-                    toggleBtn.Position = UDim2.new(1, db.Position.X.Offset - db.Size.X.Offset, 0, y)
-                    lockBtn.Position = UDim2.new(1, toggleBtn.Position.X.Offset - toggleBtn.Size.X.Offset, 0, y)
-                else
-                    db.AnchorPoint = Vector2.new(0, 0)
-                    lockBtn.Position = UDim2.fromOffset(toggleBtn.Position.X.Offset, y)
-                    toggleBtn.Position = UDim2.fromOffset(lockBtn.Position.X.Offset + lockBtn.Size.X.Offset, y)
-                    db.Position = UDim2.fromOffset(toggleBtn.Position.X.Offset + toggleBtn.Size.X.Offset, y)
-                end
-
-                local function isClick(input)
-                    return input.UserInputType == Enum.UserInputType.MouseButton1
-                        or input.UserInputType == Enum.UserInputType.Touch
-                end
-                local dragging = false
-                local startPos, startLock, startToggle, startDrag
-                local function move(pos, delta)
-                    return UDim2.new(pos.X.Scale, pos.X.Offset + delta.X, pos.Y.Scale, pos.Y.Offset + delta.Y)
-                end
-                db.InputBegan:Connect(function(input)
-                    if not isClick(input) then return end
-                    dragging = true
-                    startPos = input.Position
-                    startLock, startToggle, startDrag = lockBtn.Position, toggleBtn.Position, db.Position
-                    local changed
-                    changed = input.Changed:Connect(function()
-                        if input.UserInputState == Enum.UserInputState.End then
-                            dragging = false
-                            if changed then changed:Disconnect() end
-                        end
-                    end)
-                end)
-                GH.conns.mobileGroupDrag = userInputService.InputChanged:Connect(function(input)
-                    if not dragging then return end
-                    if input.UserInputType ~= Enum.UserInputType.MouseMovement
-                        and input.UserInputType ~= Enum.UserInputType.Touch then
-                        return
-                    end
-                    local delta = input.Position - startPos
-                    lockBtn.Position = move(startLock, delta)
-                    toggleBtn.Position = move(startToggle, delta)
-                    db.Position = move(startDrag, delta)
-                end)
-            end
-        end)
-
         local hub = {}        local hub = {}
         function hub:Tag(c)
             if c and c.Title and win and win.SetFooter then
@@ -2852,7 +2783,6 @@ antis:Toggle({
 antis:Toggle({ Title = "Anti-Freeze", Callback = function(v) antiFreeze = v end })
 antis:Toggle({
     Title = "Anti-Maptide",
-    Desc = "If spawn gets NaN'd, respawns you at a nearby player or (0, 50, 0)",
     Callback = function(v)
         if v then enableAntiMaptide() else disableAntiMaptide() end
     end,
@@ -3013,20 +2943,41 @@ function GH.sprayStart()
 end
 
 antis:Section({ Title = "Spray Lag" })
+GH.spray.allLabels = GH.sprayLabels()
+
+function GH.sprayFilter(query)
+    local list = GH.spray.allLabels or {}
+    query = tostring(query or ""):lower()
+    if query == "" then return list end
+    local out = {}
+    for _, label in ipairs(list) do
+        if label:lower():find(query, 1, true) then table.insert(out, label) end
+    end
+    return out
+end
+
 GH.spray.dropdown = antis:Dropdown({
     Title = "Spray Target",
-    Values = GH.sprayLabels(),
+    Values = GH.spray.allLabels,
     Callback = function(v)
         local label = typeof(v) == "table" and v[1] or v
         GH.spray.name = GH.spray.map[label]
         GH.sprayStart()
     end,
 })
+antis:Input({
+    Title = "Search Player",
+    Default = "",
+    Placeholder = "Type a name...",
+    Callback = function(v)
+        pcall(function() GH.spray.dropdown:Refresh(GH.sprayFilter(v)) end)
+    end,
+})
 antis:Button({
     Title = "Refresh Spray Player List",
     Callback = function()
-        local names = GH.sprayLabels()
-        local ok = pcall(function() GH.spray.dropdown:Refresh(names) end)
+        GH.spray.allLabels = GH.sprayLabels()
+        local ok = pcall(function() GH.spray.dropdown:Refresh(GH.spray.allLabels) end)
         WindUI:Notify({
             Title = "Anti Spray Lag",
             Content = ok and "Player list refreshed." or "Refresh failed.",
