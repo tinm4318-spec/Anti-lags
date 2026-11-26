@@ -1,1 +1,244 @@
-https://gist.githubusercontent.com/tinm4318-spec/e0baea868ce185671d72c23b3abc9fab/raw/b0673f77181d1f194ffade80e3f594fc29747090/gistfile1.txt
+
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+
+local LP = Players.LocalPlayer
+
+local enabled = false
+local removedCount = 0
+local conns = {}
+local watchedBricks = {}
+
+local TARGETS = {
+    Field = true,
+    BV = true,
+    FieldWeld = true
+}
+
+local function getGuiParent()
+    local ok, cg = pcall(function()
+        return CoreGui
+    end)
+
+    if ok and cg then
+        return cg
+    end
+
+    return LP:WaitForChild("PlayerGui")
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "AntiGreenOrbLag"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = getGuiParent()
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.fromOffset(200, 80)
+frame.Position = UDim2.new(0, 20, 0.4, 0)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Parent = gui
+
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(55, 55, 55)
+stroke.Thickness = 1
+stroke.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -20, 0, 22)
+title.Position = UDim2.fromOffset(10, 6)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+title.TextSize = 13
+title.TextColor3 = Color3.fromRGB(240, 240, 240)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Text = "Anti Green Orb Lag"
+title.Parent = frame
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(1, -20, 0, 32)
+toggleBtn.Position = UDim2.fromOffset(10, 32)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(70, 30, 30)
+toggleBtn.BorderSizePixel = 0
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.TextSize = 13
+toggleBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
+toggleBtn.Text = "OFF"
+toggleBtn.AutoButtonColor = false
+toggleBtn.Parent = frame
+
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 6)
+
+local countLabel = Instance.new("TextLabel")
+countLabel.Size = UDim2.new(1, -20, 0, 14)
+countLabel.Position = UDim2.fromOffset(10, 62)
+countLabel.BackgroundTransparency = 1
+countLabel.Font = Enum.Font.GothamMedium
+countLabel.TextSize = 10
+countLabel.TextColor3 = Color3.fromRGB(150, 150, 155)
+countLabel.TextXAlignment = Enum.TextXAlignment.Left
+countLabel.Text = "removed: 0"
+countLabel.Parent = frame
+
+local function refreshToggleVisual()
+    if enabled then
+        toggleBtn.Text = "ON"
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(30, 90, 50)
+    else
+        toggleBtn.Text = "OFF"
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(70, 30, 30)
+    end
+
+    countLabel.Text = "removed: " .. removedCount
+end
+
+local function killTarget(obj)
+    if obj and obj.Parent then
+        obj:Destroy()
+        removedCount += 1
+        countLabel.Text = "removed: " .. removedCount
+    end
+end
+
+-- Direct children only
+local function removeTargets(brick)
+    for _, obj in ipairs(brick:GetChildren()) do
+        if TARGETS[obj.Name] then
+            killTarget(obj)
+        end
+    end
+end
+
+-- Watch each brick once
+local function watchBrick(brick)
+    if watchedBricks[brick] then
+        return
+    end
+
+    watchedBricks[brick] = true
+
+    removeTargets(brick)
+
+    table.insert(conns, brick.ChildAdded:Connect(function(obj)
+        if not enabled then
+            return
+        end
+
+        if TARGETS[obj.Name] then
+            killTarget(obj)
+        end
+    end))
+end
+
+-- Watch player folders
+local function watchPlayerFolder(folder)
+    for _, brick in ipairs(folder:GetChildren()) do
+        watchBrick(brick)
+    end
+
+    table.insert(conns, folder.ChildAdded:Connect(function(brick)
+        if enabled then
+            watchBrick(brick)
+        end
+    end))
+end
+
+local function startScan()
+    if not enabled then
+        return
+    end
+
+    local bricks = workspace:FindFirstChild("Bricks")
+
+    if not bricks then
+        table.insert(conns, workspace.ChildAdded:Connect(function(obj)
+            if obj.Name == "Bricks" and enabled then
+                startScan()
+            end
+        end))
+        return
+    end
+
+    for _, folder in ipairs(bricks:GetChildren()) do
+        watchPlayerFolder(folder)
+    end
+
+    table.insert(conns, bricks.ChildAdded:Connect(function(folder)
+        if enabled then
+            watchPlayerFolder(folder)
+        end
+    end))
+end
+
+-- Stop
+local function stopScan()
+    for _, connection in ipairs(conns) do
+        pcall(function()
+            connection:Disconnect()
+        end)
+    end
+
+    conns = {}
+    watchedBricks = {}
+end
+
+toggleBtn.MouseButton1Click:Connect(function()
+    enabled = not enabled
+    refreshToggleVisual()
+
+    if enabled then
+        startScan()
+    else
+        stopScan()
+    end
+end)
+
+do
+    local dragging = false
+    local dragStart
+    local startPos
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (
+            input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch
+        ) then
+
+            local delta = input.Position - dragStart
+
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+refreshToggleVisual()
+
+print("I cracked Lucia every day")
