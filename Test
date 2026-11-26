@@ -74,7 +74,7 @@ local colorMap = {
     peasant  = {150, 103, 102},
     arken    = {4, 175, 236},
     admin    = {245, 205, 48},
-    hidden   = {0, 95, 2},
+    hidden   = {128, 128, 128},
     iqgenius = {98, 129, 65},
     iqdumb   = {98, 129, 65},
 }
@@ -2788,11 +2788,11 @@ antis:Toggle({
     end,
 })
 
-GH.spray = { name = nil, on = false, gen = 0, conn = nil, kept = nil, map = {}, dropdown = nil, radius = 100, mode = "Normal" }
+GH.spray = { name = nil, on = false, gen = 0, conn = nil, keptMap = {}, map = {}, dropdown = nil, radius = 100, mode = "Normal", ALL = "\0ALL" }
 
 function GH.sprayLabels()
-    local names = {}
-    GH.spray.map = {}
+    local names = { "All Players" }
+    GH.spray.map = { ["All Players"] = GH.spray.ALL }
     local seen = {}
     for _, p in ipairs(players:GetPlayers()) do
         local label = p.DisplayName .. " (@" .. p.Name .. ")"
@@ -2841,12 +2841,15 @@ end
 function GH.spraySweep(gen)
     local s = GH.spray
     local bricks = workspace:FindFirstChild("Bricks")
-    local folder = bricks and s.name and bricks:FindFirstChild(s.name)
-    if not folder then return 0 end
+    if not bricks then return 0 end
+    local isAll = s.name == s.ALL
     local removed = 0
+
     if s.mode == "Radius" then
         local origin = GH.sprayOrigin()
         if not origin then return 0 end
+        local folder = isAll and bricks or bricks:FindFirstChild(s.name)
+        if not folder then return 0 end
         local parts = GH.sprayNearParts(folder, origin)
         if parts then
             for _, part in ipairs(parts) do
@@ -2872,22 +2875,35 @@ function GH.spraySweep(gen)
         end
         return removed
     end
-    if s.kept and not s.kept:IsDescendantOf(folder) then s.kept = nil end
-    local seen = 0
-    for _, d in ipairs(folder:GetDescendants()) do
-        if d.Name == "Spray" then
-            if not s.kept then
-                s.kept = d
-            elseif d ~= s.kept then
-                pcall(function() d:Destroy() end)
-                removed = removed + 1
+
+    local function sweepFolder(folder, key)
+        if s.keptMap[key] and not s.keptMap[key]:IsDescendantOf(folder) then s.keptMap[key] = nil end
+        local seen = 0
+        for _, d in ipairs(folder:GetDescendants()) do
+            if d.Name == "Spray" then
+                if not s.keptMap[key] then
+                    s.keptMap[key] = d
+                elseif d ~= s.keptMap[key] then
+                    pcall(function() d:Destroy() end)
+                    removed = removed + 1
+                end
+            end
+            seen = seen + 1
+            if seen % 3000 == 0 then
+                task.wait()
+                if gen and s.gen ~= gen then return true end
             end
         end
-        seen = seen + 1
-        if seen % 3000 == 0 then
-            task.wait()
-            if gen and s.gen ~= gen then return removed end
+        return false
+    end
+
+    if isAll then
+        for _, folder in ipairs(bricks:GetChildren()) do
+            if sweepFolder(folder, folder) then break end
         end
+    else
+        local folder = bricks:FindFirstChild(s.name)
+        if folder then sweepFolder(folder, s.name) end
     end
     return removed
 end
@@ -2910,22 +2926,27 @@ function GH.sprayStart()
         WindUI:Notify({ Title = "Anti Spray Lag", Content = "Bricks folder not found.", Duration = 3 })
         return
     end
-    s.kept = nil
+    s.keptMap = {}
     local gen = s.gen
+    local isAll = s.name == s.ALL
     s.conn = bricks.DescendantAdded:Connect(function(d)
         if d.Name ~= "Spray" then return end
         local top = d
         while top.Parent and top.Parent ~= bricks do top = top.Parent end
-        if top.Parent ~= bricks or top.Name ~= s.name then return end
+        if top.Parent ~= bricks then return end
+        if not isAll and top.Name ~= s.name then return end
         if s.mode == "Radius" then
             local origin = GH.sprayOrigin()
             if origin and GH.sprayNear(d, origin) then
                 task.defer(function() pcall(function() d:Destroy() end) end)
             end
-        elseif not s.kept or not s.kept.Parent then
-            s.kept = d
         else
-            task.defer(function() pcall(function() d:Destroy() end) end)
+            local key = isAll and top or s.name
+            if not s.keptMap[key] or not s.keptMap[key].Parent then
+                s.keptMap[key] = d
+            else
+                task.defer(function() pcall(function() d:Destroy() end) end)
+            end
         end
     end)
     task.spawn(function()
@@ -2935,8 +2956,6 @@ function GH.sprayStart()
             if s.gen ~= gen then break end
             if s.mode == "Radius" then
                 GH.spraySweep(gen)
-            elseif s.kept and not s.kept.Parent then
-                s.kept = nil
             end
         end
     end)
