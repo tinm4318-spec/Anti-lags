@@ -74,9 +74,9 @@ local colorMap = {
     peasant  = {150, 103, 102},
     arken    = {4, 175, 236},
     admin    = {245, 205, 48},
-    hidden   = {128, 128, 128},
-    iqgenius = {98, 129, 65},
-    iqdumb   = {98, 129, 65},
+    hidden   = {45, 45, 45},
+    iqgenius = {210, 210, 210},
+    iqdumb   = {90, 90, 90},
 }
 if cubes then colorMap.peasant = {128, 128, 128} end
 
@@ -1439,7 +1439,7 @@ print("window reached")
 local about = hub:Tab({ Title = "About", Icon = "badge-question-mark", Locked = false, Border = true })
 about:Paragraph({
     Title = "Information",
-    Desc = "Keyless build. Press K to show or hide the window.\nNo data leaves the client.",
+    Desc = "Press K to show or hide the window.",
 })
 about:Paragraph({
     Title = "Credits",
@@ -1760,11 +1760,6 @@ home:Button({
     Desc = "Bypasses AgarWare detection. Removes your block place and delete sound. Needs the Delete tool.",
     Callback = function() GH.deleteSound(false) end,
 })
-home:Button({
-    Title = "Perm Disable Delete Sound",
-    Callback = function() GH.deleteSound(true) end,
-})
-
 home:Section({ Title = "Tools" })
 home:Toggle({ Title = "Rainbow Paint", Callback = function(v) rainbowPaint = v end })
 home:Toggle({ Title = "Shovel",        Callback = function(v) shovel = v end })
@@ -3462,10 +3457,10 @@ textChatService.OnIncomingMessage = function(mdata)
     local iq = nil
     if spyChat and src:GetAttribute("IQ") then
         if src:GetAttribute("IQ") >= 200 then
-            iq = "genius 🧠"
+            iq = "genius"
             cn = "iqgenius"
         elseif src:GetAttribute("IQ") <= 50 then
-            iq = "dumb 🤪"
+            iq = "dumb"
             cn = "iqdumb"
         end
     end
