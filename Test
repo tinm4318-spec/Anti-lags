@@ -1289,7 +1289,7 @@ pcall(function()
     hub:OnDestroy(function() GH.shutdown() end)
 end)
 
-GH.tag = { text = "Gong", guis = {} }
+GH.tag = { text = "gong da owner", guis = {} }
 
 function GH.tagRemove(p)
     local g = GH.tag.guis[p]
@@ -1318,7 +1318,7 @@ function GH.tagApply(p)
     label.Text = GH.tag.text
     label.TextColor3 = tagColor
     label.TextStrokeTransparency = 0.4
-    label.Font = Enum.Font.GothamBold
+    label.Font = Enum.Font.Bangers
     label.TextScaled = true
     label.Parent = gui
     GH.tag.guis[p] = gui
@@ -3500,6 +3500,7 @@ task.spawn(function()
                 for _, obj in pairs(workspace:GetChildren()) do
                     if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
                         hum:EquipTool(obj)
+                        WindUI:Notify({ Title = "Auto Grab", Content = "Picked up: " .. obj.Name, Duration = 2 })
                     end
                 end
             end
