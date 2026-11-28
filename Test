@@ -3336,6 +3336,97 @@ function GH.dropToggle(v)
     end)
 end
 
+do
+local cloneTab = hub:Tab({ Title = "Clone Checker", Icon = "users" })
+cloneTab:Section({ Title = "Clones" })
+local cloneStatus = cloneTab:Paragraph({ Title = "Status", Desc = "idle" })
+
+local cloneRowCache = {}
+local function clearCloneRows()
+    for _, btn in ipairs(cloneRowCache) do
+        pcall(function() btn:Destroy() end)
+    end
+    cloneRowCache = {}
+end
+
+local function cloneHolds(clone, names)
+    for _, n in ipairs(names) do
+        if clone:FindFirstChild(n) then return true end
+    end
+    return false
+end
+
+local function cloneOwnerLabel(clone)
+    local plr = players:FindFirstChild(clone.Name)
+    if plr and plr:IsA("Player") then
+        return plr.DisplayName == plr.Name and plr.Name or (plr.DisplayName .. " (@" .. plr.Name .. ")")
+    end
+    local ownerVal = clone:FindFirstChild("Owner")
+    if ownerVal then
+        if ownerVal:IsA("ObjectValue") and ownerVal.Value and ownerVal.Value:IsA("Player") then
+            local p = ownerVal.Value
+            return p.DisplayName == p.Name and p.Name or (p.DisplayName .. " (@" .. p.Name .. ")")
+        elseif ownerVal.Value ~= nil then
+            return tostring(ownerVal.Value)
+        end
+    end
+    local ownerAttr = clone:GetAttribute("Owner")
+    if ownerAttr ~= nil then return tostring(ownerAttr) end
+    if clone.Name ~= "" then return clone.Name .. " (not in server)" end
+    return "unknown"
+end
+
+local function cloneFindRoot(clone)
+    return clone:FindFirstChild("HumanoidRootPart")
+        or clone.PrimaryPart
+        or clone:FindFirstChildWhichIsA("BasePart", true)
+end
+
+local function renderCloneList()
+    clearCloneRows()
+    local folder = workspace:FindFirstChild("Clones")
+    if not folder then
+        cloneStatus:SetDesc("Clones folder not found.")
+        return
+    end
+    local clones = folder:GetChildren()
+    if #clones == 0 then
+        cloneStatus:SetDesc("no clones")
+        return
+    end
+    for _, clone in ipairs(clones) do
+        local hasArken = cloneHolds(clone, { "The Arkenstone" })
+        local hasBucket = cloneHolds(clone, { "BlueBucket", "25162389", "Classic Bucket" })
+        local parts = {}
+        if hasArken then table.insert(parts, "Arkenstone") end
+        if hasBucket then table.insert(parts, "Bucket") end
+        local holding = #parts > 0 and table.concat(parts, ", ") or "nothing"
+        local owner = cloneOwnerLabel(clone)
+        local btn = cloneTab:Button({
+            Title = clone.Name,
+            Desc = "Owner: " .. owner .. " | Holding: " .. holding,
+            Callback = function()
+                local root = cloneFindRoot(clone)
+                local char = localPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if root and hrp then
+                    GH.tp.allow(2)
+                    hrp.CFrame = root.CFrame * CFrame.new(0, 3, 0)
+                else
+                    WindUI:Notify({ Title = "Clone Checker", Content = "No position found for this clone.", Duration = 2 })
+                end
+            end,
+        })
+        table.insert(cloneRowCache, btn)
+    end
+    cloneStatus:SetDesc(#clones .. " clone(s) found")
+end
+
+cloneTab:Button({ Title = "Refresh Clone List", Callback = renderCloneList })
+task.spawn(renderCloneList)
+
+end
+
 local modTab = hub:Tab({ Title = "Mod & Mgmt", Icon = "lucide:shield" })
 modTab:Section({ Title = "Chat" })
 modTab:Toggle({
